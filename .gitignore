@@ -1,3 +1,7 @@
 node_modules
 dist
 .env
+*.mov
+*.MOV
+*.mp4
+*.MP4
