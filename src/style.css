@@ -16,7 +16,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 14px;
   color: var(--text);
   background: var(--bg);
@@ -26,8 +26,34 @@ body {
 
 #app {
   display: flex;
+  flex-direction: column;
   height: 100dvh;
   position: relative;
+}
+
+#header {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  height: 64px;
+  flex-shrink: 0;
+  background: #000;
+  border-bottom: none;
+  z-index: 20;
+}
+
+#header h1 {
+  font-family: "Space Mono", monospace;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 1;
+  color: #fff;
+}
+
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* Sidebar */
@@ -42,20 +68,6 @@ body {
   z-index: 10;
 }
 
-#header {
-  padding: 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-#header h1 {
-  font-size: 16px;
-  font-weight: 600;
-  flex: 1;
-}
-
 #upload-label {
   display: flex;
   align-items: center;
@@ -65,8 +77,9 @@ body {
   color: white;
   border-radius: var(--radius);
   cursor: pointer;
+  font-family: "Space Mono", monospace;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
   white-space: nowrap;
   transition: opacity 0.15s;
 }
@@ -182,6 +195,11 @@ body {
   color: var(--muted);
   font-size: 13px;
   margin-top: 2px;
+}
+
+.photo-date-mono {
+  font-family: "Roboto Mono", monospace;
+  font-size: 11px;
 }
 
 .photo-species {
@@ -308,7 +326,7 @@ body {
 .popup-next:disabled { opacity: 0.25; cursor: default; }
 
 .popup-body {
-  padding: 12px;
+  padding: 20px;
 }
 
 .popup-filename {
@@ -326,9 +344,14 @@ body {
 }
 
 .popup-species {
+  font-family: "Roboto", sans-serif;
   font-weight: 700;
   font-size: 15px;
   color: var(--text);
+}
+
+.popup-mono {
+  font-family: "Roboto Mono", monospace;
 }
 
 .popup-coords {

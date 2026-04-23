@@ -129,12 +129,9 @@ function makePopup(group, onUpdate, onDelete) {
     editing = false
     const photo = group[current]
     const hasMultiple = group.length > 1
-    const date = photo.time
-      ? new Date(photo.time).toLocaleString(undefined, {
-          year: 'numeric', month: 'short', day: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-        })
-      : 'Unknown date'
+    const d = photo.time ? new Date(photo.time) : null
+    const dateStr = d ? `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(-2)}` : null
+    const timeStr = d ? d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : null
 
     viewPanel.innerHTML = `
       <div class="popup-img-wrapper">
@@ -152,9 +149,9 @@ function makePopup(group, onUpdate, onDelete) {
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
         </div>
-        <div class="popup-detail">${date}</div>
-        ${photo.meta?.rod ? `<div class="popup-detail"><strong>Rod:</strong> ${photo.meta.rod}</div>` : ''}
-        ${photo.meta?.fly ? `<div class="popup-detail"><strong>Fly:</strong> ${photo.meta.fly}</div>` : ''}
+        ${dateStr ? `<div class="popup-detail popup-mono">${dateStr} ${timeStr}</div>` : '<div class="popup-detail">Unknown date</div>'}
+        ${photo.meta?.rod ? `<div class="popup-detail popup-mono">${photo.meta.rod}</div>` : ''}
+        ${photo.meta?.fly ? `<div class="popup-detail popup-mono">${photo.meta.fly}</div>` : ''}
       </div>
     `
 

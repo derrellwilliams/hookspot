@@ -174,8 +174,7 @@ function renderPhotoList() {
       </div>
       <div class="photo-meta">
         ${lead.species && lead.species !== 'none' ? `<div class="photo-species">${lead.species.replace(/\s*\(.*?\)/g, '').trim()}</div>` : ''}
-        ${lead.time ? `<div class="photo-date">${formatDay(lead.time)} &middot; ${formatTime(lead.time)}</div>` : '<div class="photo-date">No date</div>'}
-        ${lead.meta?.rod ? `<div class="photo-gear">${lead.meta.rod}</div>` : ''}
+        ${lead.time ? `<div class="photo-date"><span class="photo-date-mono">${formatDay(lead.time)} ${formatTime(lead.time)}</span></div>` : '<div class="photo-date">No date</div>'}
         ${lead.meta?.fly ? `<div class="photo-gear">${lead.meta.fly}</div>` : ''}
       </div>
     `
@@ -245,9 +244,8 @@ function parseExifDate(dt) {
 }
 
 function formatDay(ts) {
-  return new Date(ts).toLocaleDateString(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
+  const d = new Date(ts)
+  return `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(-2)}`
 }
 
 function formatTime(ts) {
