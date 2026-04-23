@@ -1,4 +1,4 @@
-import { initMap, rebuildMarkers } from './map.js'
+import { initMap, rebuildMarkers, fitToGroups } from './map.js'
 import { extractExif, toDisplayBlob } from './exif.js'
 import { getCached, setCached, getMeta, setMeta } from './cache.js'
 import { identifySpecies } from './identify.js'
@@ -50,7 +50,7 @@ async function loadFolderImages() {
   }
 }
 
-loadFolderImages()
+loadFolderImages().then(() => fitToGroups(map, currentGroups))
 
 // ── File handling ─────────────────────────────────────────────────────────────
 

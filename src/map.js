@@ -49,10 +49,45 @@ export function rebuildMarkers(map, groups, onGroupSelect, onUpdate, onDelete) {
     const marker = markerByPhoto.get(photo)
     if (!marker) return
 
+    goToByPhoto.get(photo)?.()
+
+    // Already showing this popup — nothing to do
+    if (marker.isPopupOpen()) return
+
+    // Another popup is open — switch, pan if far from center, then vertically center popup
+    if (map._popup?.isOpen()) {
+      map.closePopup()
+      const latlng = marker.getLatLng()
+      const markerPt = map.latLngToContainerPoint(latlng)
+      const size = map.getSize()
+      const dx = Math.abs(markerPt.x - size.x / 2)
+      const dy = Math.abs(markerPt.y - size.y / 2)
+      const threshold = Math.min(size.x, size.y) * 0.3
+
+      const openAndCenter = () => {
+        marker.openPopup()
+        requestAnimationFrame(() => {
+          const popupEl = marker.getPopup()?.getElement()
+          if (!popupEl) return
+          const popupHeight = popupEl.offsetHeight
+          const markerY = map.latLngToContainerPoint(latlng).y
+          const targetY = map.getSize().y / 2 + popupHeight / 2 + 7
+          const shift = Math.round(markerY - targetY)
+          if (Math.abs(shift) > 5) map.panBy([0, shift], { animate: true, duration: 0.3 })
+        })
+      }
+
+      if (dx > threshold || dy > threshold) {
+        map.panTo(latlng, { animate: true, duration: 0.65 })
+        map.once('moveend', openAndCenter)
+      } else {
+        openAndCenter()
+      }
+      return
+    }
+
     const latlng = marker.getLatLng()
     const zoom = Math.max(map.getZoom(), 13)
-
-    goToByPhoto.get(photo)?.()
 
     map.once('moveend', () => {
       marker.openPopup()
@@ -198,6 +233,12 @@ function makePopup(group, onUpdate, onDelete) {
 
 function makeIcon() {
   return new L.Icon.Default()
+}
+
+export function fitToGroups(map, groups) {
+  if (!groups.length) return
+  const latlngs = groups.map(g => [avg(g.map(p => p.exif.latitude)), avg(g.map(p => p.exif.longitude))])
+  map.fitBounds(latlngs, { padding: [40, 40] })
 }
 
 function avg(arr) {
