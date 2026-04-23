@@ -1,0 +1,22 @@
+{
+  "name": "hookspot",
+  "version": "1.0.0",
+  "description": "Drop photos on a map — plots GPS-tagged images as clickable pins with date/time details",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "identify": "node --env-file=.env scripts/identify.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.91.0",
+    "exifr": "^7.1.3",
+    "heic-convert": "^2.1.0",
+    "heic2any": "^0.0.4",
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
