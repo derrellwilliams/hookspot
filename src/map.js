@@ -1,7 +1,7 @@
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiZGVycmVsbHdpbGxpYW1zIiwiYSI6IkhWNGhGd00ifQ.lTp8_tfHS5K866hGOkkhaw'
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 
 const allMarkers = []
 let allPopups = []
@@ -17,6 +17,10 @@ export function initMap() {
   map.addControl(new mapboxgl.NavigationControl(), 'top-right')
   map.on('click', () => allPopups.forEach(p => p.remove()))
   return map
+}
+
+export function closeAllPopups() {
+  allPopups.forEach(p => p.remove())
 }
 
 export function rebuildMarkers(map, groups, onGroupSelect, onUpdate, onDelete) {
@@ -106,6 +110,12 @@ export function fitToGroups(map, groups) {
   else map.once('load', doFit)
 }
 
+function esc(str) {
+  const d = document.createElement('div')
+  d.textContent = str ?? ''
+  return d.innerHTML
+}
+
 function makePopup(group, onUpdate, onDelete) {
   const el = document.createElement('div')
   el.className = 'popup-carousel'
@@ -129,7 +139,7 @@ function makePopup(group, onUpdate, onDelete) {
 
     viewPanel.innerHTML = `
       <div class="popup-img-wrapper">
-        <img class="popup-img" src="${photo.url}" alt="${photo.name}" />
+        <img class="popup-img" src="${photo.url}" alt="${esc(photo.name)}" />
         ${hasMultiple ? `
           <div class="popup-counter">${current + 1} / ${group.length}</div>
           <button class="popup-prev" ${current === 0 ? 'disabled' : ''}>&#8249;</button>
@@ -138,14 +148,14 @@ function makePopup(group, onUpdate, onDelete) {
       </div>
       <div class="popup-body">
         <div class="popup-title-row">
-          <div class="popup-species">${photo.species && photo.species !== 'none' ? photo.species : '—'}</div>
+          <div class="popup-species">${photo.species && photo.species !== 'none' ? esc(photo.species) : '—'}</div>
           <button class="popup-edit-btn" title="Edit">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
         </div>
         ${dateStr ? `<div class="popup-detail popup-mono">${dateStr} ${timeStr}</div>` : '<div class="popup-detail">Unknown date</div>'}
-        ${photo.meta?.rod ? `<div class="popup-detail popup-mono">${photo.meta.rod}</div>` : ''}
-        ${photo.meta?.fly ? `<div class="popup-detail popup-mono">${photo.meta.fly}</div>` : ''}
+        ${photo.meta?.rod ? `<div class="popup-detail popup-mono">${esc(photo.meta.rod)}</div>` : ''}
+        ${photo.meta?.fly ? `<div class="popup-detail popup-mono">${esc(photo.meta.fly)}</div>` : ''}
       </div>
     `
 
@@ -176,11 +186,11 @@ function makePopup(group, onUpdate, onDelete) {
 
     editPanel.innerHTML = `
       <label>Species</label>
-      <input class="edit-species" type="text" value="${photo.species ?? ''}" placeholder="e.g. Brown Trout" />
+      <input class="edit-species" type="text" value="${esc(photo.species ?? '')}" placeholder="e.g. Brown Trout" />
       <label>Rod</label>
-      <input class="edit-rod" type="text" value="${m.rod ?? ''}" placeholder="e.g. 9ft 5wt" />
+      <input class="edit-rod" type="text" value="${esc(m.rod ?? '')}" placeholder="e.g. 9ft 5wt" />
       <label>Fly</label>
-      <input class="edit-fly" type="text" value="${m.fly ?? ''}" placeholder="e.g. Elk Hair Caddis #14" />
+      <input class="edit-fly" type="text" value="${esc(m.fly ?? '')}" placeholder="e.g. Elk Hair Caddis #14" />
       <div class="edit-actions">
         <button class="edit-save">Save</button>
         <button class="edit-cancel">Cancel</button>

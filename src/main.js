@@ -1,4 +1,4 @@
-import { initMap, rebuildMarkers, fitToGroups } from './map.js'
+import { initMap, rebuildMarkers, fitToGroups, closeAllPopups } from './map.js'
 import { extractExif, toDisplayBlob } from './exif.js'
 import { getCached, setCached, getMeta, setMeta } from './cache.js'
 import { identifySpecies } from './identify.js'
@@ -46,7 +46,10 @@ function openUploadDialog(files) {
 
 function closeUploadDialog() {
   uploadDialog.classList.add('hidden')
-  if (uploadPreviewImg.src?.startsWith('blob:')) URL.revokeObjectURL(uploadPreviewImg.src)
+  const url = uploadPreviewImg.src
+  uploadPreviewImg.src = ''
+  uploadConfirmImg.src = ''
+  if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
   pendingFiles = null
   fileInput.value = ''
 }
@@ -59,9 +62,9 @@ document.getElementById('upload-next-btn').addEventListener('click', () => {
   const rod     = document.getElementById('upload-rod').value.trim()
   const fly     = document.getElementById('upload-fly').value.trim()
   uploadConfirmSummary.innerHTML = `
-    <div class="popup-species">${species || '—'}</div>
-    ${rod ? `<div class="popup-detail popup-mono">${rod}</div>` : ''}
-    ${fly ? `<div class="popup-detail popup-mono">${fly}</div>` : ''}
+    <div class="popup-species">${esc(species) || '—'}</div>
+    ${rod ? `<div class="popup-detail popup-mono">${esc(rod)}</div>` : ''}
+    ${fly ? `<div class="popup-detail popup-mono">${esc(fly)}</div>` : ''}
     ${pendingFiles.length > 1 ? `<div class="popup-detail">${pendingFiles.length} photos</div>` : ''}
   `
   uploadEditStep.classList.add('hidden')
@@ -116,6 +119,12 @@ navDropdownMenu.addEventListener('click', (e) => {
 })
 
 export const photos = []
+
+function esc(str) {
+  const d = document.createElement('div')
+  d.textContent = str ?? ''
+  return d.innerHTML
+}
 
 // Species + metadata seeds — loaded once, applied to photos whenever either is ready
 let speciesData = {}
@@ -272,12 +281,12 @@ function renderPhotoList() {
 
     item.innerHTML = `
       <div class="photo-thumb-wrap">
-        <img class="photo-thumb" src="${lead.url}" alt="${lead.name}" loading="lazy" />
+        <img class="photo-thumb" src="${lead.url}" alt="${esc(lead.name)}" loading="lazy" />
       </div>
       <div class="photo-meta">
-        ${lead.species && lead.species !== 'none' ? `<div class="photo-species">${lead.species.replace(/\s*\(.*?\)/g, '').trim()}</div>` : ''}
+        ${lead.species && lead.species !== 'none' ? `<div class="photo-species">${esc(lead.species.replace(/\s*\(.*?\)/g, '').trim())}</div>` : ''}
         ${lead.time ? `<div class="photo-date"><span class="photo-date-mono">${formatDay(lead.time)} ${formatTime(lead.time)}</span></div>` : '<div class="photo-date">No date</div>'}
-        ${lead.meta?.fly ? `<div class="photo-gear">${lead.meta.fly}</div>` : ''}
+        ${lead.meta?.fly ? `<div class="photo-gear">${esc(lead.meta.fly)}</div>` : ''}
       </div>
     `
 
@@ -292,7 +301,8 @@ function renderPhotoList() {
 }
 
 async function deletePhoto(photo) {
-  map.closePopup()
+  closeAllPopups()
+  if (photo.url?.startsWith('blob:')) URL.revokeObjectURL(photo.url)
   photos.splice(photos.indexOf(photo), 1)
   await Promise.all([setCached(photo.name, undefined), setMeta(photo.name, undefined)])
   refresh()

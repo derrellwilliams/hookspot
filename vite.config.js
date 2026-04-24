@@ -64,11 +64,15 @@ export default defineConfig({
 
         // Serve /images/* from the images directory
         server.middlewares.use('/images', (req, res, next) => {
+          const safe = (filepath) => filepath.startsWith(imagesDir + '/')
+
           if (req.method === 'DELETE') {
             const filename = decodeURIComponent(req.url.replace(/^\//, '').split('?')[0])
             if (!filename) { res.statusCode = 400; res.end(); return }
+            const filepath = resolve(imagesDir, filename)
+            if (!safe(filepath)) { res.statusCode = 400; res.end('Bad path'); return }
             try {
-              unlinkSync(resolve(imagesDir, filename))
+              unlinkSync(filepath)
               const mod = server.moduleGraph.getModuleById('\0virtual:images')
               if (mod) server.moduleGraph.invalidateModule(mod)
               res.statusCode = 200; res.end('ok')
@@ -82,6 +86,7 @@ export default defineConfig({
               res.statusCode = 400; res.end('Bad filename'); return
             }
             const dest = resolve(imagesDir, filename)
+            if (!safe(dest)) { res.statusCode = 400; res.end('Bad path'); return }
             const out = createWriteStream(dest)
             req.pipe(out)
             out.on('finish', () => {
@@ -98,6 +103,7 @@ export default defineConfig({
           const filename = decodeURIComponent(req.url.replace(/^\//, '').split('?')[0])
           if (!filename) return next()
           const filepath = resolve(imagesDir, filename)
+          if (!safe(filepath)) return next()
           let stat
           try { stat = statSync(filepath) } catch { return next() }
           if (!stat.isFile()) return next()
