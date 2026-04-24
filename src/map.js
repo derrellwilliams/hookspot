@@ -51,7 +51,8 @@ export function rebuildMarkers(map, groups, onGroupSelect, onUpdate, onDelete) {
       .addTo(map)
 
     marker.getElement().style.cursor = 'pointer'
-    marker.getElement().addEventListener('click', () => {
+    marker.getElement().addEventListener('click', (e) => {
+      e.stopPropagation()
       onGroupSelect(group)
       flyToPhoto(group[0])
     })
@@ -79,14 +80,14 @@ export function rebuildMarkers(map, groups, onGroupSelect, onUpdate, onDelete) {
     const lnglat = marker.getLngLat()
     const zoom = Math.max(map.getZoom(), 13)
 
-    map.flyTo({ center: lnglat, zoom, duration: 600, essential: true })
-    map.once('moveend', () => {
-      popup.addTo(map)
-      requestAnimationFrame(() => {
-        const popupEl = popup.getElement()
-        if (!popupEl) return
-        map.panBy([0, -(popupEl.offsetHeight / 2)], { duration: 200 })
-      })
+    const sidebar = document.getElementById('sidebar')
+    const sidebarRight = sidebar ? Math.ceil(sidebar.getBoundingClientRect().right) : 0
+    map.jumpTo({ center: lnglat, zoom, padding: { left: sidebarRight, right: 0, top: 0, bottom: 0 } })
+    popup.addTo(map)
+    requestAnimationFrame(() => {
+      const popupEl = popup.getElement()
+      if (!popupEl) return
+      map.panBy([0, -(popupEl.offsetHeight / 2)], { duration: 0 })
     })
   }
 
@@ -153,8 +154,10 @@ function makePopup(group, onUpdate, onDelete) {
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
         </div>
-        ${dateStr ? `<div class="popup-detail popup-mono">${dateStr} ${timeStr}</div>` : '<div class="popup-detail">Unknown date</div>'}
-        ${photo.meta?.rod ? `<div class="popup-detail popup-mono">${esc(photo.meta.rod)}</div>` : ''}
+        <div class="popup-detail popup-mono popup-detail-row">
+          ${dateStr ? `<span>${dateStr} ${timeStr}</span>` : '<span>Unknown date</span>'}
+          ${photo.meta?.rod ? `<span class="popup-detail-sep">|</span><span>${esc(photo.meta.rod)}</span>` : ''}
+        </div>
         ${photo.meta?.fly ? `<div class="popup-detail popup-mono">${esc(photo.meta.fly)}</div>` : ''}
       </div>
     `

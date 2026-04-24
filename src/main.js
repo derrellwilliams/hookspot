@@ -2,6 +2,7 @@ import { initMap, rebuildMarkers, fitToGroups, closeAllPopups } from './map.js'
 import { extractExif, toDisplayBlob } from './exif.js'
 import { getCached, setCached, getMeta, setMeta } from './cache.js'
 import { identifySpecies } from './identify.js'
+import { renderStats } from './stats.js'
 import imageList from 'virtual:images'
 
 const fileInput = document.getElementById('file-input')
@@ -17,63 +18,96 @@ const map = initMap()
 
 // ── Upload dialog ──────────────────────────────────────────────────────────────
 
-const uploadDialog   = document.getElementById('upload-dialog')
-const uploadBackdrop = document.getElementById('upload-backdrop')
-const uploadEditStep = document.getElementById('upload-edit-step')
-const uploadConfirmStep = document.getElementById('upload-confirm-step')
-const uploadPreviewImg  = document.getElementById('upload-preview-img')
-const uploadConfirmImg  = document.getElementById('upload-confirm-img')
-const uploadFileCount   = document.getElementById('upload-file-count')
-const uploadConfirmSummary = document.getElementById('upload-confirm-summary')
+const uploadDialog     = document.getElementById('upload-dialog')
+const uploadBackdrop   = document.getElementById('upload-backdrop')
+const uploadPreviewImg = document.getElementById('upload-preview-img')
+const uploadFileCount  = document.getElementById('upload-file-count')
 
 let pendingFiles = null
+let previewBlobUrl = null
 
-function openUploadDialog(files) {
-  pendingFiles = files
-  const first = files[0]
-  const url = URL.createObjectURL(first)
-  uploadPreviewImg.src = url
-  uploadConfirmImg.src = url
-  uploadFileCount.textContent = files.length > 1 ? `${files.length} photos` : ''
-  uploadFileCount.style.display = files.length > 1 ? '' : 'none'
+function showUploadStep(n) {
+  document.getElementById('upload-step-1').classList.toggle('hidden', n !== 1)
+  document.getElementById('upload-step-2').classList.toggle('hidden', n !== 2)
+}
+
+function openUploadDialog() {
   document.getElementById('upload-species').value = ''
   document.getElementById('upload-rod').value = ''
   document.getElementById('upload-fly').value = ''
-  uploadEditStep.classList.remove('hidden')
-  uploadConfirmStep.classList.add('hidden')
+  uploadPreviewImg.src = ''
+  pendingFiles = null
+  showUploadStep(1)
   uploadDialog.classList.remove('hidden')
 }
 
 function closeUploadDialog() {
   uploadDialog.classList.add('hidden')
-  const url = uploadPreviewImg.src
+  if (previewBlobUrl) { URL.revokeObjectURL(previewBlobUrl); previewBlobUrl = null }
   uploadPreviewImg.src = ''
-  uploadConfirmImg.src = ''
-  if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
   pendingFiles = null
   fileInput.value = ''
 }
 
+function showToast(msg) {
+  const toast = document.getElementById('upload-toast')
+  toast.textContent = msg
+  toast.classList.remove('hidden')
+  requestAnimationFrame(() => {
+    toast.classList.add('show')
+    setTimeout(() => {
+      toast.classList.remove('show')
+      setTimeout(() => toast.classList.add('hidden'), 200)
+    }, 3000)
+  })
+}
+
+async function goToStep2(files) {
+  pendingFiles = files
+  const first = files[0]
+  if (previewBlobUrl) URL.revokeObjectURL(previewBlobUrl)
+  previewBlobUrl = URL.createObjectURL(first)
+  uploadPreviewImg.src = previewBlobUrl
+  uploadFileCount.textContent = files.length > 1 ? `${files.length} photos` : ''
+  uploadFileCount.style.display = files.length > 1 ? '' : 'none'
+  const speciesInput = document.getElementById('upload-species')
+  const identifyingEl = document.getElementById('upload-identifying')
+  speciesInput.value = ''
+  document.getElementById('upload-rod').value = ''
+  document.getElementById('upload-fly').value = ''
+  speciesInput.placeholder = 'Identifying…'
+  speciesInput.disabled = true
+  identifyingEl.classList.remove('hidden')
+  showUploadStep(2)
+  try {
+    const blob = await toDisplayBlob(first)
+    const species = await identifySpecies(blob)
+    if (species) speciesInput.value = species
+    speciesInput.placeholder = 'e.g. Brown Trout'
+  } catch {
+    speciesInput.placeholder = 'e.g. Brown Trout'
+  } finally {
+    identifyingEl.classList.add('hidden')
+    speciesInput.disabled = false
+    speciesInput.focus()
+  }
+}
+
+document.getElementById('upload-close-btn').addEventListener('click', closeUploadDialog)
 document.getElementById('upload-cancel-btn').addEventListener('click', closeUploadDialog)
 uploadBackdrop.addEventListener('click', closeUploadDialog)
 
-document.getElementById('upload-next-btn').addEventListener('click', () => {
-  const species = document.getElementById('upload-species').value.trim()
-  const rod     = document.getElementById('upload-rod').value.trim()
-  const fly     = document.getElementById('upload-fly').value.trim()
-  uploadConfirmSummary.innerHTML = `
-    <div class="popup-species">${esc(species) || '—'}</div>
-    ${rod ? `<div class="popup-detail popup-mono">${esc(rod)}</div>` : ''}
-    ${fly ? `<div class="popup-detail popup-mono">${esc(fly)}</div>` : ''}
-    ${pendingFiles.length > 1 ? `<div class="popup-detail">${pendingFiles.length} photos</div>` : ''}
-  `
-  uploadEditStep.classList.add('hidden')
-  uploadConfirmStep.classList.remove('hidden')
-})
+document.getElementById('upload-browse-btn').addEventListener('click', () => fileInput.click())
 
-document.getElementById('upload-back-btn').addEventListener('click', () => {
-  uploadConfirmStep.classList.add('hidden')
-  uploadEditStep.classList.remove('hidden')
+const dialogDropZone = document.getElementById('upload-drop-zone')
+dialogDropZone.addEventListener('dragover', e => e.preventDefault())
+dialogDropZone.addEventListener('dragenter', e => { e.preventDefault(); dialogDropZone.classList.add('drag-over') })
+dialogDropZone.addEventListener('dragleave', () => dialogDropZone.classList.remove('drag-over'))
+dialogDropZone.addEventListener('drop', e => {
+  e.preventDefault()
+  dialogDropZone.classList.remove('drag-over')
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+  if (files.length) goToStep2(files)
 })
 
 document.getElementById('upload-submit-btn').addEventListener('click', async () => {
@@ -83,15 +117,16 @@ document.getElementById('upload-submit-btn').addEventListener('click', async () 
   const files   = pendingFiles
   closeUploadDialog()
   await handleFiles(files, { species, rod, fly })
+  showToast('Catch added!')
 })
 
 // ── Nav dropdown + view switching ─────────────────────────────────────────────
 
-fabAdd.addEventListener('click', () => fileInput.click())
+fabAdd.addEventListener('click', openUploadDialog)
 
 fileInput.addEventListener('change', (e) => {
   const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'))
-  if (files.length) openUploadDialog(files)
+  if (files.length) goToStep2(files)
 })
 
 const navDropdownWrap = document.getElementById('nav-dropdown-wrap')
@@ -113,7 +148,8 @@ navDropdownMenu.addEventListener('click', (e) => {
   const view = btn.dataset.view
   document.querySelectorAll('.nav-option').forEach(el => el.classList.toggle('active', el.dataset.view === view))
   mainView.style.display = view === 'map' ? 'flex' : 'none'
-  statsView.style.display = view === 'stats' ? 'flex' : 'none'
+  statsView.style.display = view === 'stats' ? 'block' : 'none'
+  if (view === 'stats') renderStats(currentGroups)
   navDropdownWrap.classList.remove('open')
   navDropdownMenu.classList.remove('open')
 })
@@ -269,6 +305,13 @@ function groupByTime(gpsPhotos) {
 function renderPhotoList() {
   noPhotos.classList.toggle('hidden', photos.length > 0)
   photoList.innerHTML = ''
+
+  // Add button card
+  const addCard = document.createElement('div')
+  addCard.className = 'photo-item photo-item-add'
+  addCard.innerHTML = `<span class="photo-item-add-icon">+</span><span class="photo-item-add-label">Add a catch</span>`
+  addCard.addEventListener('click', openUploadDialog)
+  photoList.appendChild(addCard)
 
   // Sort groups newest-first by the first photo in each group
   const sorted = [...currentGroups].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0))
