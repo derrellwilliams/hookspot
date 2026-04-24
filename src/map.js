@@ -1,121 +1,115 @@
-import L from 'leaflet'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-})
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiZGVycmVsbHdpbGxpYW1zIiwiYSI6IkhWNGhGd00ifQ.lTp8_tfHS5K866hGOkkhaw'
 
-const markers = []
+const allMarkers = []
+let allPopups = []
 
 export function initMap() {
-  const map = L.map('map').setView([39.5, -111.1], 7)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  }).addTo(map)
+  mapboxgl.accessToken = MAPBOX_TOKEN
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/derrellwilliams/cmoc96j0y000i01r90nqr62du',
+    center: [-111.1, 39.5],
+    zoom: 7,
+  })
+  map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+  map.on('click', () => allPopups.forEach(p => p.remove()))
   return map
 }
 
-// Returns flyToPhoto(photo) so callers don't need globals
 export function rebuildMarkers(map, groups, onGroupSelect, onUpdate, onDelete) {
-  markers.forEach(m => m.remove())
-  markers.length = 0
+  allMarkers.forEach(m => m.remove())
+  allMarkers.length = 0
+  allPopups.forEach(p => p.remove())
+  allPopups = []
 
   const markerByPhoto = new Map()
   const goToByPhoto = new Map()
 
   for (const group of groups) {
-    const lat = avg(group.map(p => p.exif.latitude))
     const lng = avg(group.map(p => p.exif.longitude))
+    const lat = avg(group.map(p => p.exif.latitude))
+    const lnglat = [lng, lat]
 
     const { el, goTo } = makePopup(group, onUpdate, onDelete)
-    const marker = L.marker([lat, lng], { icon: makeIcon() }).addTo(map)
-    marker.bindPopup(el, { maxWidth: 240, minWidth: 220 })
-    marker.on('click', () => onGroupSelect(group))
 
-    markers.push(marker)
+    const popup = new mapboxgl.Popup({
+      closeButton: true,
+      closeOnClick: false,
+      maxWidth: '461px',
+      offset: 12,
+    }).setDOMContent(el).setLngLat(lnglat)
+
+    const marker = new mapboxgl.Marker({ color: '#000000' })
+      .setLngLat(lnglat)
+      .addTo(map)
+
+    marker.getElement().style.cursor = 'pointer'
+    marker.getElement().addEventListener('click', () => {
+      onGroupSelect(group)
+      flyToPhoto(group[0])
+    })
+
+    allMarkers.push(marker)
+    allPopups.push(popup)
+
     for (const photo of group) {
-      markerByPhoto.set(photo, marker)
+      markerByPhoto.set(photo, { marker, popup })
       goToByPhoto.set(photo, () => goTo(group.indexOf(photo)))
     }
   }
 
-  return function flyToPhoto(photo) {
-    const marker = markerByPhoto.get(photo)
-    if (!marker) return
+  function flyToPhoto(photo) {
+    const entry = markerByPhoto.get(photo)
+    if (!entry) return
+    const { marker, popup } = entry
 
     goToByPhoto.get(photo)?.()
 
-    // Already showing this popup — nothing to do
-    if (marker.isPopupOpen()) return
+    if (popup.isOpen()) return
 
-    // Another popup is open — switch, pan if far from center, then vertically center popup
-    if (map._popup?.isOpen()) {
-      map.closePopup()
-      const latlng = marker.getLatLng()
-      const markerPt = map.latLngToContainerPoint(latlng)
-      const size = map.getSize()
-      const dx = Math.abs(markerPt.x - size.x / 2)
-      const dy = Math.abs(markerPt.y - size.y / 2)
-      const threshold = Math.min(size.x, size.y) * 0.3
+    allPopups.forEach(p => p.remove())
 
-      const openAndCenter = () => {
-        marker.openPopup()
-        requestAnimationFrame(() => {
-          const popupEl = marker.getPopup()?.getElement()
-          if (!popupEl) return
-          const popupHeight = popupEl.offsetHeight
-          const markerY = map.latLngToContainerPoint(latlng).y
-          const targetY = map.getSize().y / 2 + popupHeight / 2 + 7
-          const shift = Math.round(markerY - targetY)
-          if (Math.abs(shift) > 5) map.panBy([0, shift], { animate: true, duration: 0.3 })
-        })
-      }
-
-      if (dx > threshold || dy > threshold) {
-        map.panTo(latlng, { animate: true, duration: 0.65 })
-        map.once('moveend', openAndCenter)
-      } else {
-        openAndCenter()
-      }
-      return
-    }
-
-    const latlng = marker.getLatLng()
+    const lnglat = marker.getLngLat()
     const zoom = Math.max(map.getZoom(), 13)
 
+    map.flyTo({ center: lnglat, zoom, duration: 600, essential: true })
     map.once('moveend', () => {
-      marker.openPopup()
-
+      popup.addTo(map)
       requestAnimationFrame(() => {
-        const popupEl = marker.getPopup()?.getElement()
+        const popupEl = popup.getElement()
         if (!popupEl) return
-
-        const popupHeight = popupEl.offsetHeight
-        const viewHeight = map.getSize().y
-        const markerY = map.latLngToContainerPoint(latlng).y
-        const tipOffset = 7
-        const targetY = viewHeight / 2 + popupHeight / 2 + tipOffset
-        const dy = Math.round(markerY - targetY)
-
-        if (Math.abs(dy) > 5) map.panBy([0, dy], { animate: true, duration: 0.3 })
+        map.panBy([0, -(popupEl.offsetHeight / 2)], { duration: 200 })
       })
     })
-
-    map.flyTo(latlng, zoom, { duration: 0.8 })
   }
+
+  return flyToPhoto
+}
+
+export function fitToGroups(map, groups) {
+  if (!groups.length) return
+  const lngs = groups.flatMap(g => g.map(p => p.exif.longitude))
+  const lats = groups.flatMap(g => g.map(p => p.exif.latitude))
+  const bounds = new mapboxgl.LngLatBounds(
+    [Math.min(...lngs), Math.min(...lats)],
+    [Math.max(...lngs), Math.max(...lats)]
+  )
+  const doFit = () => map.fitBounds(bounds, {
+    padding: { top: 80, bottom: 60, left: 320, right: 60 },
+    maxZoom: 16,
+    duration: 0,
+  })
+  if (map.loaded()) doFit()
+  else map.once('load', doFit)
 }
 
 function makePopup(group, onUpdate, onDelete) {
   const el = document.createElement('div')
   el.className = 'popup-carousel'
 
-  // Build persistent DOM — toggle visibility instead of replacing innerHTML
   const viewPanel = document.createElement('div')
   const editPanel = document.createElement('div')
   editPanel.className = 'popup-edit-form'
@@ -228,14 +222,8 @@ function makePopup(group, onUpdate, onDelete) {
   }
 }
 
-function makeIcon() {
-  return new L.Icon.Default()
-}
-
-export function fitToGroups(map, groups) {
-  if (!groups.length) return
-  const latlngs = groups.map(g => [avg(g.map(p => p.exif.latitude)), avg(g.map(p => p.exif.longitude))])
-  map.fitBounds(latlngs, { padding: [40, 40] })
+export function fitToGroupsOnLoad(map, groups) {
+  fitToGroups(map, groups)
 }
 
 function avg(arr) {

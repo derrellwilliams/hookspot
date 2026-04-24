@@ -8,7 +8,112 @@ const fileInput = document.getElementById('file-input')
 const photoList = document.getElementById('photo-list')
 const noPhotos = document.getElementById('no-photos')
 const dropOverlay = document.getElementById('drop-overlay')
+const fabAdd = document.getElementById('fab-add')
+const navDropdownBtn = document.getElementById('nav-dropdown-btn')
+const navDropdownMenu = document.getElementById('nav-dropdown-menu')
+const mainView = document.getElementById('main')
+const statsView = document.getElementById('stats-view')
 const map = initMap()
+
+// ── Upload dialog ──────────────────────────────────────────────────────────────
+
+const uploadDialog   = document.getElementById('upload-dialog')
+const uploadBackdrop = document.getElementById('upload-backdrop')
+const uploadEditStep = document.getElementById('upload-edit-step')
+const uploadConfirmStep = document.getElementById('upload-confirm-step')
+const uploadPreviewImg  = document.getElementById('upload-preview-img')
+const uploadConfirmImg  = document.getElementById('upload-confirm-img')
+const uploadFileCount   = document.getElementById('upload-file-count')
+const uploadConfirmSummary = document.getElementById('upload-confirm-summary')
+
+let pendingFiles = null
+
+function openUploadDialog(files) {
+  pendingFiles = files
+  const first = files[0]
+  const url = URL.createObjectURL(first)
+  uploadPreviewImg.src = url
+  uploadConfirmImg.src = url
+  uploadFileCount.textContent = files.length > 1 ? `${files.length} photos` : ''
+  uploadFileCount.style.display = files.length > 1 ? '' : 'none'
+  document.getElementById('upload-species').value = ''
+  document.getElementById('upload-rod').value = ''
+  document.getElementById('upload-fly').value = ''
+  uploadEditStep.classList.remove('hidden')
+  uploadConfirmStep.classList.add('hidden')
+  uploadDialog.classList.remove('hidden')
+}
+
+function closeUploadDialog() {
+  uploadDialog.classList.add('hidden')
+  if (uploadPreviewImg.src?.startsWith('blob:')) URL.revokeObjectURL(uploadPreviewImg.src)
+  pendingFiles = null
+  fileInput.value = ''
+}
+
+document.getElementById('upload-cancel-btn').addEventListener('click', closeUploadDialog)
+uploadBackdrop.addEventListener('click', closeUploadDialog)
+
+document.getElementById('upload-next-btn').addEventListener('click', () => {
+  const species = document.getElementById('upload-species').value.trim()
+  const rod     = document.getElementById('upload-rod').value.trim()
+  const fly     = document.getElementById('upload-fly').value.trim()
+  uploadConfirmSummary.innerHTML = `
+    <div class="popup-species">${species || '—'}</div>
+    ${rod ? `<div class="popup-detail popup-mono">${rod}</div>` : ''}
+    ${fly ? `<div class="popup-detail popup-mono">${fly}</div>` : ''}
+    ${pendingFiles.length > 1 ? `<div class="popup-detail">${pendingFiles.length} photos</div>` : ''}
+  `
+  uploadEditStep.classList.add('hidden')
+  uploadConfirmStep.classList.remove('hidden')
+})
+
+document.getElementById('upload-back-btn').addEventListener('click', () => {
+  uploadConfirmStep.classList.add('hidden')
+  uploadEditStep.classList.remove('hidden')
+})
+
+document.getElementById('upload-submit-btn').addEventListener('click', async () => {
+  const species = document.getElementById('upload-species').value.trim()
+  const rod     = document.getElementById('upload-rod').value.trim()
+  const fly     = document.getElementById('upload-fly').value.trim()
+  const files   = pendingFiles
+  closeUploadDialog()
+  await handleFiles(files, { species, rod, fly })
+})
+
+// ── Nav dropdown + view switching ─────────────────────────────────────────────
+
+fabAdd.addEventListener('click', () => fileInput.click())
+
+fileInput.addEventListener('change', (e) => {
+  const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'))
+  if (files.length) openUploadDialog(files)
+})
+
+const navDropdownWrap = document.getElementById('nav-dropdown-wrap')
+
+navDropdownBtn.addEventListener('click', (e) => {
+  e.stopPropagation()
+  navDropdownWrap.classList.toggle('open')
+  navDropdownMenu.classList.toggle('open')
+})
+
+document.addEventListener('click', () => {
+  navDropdownWrap.classList.remove('open')
+  navDropdownMenu.classList.remove('open')
+})
+
+navDropdownMenu.addEventListener('click', (e) => {
+  const btn = e.target.closest('.nav-option')
+  if (!btn) return
+  const view = btn.dataset.view
+  document.querySelectorAll('.nav-option').forEach(el => el.classList.toggle('active', el.dataset.view === view))
+  mainView.style.display = view === 'map' ? 'flex' : 'none'
+  statsView.style.display = view === 'stats' ? 'flex' : 'none'
+  navDropdownWrap.classList.remove('open')
+  navDropdownMenu.classList.remove('open')
+})
 
 export const photos = []
 
@@ -54,19 +159,13 @@ loadFolderImages().then(() => fitToGroups(map, currentGroups))
 
 // ── File handling ─────────────────────────────────────────────────────────────
 
-fileInput.addEventListener('change', async (e) => {
-  await handleFiles(e.target.files)
-  fileInput.value = ''
-})
-
-async function handleFiles(fileList) {
+async function handleFiles(fileList, meta = {}) {
   const files = Array.from(fileList).filter(f => f.type.startsWith('image/'))
   if (!files.length) return
   for (const file of files) {
     if (photos.find(p => p.name === file.name)) continue
-    await loadPhoto(file.name, file)
+    await loadPhoto(file.name, file, meta)
     refresh()
-    // Save to images/ folder so it persists on reload
     fetch(`/images/${encodeURIComponent(file.name)}`, {
       method: 'POST',
       headers: { 'x-filename': file.name },
@@ -75,7 +174,7 @@ async function handleFiles(fileList) {
   }
 }
 
-async function loadPhoto(filename, file) {
+async function loadPhoto(filename, file, uploadMeta = {}) {
   // Return early if already loaded this session
   if (photos.find(p => p.name === filename)) return
 
@@ -104,13 +203,16 @@ async function loadPhoto(filename, file) {
   const entry = { name: filename, blob, exif, hasGps: !!(exif?.latitude && exif?.longitude), time }
   await setCached(filename, entry)
 
-  // Default meta: use seed for this file, or fall back to the rod from any seed entry
-  const defaultRod = metaSeed[filename]?.rod ?? Object.values(metaSeed)[0]?.rod
-  const photo = { ...entry, url: URL.createObjectURL(blob), meta: { rod: defaultRod } }
-  applySpecies(photo)
+  // Default meta: use upload meta, then seed, then fallback rod
+  const defaultRod = uploadMeta.rod || (metaSeed[filename]?.rod ?? Object.values(metaSeed)[0]?.rod)
+  const mergedMeta = { rod: defaultRod, ...uploadMeta }
+  const photo = { ...entry, url: URL.createObjectURL(blob), meta: mergedMeta }
+  if (uploadMeta.species) photo.species = uploadMeta.species
+  else applySpecies(photo)
+  if (Object.keys(mergedMeta).some(k => mergedMeta[k])) await setMeta(filename, mergedMeta)
   photos.push(photo)
 
-  // If no species from species.json, ask Claude
+  // If no species from species.json or upload, ask Claude
   if (!photo.species) {
     const species = await identifySpecies(blob)
     if (species && species !== 'none') {

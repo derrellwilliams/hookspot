@@ -7,30 +7,89 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/src/style.css" />
+<link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <div id="app">
-      <div id="header">
-        <h1>Hook Spot</h1>
-        <label id="upload-label" for="file-input">
-          Submit a Catch
-        </label>
-        <input id="file-input" type="file" accept="image/*" multiple />
+      <!-- Floating pill nav -->
+      <div id="nav-bar">
+        <div id="nav-pill">
+          <div id="nav-dropdown-wrap">
+            <button id="nav-dropdown-btn">Hook Spot <svg id="nav-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div id="nav-dropdown-menu">
+              <button class="nav-option active" data-view="map">Map</button>
+              <button class="nav-option" data-view="stats">Stats</button>
+            </div>
+          </div>
+        </div>
+        <button id="fab-add">+</button>
       </div>
+      <input id="file-input" type="file" accept="image/*" multiple />
+
+      <!-- Main content -->
       <div id="main">
         <div id="sidebar">
           <div id="photo-list"></div>
           <div id="no-photos">
-            <p>Drop photos here or click <strong>Add Photos</strong> to get started.</p>
+            <p>Drop photos here or click <strong>+</strong> to get started.</p>
             <p class="hint">Photos need GPS data embedded to appear on the map.</p>
           </div>
         </div>
         <div id="map"></div>
       </div>
+
+      <!-- Stats view -->
+      <div id="stats-view">
+        <h2>Stats</h2>
+        <p>Coming soon.</p>
+      </div>
+
       <div id="drop-overlay">
         <div id="drop-message">Drop photos to add them</div>
+      </div>
+
+      <!-- Upload dialog -->
+      <div id="upload-dialog" class="hidden">
+        <div id="upload-backdrop"></div>
+        <div id="upload-content">
+
+          <!-- Step 1: Edit -->
+          <div id="upload-edit-step">
+            <div class="popup-img-wrapper">
+              <img id="upload-preview-img" alt="preview" />
+              <div id="upload-file-count"></div>
+            </div>
+            <div class="popup-body">
+              <div class="popup-edit-form">
+                <label>Species</label>
+                <input id="upload-species" type="text" placeholder="e.g. Brown Trout" />
+                <label>Rod</label>
+                <input id="upload-rod" type="text" placeholder="e.g. 9ft 5wt" />
+                <label>Fly</label>
+                <input id="upload-fly" type="text" placeholder="e.g. Elk Hair Caddis #14" />
+                <div class="edit-actions">
+                  <button id="upload-next-btn" class="edit-save">Review →</button>
+                  <button id="upload-cancel-btn" class="edit-cancel">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Confirm -->
+          <div id="upload-confirm-step" class="hidden">
+            <div class="popup-img-wrapper">
+              <img id="upload-confirm-img" alt="preview" />
+            </div>
+            <div class="popup-body">
+              <div id="upload-confirm-summary"></div>
+              <div class="edit-actions" style="margin-top:12px">
+                <button id="upload-submit-btn" class="edit-save">Add Catch</button>
+                <button id="upload-back-btn" class="edit-cancel">← Back</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
     <script type="module" src="/src/main.js"></script>
