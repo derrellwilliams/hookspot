@@ -2,8 +2,9 @@
 
 A personal fishing log — drop GPS-tagged photos onto a map, track species, gear, and catch stats over time.
 
-<img width="1294" height="971" alt="Screenshot 2026-04-24 at 1 00 23 PM" src="https://github.com/user-attachments/assets/637f2354-e18a-4ac6-b33f-4ecc60a2cf4a" />
 <img width="1294" height="971" alt="Screenshot 2026-04-24 at 1 00 15 PM" src="https://github.com/user-attachments/assets/0a2df8d8-0ba2-47b4-975c-90bb6b562310" />
+<img width="1294" height="971" alt="Screenshot 2026-04-24 at 1 00 23 PM" src="https://github.com/user-attachments/assets/637f2354-e18a-4ac6-b33f-4ecc60a2cf4a" />
+
 
 ## What it does
 
