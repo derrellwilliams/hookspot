@@ -47,34 +47,27 @@ export function MapView() {
     if (!mapReady) return
     const map = mapRef.current
 
-    // Unmount old popup roots and remove markers
-    markersRef.current.forEach(({ marker, popup, root }) => {
-      popup.remove()
-      root.unmount()
-      marker.remove()
+    const groupKey = (group) => group.map(p => p.name).sort().join('|')
+    const existingByKey = new Map(markersRef.current.map(m => [m.key, m]))
+    const newKeySet = new Set(groups.map(groupKey))
+
+    // Remove markers for deleted groups
+    markersRef.current.forEach(({ key, marker, popup, root }) => {
+      if (!newKeySet.has(key)) { popup.remove(); root.unmount(); marker.remove() }
     })
-    markersRef.current = []
+    markersRef.current = markersRef.current.filter(m => newKeySet.has(m.key))
 
-    const markerByPhoto = new Map()
-
+    // Add markers for new groups
     for (const group of groups) {
+      const key = groupKey(group)
+      if (existingByKey.has(key)) continue
+
       const lng = avg(group.map(p => p.exif.longitude))
       const lat = avg(group.map(p => p.exif.latitude))
       const lnglat = [lng, lat]
 
-      // Create React root for popup content
       const el = document.createElement('div')
       const root = createRoot(el)
-      root.render(
-        <PopupCarousel
-          initialGroup={group}
-          onClose={() => popup.remove()}
-          onDelete={async (toDelete) => {
-            markersRef.current.forEach(({ popup }) => popup.remove())
-            await deletePhotos(toDelete)
-          }}
-        />
-      )
 
       const popup = new mapboxgl.Popup({
         closeButton: false,
@@ -83,29 +76,47 @@ export function MapView() {
         offset: 12,
       }).setDOMContent(el).setLngLat(lnglat)
 
+      root.render(
+        <PopupCarousel
+          initialGroup={group}
+          onClose={() => popup.remove()}
+          onDelete={async (toDelete) => {
+            markersRef.current.forEach(({ popup: p }) => p.remove())
+            await deletePhotos(toDelete)
+          }}
+        />
+      )
+
       const marker = new mapboxgl.Marker({ color: '#000000' })
         .setLngLat(lnglat)
         .addTo(map)
-
       marker.getElement().style.cursor = 'pointer'
-      marker.getElement().addEventListener('click', (e) => {
+
+      markersRef.current.push({ key, marker, popup, root })
+    }
+
+    // Rebuild name→marker lookup and refresh click handlers
+    const markerByName = new Map()
+    for (const group of groups) {
+      const key = groupKey(group)
+      const entry = markersRef.current.find(m => m.key === key)
+      if (!entry) continue
+      for (const photo of group) markerByName.set(photo.name, entry)
+
+      const el = entry.marker.getElement()
+      if (entry._clickHandler) el.removeEventListener('click', entry._clickHandler)
+      entry._clickHandler = (e) => {
         e.stopPropagation()
         setActiveGroup(group)
         flyToPhotoFn(group[0])
-      })
-
-      markersRef.current.push({ marker, popup, root })
-
-      const groupIdx = markersRef.current.length - 1
-      for (const photo of group) {
-        markerByPhoto.set(photo, groupIdx)
       }
+      el.addEventListener('click', entry._clickHandler)
     }
 
     function flyToPhotoFn(photo) {
-      const idx = markerByPhoto.get(photo)
-      if (idx === undefined) return
-      const { marker, popup } = markersRef.current[idx]
+      const entry = markerByName.get(photo.name)
+      if (!entry) return
+      const { marker, popup } = entry
 
       markersRef.current.forEach(m => m.popup.remove())
 

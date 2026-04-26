@@ -29,24 +29,6 @@
   z-index: 1;
 }
 
-.imgBtn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0,0,0,0.5);
-  color: white;
-  opacity: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-}
-
-.imgBtn:hover {
-  background: rgba(0,0,0,0.8);
-}
 
 .stripRow {
   position: absolute;
@@ -127,20 +109,6 @@
   font-size: 14px;
   color: var(--dark-muted);
   margin-top: 4px;
-}
-
-.popupDetailRow {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-}
-
-.mono {
-  font-family: "Roboto Mono", monospace;
-}
-
-.sep {
-  color: rgba(255,255,255,0.2);
 }
 
 .editForm {

@@ -47,6 +47,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
       reorderGroup(newOrderedGroup)
       await Promise.all(newOrderedGroup.map((p, i) => setMeta(p.name, { ...p.meta, order: i })))
     }
+    setLocalOrder(null)
     setEditing(false)
   }
 
@@ -88,17 +89,13 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
       <div className={styles.imgWrapper}>
         <img className={styles.popupImg} src={photo.url} alt={photo.name} />
         <div className={styles.imgBtns}>
-          <button
-            className={styles.imgBtn}
-            onClick={() => editing ? cancelEdit() : startEdit()}
-            title={editing ? 'Cancel' : 'Edit'}
-          >
-            {editing ? <Xmark width={24} height={24} /> : <EditPencil width={24} height={24} />}
-          </button>
+          <Button variant="icon-sm" onClick={() => editing ? cancelEdit() : startEdit()} title={editing ? 'Cancel' : 'Edit'}>
+            {editing ? <Xmark width={20} height={20} /> : <EditPencil width={20} height={20} />}
+          </Button>
           {!editing && (
-            <button className={styles.imgBtn} onClick={onClose} title="Close">
-              <Xmark width={24} height={24} />
-            </button>
+            <Button variant="icon-sm" onClick={onClose} title="Close">
+              <Xmark width={20} height={20} />
+            </Button>
           )}
         </div>
         {orderedGroup.length > 1 && (

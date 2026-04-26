@@ -98,8 +98,10 @@ export function UploadDialog() {
     close()
     try {
       await handleFiles(files, { species, rod, fly, identified: true }, blobs)
-    } catch {}
-    showToast('Catch added!')
+      showToast('Catch added!')
+    } catch {
+      showToast('Failed to add catch.')
+    }
   }
 
   function onFileChange(e) {
@@ -124,7 +126,7 @@ export function UploadDialog() {
         <Dialog.Content className={styles.content} aria-describedby={undefined}>
           <div className={styles.header}>
             <Dialog.Title className={styles.title}>Add a catch</Dialog.Title>
-            <Dialog.Close className={styles.closeBtn} aria-label="Close"><Xmark width={24} height={24} /></Dialog.Close>
+            <Dialog.Close asChild><Button variant="icon-sm" aria-label="Close"><Xmark width={20} height={20} /></Button></Dialog.Close>
           </div>
 
           {step === 1 && (

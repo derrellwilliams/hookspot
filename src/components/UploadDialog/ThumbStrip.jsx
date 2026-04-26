@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { Xmark, Plus } from 'iconoir-react'
+import { Button } from '../ui/index.js'
 import styles from './UploadDialog.module.css'
 
 export function ThumbStrip({ urls, heroIndex = 0, onSelect, onRemove, onReorder }) {
@@ -46,10 +47,11 @@ export function ThumbStrip({ urls, heroIndex = 0, onSelect, onRemove, onReorder 
         >
           <img src={url} alt="" />
           {onRemove && (
-            <button
+            <Button
+              variant="icon-sm"
               className={styles.thumbRemove}
               onClick={e => { e.stopPropagation(); onRemove(i) }}
-            ><Xmark width={24} height={24} /></button>
+            ><Xmark width={20} height={20} /></Button>
           )}
         </div>
       ))}

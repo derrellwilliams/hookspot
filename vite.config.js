@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { readdirSync, createReadStream, statSync, createWriteStream, unlinkSync } from 'fs'
+import { readdirSync, createReadStream, statSync, unlinkSync, writeFileSync } from 'fs'
 import { resolve, dirname, extname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -10,6 +10,17 @@ function lookup(f) { return MIME[extname(f).toLowerCase()] }
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const imagesDir = resolve(__dirname, 'images')
 const IMAGE_RE = /\.(heic|heif|png|jpg|jpeg|gif|webp)$/i
+
+function isImageBuffer(buf) {
+  if (buf.length < 12) return false
+  if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return true // JPEG
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47) return true // PNG
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return true // GIF
+  if (buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+      buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) return true // WebP
+  if (buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70) return true // HEIC/HEIF (ftyp)
+  return false
+}
 
 export default defineConfig({
   plugins: [
@@ -89,14 +100,18 @@ export default defineConfig({
             }
             const dest = resolve(imagesDir, filename)
             if (!safe(dest)) { res.statusCode = 400; res.end('Bad path'); return }
-            const out = createWriteStream(dest)
-            req.pipe(out)
-            out.on('finish', () => {
-              const mod = server.moduleGraph.getModuleById('\0virtual:images')
-              if (mod) server.moduleGraph.invalidateModule(mod)
-              res.statusCode = 200; res.end('ok')
+            const chunks = []
+            req.on('data', c => chunks.push(c))
+            req.on('end', () => {
+              const buf = Buffer.concat(chunks)
+              if (!isImageBuffer(buf)) { res.statusCode = 400; res.end('Invalid image data'); return }
+              try {
+                writeFileSync(dest, buf)
+                const mod = server.moduleGraph.getModuleById('\0virtual:images')
+                if (mod) server.moduleGraph.invalidateModule(mod)
+                res.statusCode = 200; res.end('ok')
+              } catch { res.statusCode = 500; res.end('error') }
             })
-            out.on('error', () => { res.statusCode = 500; res.end('error') })
             return
           }
 

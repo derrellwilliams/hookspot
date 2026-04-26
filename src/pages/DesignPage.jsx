@@ -15,7 +15,7 @@ function DemoDialog({ open, onClose }) {
         <Dialog.Content className={d.content} aria-describedby={undefined}>
           <div className={d.header}>
             <Dialog.Title className={d.title}>Dialog title</Dialog.Title>
-            <Dialog.Close className={d.closeBtn} aria-label="Close"><Xmark width={24} height={24} /></Dialog.Close>
+            <Dialog.Close asChild><Button variant="icon-sm" aria-label="Close"><Xmark width={20} height={20} /></Button></Dialog.Close>
           </div>
           <div className={d.body}>
             Dialog body content goes here.
@@ -88,6 +88,10 @@ export function DesignPage() {
             <Button variant="ghost">Ghost</Button>
             <Button variant="danger">Danger</Button>
             <Button variant="primary" disabled>Disabled</Button>
+          </div>
+          <div className={styles.buttonRow} style={{ marginTop: 12 }}>
+            <Button variant="icon"><Xmark width={24} height={24} /></Button>
+            <Button variant="icon-sm"><Xmark width={20} height={20} /></Button>
           </div>
         </Section>
 
