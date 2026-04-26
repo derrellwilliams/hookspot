@@ -15,40 +15,50 @@
 
 .popupImg {
   width: 100%;
-  height: 317px;
+  height: 329px;
   object-fit: cover;
   display: block;
 }
 
-.editBtn {
+.imgBtns {
   position: absolute;
   top: 10px;
   right: 10px;
+  display: flex;
+  gap: 6px;
+  z-index: 1;
+}
+
+.imgBtn {
   width: 30px;
   height: 30px;
   border-radius: 50%;
   border: none;
   background: rgba(0,0,0,0.5);
   color: white;
+  opacity: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s;
-  z-index: 1;
 }
 
-.editBtn:hover {
+.imgBtn:hover {
   background: rgba(0,0,0,0.8);
 }
 
 .stripRow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 8px 20px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.2) transparent;
+  padding: 10px;
+  scrollbar-width: none;
+  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%);
 }
 
 .viewThumb {
@@ -58,7 +68,7 @@
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: 2px solid rgba(0,0,0,0.7);
   transition: border-color 0.1s;
 }
 
@@ -75,12 +85,12 @@
 
 .editThumb {
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 6px;
   overflow: visible;
   cursor: grab;
-  border: 2px solid transparent;
+  border: 2px solid rgba(0,0,0,0.7);
   transition: border-color 0.1s, opacity 0.1s;
 }
 
@@ -109,12 +119,12 @@
 .popupSpecies {
   font-family: "Roboto", sans-serif;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 18px;
   color: var(--dark-text);
 }
 
 .popupDetail {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--dark-muted);
   margin-top: 4px;
 }
@@ -134,7 +144,7 @@
 }
 
 .editForm {
-  padding: 14px;
+  padding: 14px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -149,63 +159,10 @@
   margin-top: 4px;
 }
 
-.editForm input {
-  padding: 6px 8px;
-  border: 1px solid var(--dark-border);
-  border-radius: var(--radius);
-  font-size: 13px;
-  font-family: inherit;
-  width: 100%;
-  background: var(--dark-surface);
-  color: var(--dark-text);
-}
-
-.editForm input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
 .editActions {
   display: flex;
+  justify-content: flex-end;
   gap: 8px;
   margin-top: 4px;
 }
 
-.saveBtn {
-  flex: 1;
-  padding: 7px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.cancelEditBtn {
-  padding: 7px 14px;
-  background: var(--dark-surface);
-  border: 1px solid var(--dark-border);
-  border-radius: var(--radius);
-  font-size: 13px;
-  cursor: pointer;
-  color: var(--dark-muted);
-}
-
-.deleteBtn {
-  width: 100%;
-  margin-top: 8px;
-  padding: 7px;
-  background: none;
-  border: 1px solid #7f1d1d;
-  border-radius: var(--radius);
-  font-size: 13px;
-  cursor: pointer;
-  color: #f87171;
-  transition: background 0.15s;
-}
-
-.deleteBtn:hover {
-  background: #2d1010;
-}

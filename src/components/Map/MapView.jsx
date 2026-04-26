@@ -68,6 +68,7 @@ export function MapView() {
       root.render(
         <PopupCarousel
           initialGroup={group}
+          onClose={() => popup.remove()}
           onDelete={async (toDelete) => {
             markersRef.current.forEach(({ popup }) => popup.remove())
             await deletePhotos(toDelete)
@@ -76,9 +77,9 @@ export function MapView() {
       )
 
       const popup = new mapboxgl.Popup({
-        closeButton: true,
+        closeButton: false,
         closeOnClick: false,
-        maxWidth: '461px',
+        maxWidth: '484px',
         offset: 12,
       }).setDOMContent(el).setLngLat(lnglat)
 

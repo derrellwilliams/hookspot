@@ -1,4 +1,5 @@
 import * as ScrollArea from '@radix-ui/react-scroll-area'
+import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { SidebarItem } from './SidebarItem.jsx'
 import styles from './Sidebar.module.css'
@@ -16,10 +17,6 @@ export function Sidebar() {
       <ScrollArea.Root className={styles.scrollRoot}>
         <ScrollArea.Viewport className={styles.scrollViewport}>
           <div className={styles.list}>
-            <div className={styles.addCard} onClick={() => setUploadOpen(true)}>
-              <span className={styles.addIcon}>+</span>
-              <span className={styles.addLabel}>Add a catch</span>
-            </div>
             {!hasPhotos && (
               <div className={styles.empty}>
                 <p>Drop photos here or click <strong>+</strong> to get started.</p>
@@ -29,6 +26,10 @@ export function Sidebar() {
             {sorted.map(group => (
               <SidebarItem key={group[0].name} group={group} />
             ))}
+            <div className={styles.addCard} onClick={() => setUploadOpen(true)}>
+              <Plus width={24} height={24} className={styles.addIcon} />
+              <span className={styles.addLabel}>Add a catch</span>
+            </div>
           </div>
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar className={styles.scrollbar} orientation="vertical">

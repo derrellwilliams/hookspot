@@ -1,17 +1,12 @@
 import { useState, useRef } from 'react'
+import { EditPencil, Xmark } from 'iconoir-react'
+import { Button, Input } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { setMeta } from '../../cache.js'
 import { formatDay, formatTime } from '../../lib/formatters.js'
 import styles from './Map.module.css'
 
-const PencilIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-  </svg>
-)
-
-export function PopupCarousel({ initialGroup, onDelete }) {
+export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const leadName = initialGroup[0].name
   const groups = usePhotoStore(s => s.groups)
   const updatePhoto = usePhotoStore(s => s.updatePhoto)
@@ -92,68 +87,68 @@ export function PopupCarousel({ initialGroup, onDelete }) {
     <div className={styles.popup}>
       <div className={styles.imgWrapper}>
         <img className={styles.popupImg} src={photo.url} alt={photo.name} />
-        <button
-          className={styles.editBtn}
-          onClick={() => editing ? cancelEdit() : startEdit()}
-          title={editing ? 'Cancel' : 'Edit'}
-        >
-          {editing ? '✕' : <PencilIcon />}
-        </button>
-      </div>
-
-      {orderedGroup.length > 1 && (
-        <div className={styles.stripRow}>
-          {orderedGroup.map((p, i) => (
-            <div
-              key={p.name}
-              className={`${editing ? styles.editThumb : styles.viewThumb} ${i === current ? styles.thumbActive : ''} ${editing ? '' : ''}`}
-              draggable={editing}
-              onDragStart={editing ? e => onThumbDragStart(e, i) : undefined}
-              onDragOver={editing ? e => { e.preventDefault(); e.currentTarget.classList.add(styles.dragOver) } : undefined}
-              onDragLeave={editing ? e => e.currentTarget.classList.remove(styles.dragOver) : undefined}
-              onDragEnd={editing ? () => { document.querySelectorAll(`.${styles.editThumb}`).forEach(t => t.classList.remove(styles.dragging, styles.dragOver)); dragSrcRef.current = null } : undefined}
-              onDrop={editing ? e => onThumbDrop(e, i) : undefined}
-              onClick={() => {
-                setCurrent(i)
-                if (editing) {
-                  // Only update hero img, keep form
-                }
-              }}
-            >
-              <img src={p.url} alt="" />
-            </div>
-          ))}
+        <div className={styles.imgBtns}>
+          <button
+            className={styles.imgBtn}
+            onClick={() => editing ? cancelEdit() : startEdit()}
+            title={editing ? 'Cancel' : 'Edit'}
+          >
+            {editing ? <Xmark width={24} height={24} /> : <EditPencil width={24} height={24} />}
+          </button>
+          {!editing && (
+            <button className={styles.imgBtn} onClick={onClose} title="Close">
+              <Xmark width={24} height={24} />
+            </button>
+          )}
         </div>
-      )}
+        {orderedGroup.length > 1 && (
+          <div className={styles.stripRow}>
+            {orderedGroup.map((p, i) => (
+              <div
+                key={p.name}
+                className={`${editing ? styles.editThumb : styles.viewThumb} ${i === current ? styles.thumbActive : ''}`}
+                draggable={editing}
+                onDragStart={editing ? e => onThumbDragStart(e, i) : undefined}
+                onDragOver={editing ? e => { e.preventDefault(); e.currentTarget.classList.add(styles.dragOver) } : undefined}
+                onDragLeave={editing ? e => e.currentTarget.classList.remove(styles.dragOver) : undefined}
+                onDragEnd={editing ? () => { document.querySelectorAll(`.${styles.editThumb}`).forEach(t => t.classList.remove(styles.dragging, styles.dragOver)); dragSrcRef.current = null } : undefined}
+                onDrop={editing ? e => onThumbDrop(e, i) : undefined}
+                onClick={() => setCurrent(i)}
+              >
+                <img src={p.url} alt="" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {editing ? (
         <div className={styles.editForm}>
           <label>Species</label>
-          <input type="text" value={species} onChange={e => setSpecies(e.target.value)} placeholder="e.g. Brown Trout" />
+          <Input value={species} onChange={e => setSpecies(e.target.value)} placeholder="e.g. Brown Trout" />
           <label>Rod</label>
-          <input type="text" value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" />
+          <Input value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" />
           <label>Fly</label>
-          <input type="text" value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" />
+          <Input value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" />
           <div className={styles.editActions}>
-            <button className={styles.saveBtn} onClick={saveEdit}>Save</button>
-            <button className={styles.cancelEditBtn} onClick={cancelEdit}>Cancel</button>
+            <Button variant="danger" onClick={handleDelete}>Delete entry</Button>
+            <Button variant="secondary" onClick={cancelEdit}>Cancel</Button>
+            <Button variant="primary" onClick={saveEdit}>Save</Button>
           </div>
-          <button className={styles.deleteBtn} onClick={handleDelete}>Delete entry</button>
         </div>
       ) : (
         <div className={styles.popupBody}>
           <div className={styles.popupSpecies}>
             {photo.species && photo.species !== 'none' ? photo.species : '—'}
           </div>
-          <div className={`${styles.popupDetail} ${styles.popupDetailRow} ${styles.mono}`}>
-            {d ? (
-              <span>{`${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(-2)}`} {d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
-            ) : (
-              <span>Unknown date</span>
-            )}
-            {lead.meta?.rod && <><span className={styles.sep}>|</span><span>{lead.meta.rod}</span></>}
+          <div className={styles.popupDetail}>
+            {d ? `${formatDay(photo.time)} ${formatTime(photo.time)}` : 'Unknown date'}
           </div>
-          {lead.meta?.fly && <div className={`${styles.popupDetail} ${styles.mono}`}>{lead.meta.fly}</div>}
+          {(lead.meta?.rod || lead.meta?.fly) && (
+            <div className={styles.popupDetail}>
+              {[lead.meta?.rod, lead.meta?.fly].filter(Boolean).join(' with ')}
+            </div>
+          )}
         </div>
       )}
     </div>

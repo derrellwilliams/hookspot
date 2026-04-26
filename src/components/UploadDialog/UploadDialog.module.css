@@ -25,12 +25,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 12px 6px 16px;
+  padding: 20px 20px 10px;
 }
 
 .title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 500;
   color: rgba(255,255,255,0.7);
   font-family: 'Roboto', sans-serif;
 }
@@ -39,17 +39,22 @@
   background: none;
   border: none;
   color: rgba(255,255,255,0.4);
-  font-size: 16px;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 4px;
   border-radius: 6px;
-  line-height: 1;
+  line-height: 0;
   transition: color 0.15s, background 0.15s;
 }
 
 .closeBtn:hover {
   color: white;
   background: rgba(255,255,255,0.1);
+}
+
+.body {
+  padding: 16px 20px 4px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
 }
 
 .dropZone {
@@ -59,7 +64,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin: 12px 24px 24px;
+  margin: 16px 20px 20px;
   padding: 48px 24px;
   border: 2px dashed rgba(255,255,255,0.15);
   border-radius: 12px;
@@ -196,7 +201,7 @@
 }
 
 .form {
-  padding: 14px;
+  padding: 14px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -212,21 +217,6 @@
   margin-top: 4px;
 }
 
-.form input {
-  padding: 6px 8px;
-  border: 1px solid var(--dark-border);
-  border-radius: var(--radius);
-  font-size: 13px;
-  font-family: inherit;
-  width: 100%;
-  background: var(--dark-surface);
-  color: var(--dark-text);
-}
-
-.form input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
 
 .spinner {
   width: 28px;
@@ -264,28 +254,8 @@
 
 .actions {
   display: flex;
+  justify-content: flex-end;
   gap: 8px;
   margin-top: 4px;
 }
 
-.submitBtn {
-  flex: 1;
-  padding: 7px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.cancelBtn {
-  padding: 7px 14px;
-  background: var(--dark-surface);
-  border: 1px solid var(--dark-border);
-  border-radius: var(--radius);
-  font-size: 13px;
-  cursor: pointer;
-  color: var(--dark-muted);
-}

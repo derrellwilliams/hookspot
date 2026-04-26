@@ -19,6 +19,7 @@
     "exifr": "^7.1.3",
     "heic-convert": "^2.1.0",
     "heic2any": "^0.0.4",
+    "iconoir-react": "^7.11.0",
     "mapbox-gl": "^3.22.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

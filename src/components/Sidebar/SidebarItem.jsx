@@ -42,7 +42,6 @@ export function SidebarItem({ group }) {
           ? <div className={styles.date}><span className={styles.mono}>{formatDay(lead.time)} {formatTime(lead.time)}</span></div>
           : <div className={styles.date}>No date</div>
         }
-        {lead.meta?.fly && <div className={styles.gear}>{lead.meta.fly}</div>}
       </div>
     </div>
   )

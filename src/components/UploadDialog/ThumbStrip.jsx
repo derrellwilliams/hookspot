@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { Xmark, Plus } from 'iconoir-react'
 import styles from './UploadDialog.module.css'
 
 export function ThumbStrip({ urls, heroIndex = 0, onSelect, onRemove, onReorder }) {
@@ -48,13 +49,13 @@ export function ThumbStrip({ urls, heroIndex = 0, onSelect, onRemove, onReorder 
             <button
               className={styles.thumbRemove}
               onClick={e => { e.stopPropagation(); onRemove(i) }}
-            >×</button>
+            ><Xmark width={24} height={24} /></button>
           )}
         </div>
       ))}
       {onRemove && (
         <div className={`${styles.thumb} ${styles.thumbAdd}`} onClick={() => document.getElementById('__file-input').click()}>
-          +
+          <Plus width={24} height={24} />
         </div>
       )}
     </div>

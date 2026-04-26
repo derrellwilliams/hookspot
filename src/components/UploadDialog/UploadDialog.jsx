@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
+import { Xmark, MediaImage } from 'iconoir-react'
+import { Button, Input } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { handleFiles } from '../../lib/fileLoader.js'
 import { toDisplayBlob } from '../../exif.js'
@@ -122,7 +124,7 @@ export function UploadDialog() {
         <Dialog.Content className={styles.content} aria-describedby={undefined}>
           <div className={styles.header}>
             <Dialog.Title className={styles.title}>Add a catch</Dialog.Title>
-            <Dialog.Close className={styles.closeBtn} aria-label="Close">&#10005;</Dialog.Close>
+            <Dialog.Close className={styles.closeBtn} aria-label="Close"><Xmark width={24} height={24} /></Dialog.Close>
           </div>
 
           {step === 1 && (
@@ -137,9 +139,7 @@ export function UploadDialog() {
                 <div className={styles.spinner} />
               ) : (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.4}}>
-                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
-                  </svg>
+                  <MediaImage width={24} height={24} style={{opacity:0.4}} />
                   <div className={styles.dropLabel}>Drop photos here</div>
                   <div className={styles.dropOr}>or</div>
                   <button className={styles.browseBtn} onClick={() => fileInputRef.current?.click()}>Browse</button>
@@ -162,8 +162,7 @@ export function UploadDialog() {
               />
               <div className={styles.form}>
                 <label>Species</label>
-                <input
-                  type="text"
+                <Input
                   value={species}
                   onChange={e => setSpecies(e.target.value)}
                   placeholder={identifying ? 'Identifying…' : 'e.g. Brown Trout'}
@@ -172,12 +171,12 @@ export function UploadDialog() {
                 />
                 {identifying && <div className={styles.identifying}>Identifying species…</div>}
                 <label>Rod</label>
-                <input type="text" value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" />
+                <Input value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" />
                 <label>Fly</label>
-                <input type="text" value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" />
+                <Input value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" />
                 <div className={styles.actions}>
-                  <button className={styles.submitBtn} onClick={submit}>Add Catch</button>
-                  <button className={styles.cancelBtn} onClick={close}>Cancel</button>
+                  <Button variant="secondary" onClick={close}>Cancel</Button>
+                  <Button variant="primary" onClick={submit}>Add Catch</Button>
                 </div>
               </div>
             </>

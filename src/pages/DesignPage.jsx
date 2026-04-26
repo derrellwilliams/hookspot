@@ -1,7 +1,36 @@
+import { useState } from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
+import { Xmark } from 'iconoir-react'
 import { tokens } from '../tokens.js'
 import { Button, Input, Card } from '../components/ui/index.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import styles from './DesignPage.module.css'
+import d from '../components/UploadDialog/UploadDialog.module.css'
+
+function DemoDialog({ open, onClose }) {
+  return (
+    <Dialog.Root open={open} onOpenChange={open => { if (!open) onClose() }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className={d.backdrop} />
+        <Dialog.Content className={d.content} aria-describedby={undefined}>
+          <div className={d.header}>
+            <Dialog.Title className={d.title}>Dialog title</Dialog.Title>
+            <Dialog.Close className={d.closeBtn} aria-label="Close"><Xmark width={24} height={24} /></Dialog.Close>
+          </div>
+          <div className={d.body}>
+            Dialog body content goes here.
+          </div>
+          <div className={d.form}>
+            <div className={d.actions}>
+              <Button variant="secondary" onClick={onClose}>Cancel</Button>
+              <Button variant="primary">Confirm</Button>
+            </div>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
 
 function Section({ label, children }) {
   return (
@@ -13,6 +42,7 @@ function Section({ label, children }) {
 }
 
 export function DesignPage() {
+  const [dialogOpen, setDialogOpen] = useState(false)
   const colorTokens = Object.entries(tokens).filter(([, v]) => String(v).startsWith('#'))
 
   return (
@@ -75,6 +105,11 @@ export function DesignPage() {
               <p>This is example content inside a Card component.</p>
             </div>
           </Card>
+        </Section>
+
+        <Section label="Dialog">
+          <Button variant="primary" onClick={() => setDialogOpen(true)}>Open dialog</Button>
+          <DemoDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
         </Section>
 
         <Section label="Toast">
