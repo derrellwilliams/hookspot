@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 import { readdirSync, createReadStream, statSync, createWriteStream, unlinkSync } from 'fs'
 import { resolve, dirname, extname } from 'path'
 import { fileURLToPath } from 'url'
@@ -12,6 +13,7 @@ const IMAGE_RE = /\.(heic|heif|png|jpg|jpeg|gif|webp)$/i
 
 export default defineConfig({
   plugins: [
+    react(),
     {
       name: 'image-manifest',
 
@@ -90,10 +92,8 @@ export default defineConfig({
             const out = createWriteStream(dest)
             req.pipe(out)
             out.on('finish', () => {
-              // Invalidate virtual module so HMR picks up the new file
               const mod = server.moduleGraph.getModuleById('\0virtual:images')
               if (mod) server.moduleGraph.invalidateModule(mod)
-              server.hot.send({ type: 'full-reload' })
               res.statusCode = 200; res.end('ok')
             })
             out.on('error', () => { res.statusCode = 500; res.end('error') })

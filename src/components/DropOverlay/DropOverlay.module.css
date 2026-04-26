@@ -1,0 +1,28 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(37, 99, 235, 0.15);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.message {
+  background: white;
+  border: 2px dashed var(--accent);
+  border-radius: 16px;
+  padding: 48px 64px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent);
+}

@@ -1,0 +1,115 @@
+.navBar {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.navPill {
+  position: relative;
+  background: #000;
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navPill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.navBtn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-family: "Space Mono", monospace;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.15s;
+}
+
+.navBtn:hover {
+  opacity: 0.8;
+}
+
+.chevron {
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.2s;
+}
+
+[data-state="open"] .chevron {
+  transform: rotate(180deg);
+}
+
+.dropMenu {
+  background: #000;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  overflow: hidden;
+  min-width: 120px;
+  z-index: 1001;
+}
+
+.dropItem {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.1s;
+  outline: none;
+}
+
+.dropItem:hover,
+.dropItem[data-highlighted] {
+  background: rgba(255,255,255,0.1);
+}
+
+.dropItem.active {
+  font-weight: 600;
+}
+
+.fabAdd {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 22px;
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 24px rgba(37,99,235,0.4), 0 1px 4px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.fabAdd:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(37,99,235,0.55), 0 2px 8px rgba(0,0,0,0.2);
+}

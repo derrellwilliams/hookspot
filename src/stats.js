@@ -57,14 +57,14 @@ function monthWindow(n = 12) {
   return { labels, now }
 }
 
-export function renderStats(groups) {
+export function renderStats(groups, refs = {}) {
   destroyAll()
 
   const photos = groups.flat()
   // One lead per group — same logic as the sidebar
   const leads = groups.map(g => g.find(p => p.species) ?? g[0])
 
-  const totalEl = document.getElementById('stats-total')
+  const totalEl = refs.total ?? document.getElementById('stats-total')
   if (totalEl) totalEl.textContent = `${groups.length} catch${groups.length !== 1 ? 'es' : ''}`
 
   if (!groups.length) return
@@ -80,7 +80,7 @@ export function renderStats(groups) {
     if (diff >= 0 && diff < 12) mCounts[11 - diff]++
   })
 
-  make(document.getElementById('chart-monthly'), {
+  make(refs.monthly ?? document.getElementById('chart-monthly'), {
     ...BASE,
     chart: { ...BASE_CHART, type: 'bar', height: 200 },
     series: [{ name: 'Catches', data: mCounts }],
@@ -96,7 +96,7 @@ export function renderStats(groups) {
     i === 0 ? '12a' : i < 12 ? `${i}a` : i === 12 ? '12p' : `${i - 12}p`
   )
 
-  make(document.getElementById('chart-hourly'), {
+  make(refs.hourly ?? document.getElementById('chart-hourly'), {
     ...BASE,
     chart: { ...BASE_CHART, type: 'bar', height: 180 },
     series: [{ name: 'Catches', data: hCounts }],
@@ -114,7 +114,7 @@ export function renderStats(groups) {
   })
   const spEntries = Object.entries(spCounts).sort((a, b) => b[1] - a[1])
 
-  make(document.getElementById('chart-species'), {
+  make(refs.species ?? document.getElementById('chart-species'), {
     ...BASE,
     chart: { ...BASE_CHART, type: 'donut', height: 260 },
     series: spEntries.map(([, v]) => v),
@@ -158,7 +158,7 @@ export function renderStats(groups) {
     }),
   }))
 
-  make(document.getElementById('chart-species-monthly'), {
+  make(refs.speciesMonthly ?? document.getElementById('chart-species-monthly'), {
     ...BASE,
     chart: { ...BASE_CHART, type: 'bar', stacked: true, height: 260 },
     series: spMonthly,

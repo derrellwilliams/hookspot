@@ -19,7 +19,9 @@ export async function toDisplayBlob(file) {
     try {
       const result = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 })
       return Array.isArray(result) ? result[0] : result
-    } catch { /* fall through */ }
+    } catch (e) {
+      console.warn('[exif] HEIC conversion failed for', file.name, e)
+    }
   }
 
   return file

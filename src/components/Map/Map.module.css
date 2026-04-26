@@ -1,0 +1,211 @@
+.map {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Popup wrapper */
+.popup {
+  color: var(--dark-text);
+}
+
+.imgWrapper {
+  position: relative;
+}
+
+.popupImg {
+  width: 100%;
+  height: 317px;
+  object-fit: cover;
+  display: block;
+}
+
+.editBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  z-index: 1;
+}
+
+.editBtn:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+.stripRow {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+.viewThumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.1s;
+}
+
+.viewThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbActive {
+  border-color: var(--accent);
+}
+
+.editThumb {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  overflow: visible;
+  cursor: grab;
+  border: 2px solid transparent;
+  transition: border-color 0.1s, opacity 0.1s;
+}
+
+.editThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+
+.dragging {
+  opacity: 0.25;
+  border-style: dashed;
+}
+
+.dragOver {
+  border-color: white;
+  transform: scale(1.08);
+}
+
+.popupBody {
+  padding: 20px;
+}
+
+.popupSpecies {
+  font-family: "Roboto", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--dark-text);
+}
+
+.popupDetail {
+  font-size: 12px;
+  color: var(--dark-muted);
+  margin-top: 4px;
+}
+
+.popupDetailRow {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.mono {
+  font-family: "Roboto Mono", monospace;
+}
+
+.sep {
+  color: rgba(255,255,255,0.2);
+}
+
+.editForm {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editForm label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dark-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.editForm input {
+  padding: 6px 8px;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+  background: var(--dark-surface);
+  color: var(--dark-text);
+}
+
+.editForm input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.editActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.saveBtn {
+  flex: 1;
+  padding: 7px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelEditBtn {
+  padding: 7px 14px;
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--dark-muted);
+}
+
+.deleteBtn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px;
+  background: none;
+  border: 1px solid #7f1d1d;
+  border-radius: var(--radius);
+  font-size: 13px;
+  cursor: pointer;
+  color: #f87171;
+  transition: background 0.15s;
+}
+
+.deleteBtn:hover {
+  background: #2d1010;
+}

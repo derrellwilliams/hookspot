@@ -1,0 +1,59 @@
+.page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  background: #111113;
+}
+
+.scroll {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 80px 24px 40px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-family: 'Roboto', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--dark-text);
+}
+
+.total {
+  font-size: 13px;
+  color: var(--dark-muted);
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  border-radius: 16px;
+  padding: 20px 20px 8px;
+}
+
+.cardLabel {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dark-muted);
+  margin-bottom: 8px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}

@@ -3,20 +3,23 @@ const DB_VERSION = 2
 const PHOTOS_STORE = 'photos'
 const META_STORE = 'metadata'
 
-let _db = null
+// Memoize the Promise (not the result) so concurrent callers share one open request
+let _dbPromise = null
 
-async function openDB() {
-  if (_db) return _db
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION)
-    req.onupgradeneeded = (e) => {
-      const db = e.target.result
-      if (!db.objectStoreNames.contains(PHOTOS_STORE)) db.createObjectStore(PHOTOS_STORE)
-      if (!db.objectStoreNames.contains(META_STORE)) db.createObjectStore(META_STORE)
-    }
-    req.onsuccess = () => { _db = req.result; resolve(_db) }
-    req.onerror = () => reject(req.error)
-  })
+function openDB() {
+  if (!_dbPromise) {
+    _dbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION)
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result
+        if (!db.objectStoreNames.contains(PHOTOS_STORE)) db.createObjectStore(PHOTOS_STORE)
+        if (!db.objectStoreNames.contains(META_STORE)) db.createObjectStore(META_STORE)
+      }
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+  }
+  return _dbPromise
 }
 
 async function get(store, key) {
@@ -33,15 +36,15 @@ async function get(store, key) {
 async function set(store, key, value) {
   try {
     const db = await openDB()
-    await new Promise((resolve) => {
+    await new Promise((resolve, reject) => {
       const tx = db.transaction(store, 'readwrite')
       value === undefined
         ? tx.objectStore(store).delete(key)
         : tx.objectStore(store).put(value, key)
-      tx.oncomplete = resolve
-      tx.onerror = resolve
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
     })
-  } catch { /* non-fatal */ }
+  } catch (e) { console.warn('[cache] write failed:', e) }
 }
 
 export const getCached = (key) => get(PHOTOS_STORE, key)
