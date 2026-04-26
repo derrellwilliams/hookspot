@@ -40,6 +40,13 @@ export const usePhotoStore = create((set, get) => ({
     setTimeout(() => set(s => s.toast === msg ? { toast: null } : {}), 3200)
   },
 
+  reorderGroup(newOrderedPhotos) {
+    const updated = newOrderedPhotos.map((p, i) => ({ ...p, meta: { ...p.meta, order: i } }))
+    const nameMap = new Map(updated.map(p => [p.name, p]))
+    const photos = get().photos.map(p => nameMap.has(p.name) ? nameMap.get(p.name) : p)
+    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)) })
+  },
+
   setUploadOpen(open) {
     set({ uploadOpen: open })
   },

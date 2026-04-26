@@ -228,6 +228,15 @@
   border-color: var(--accent);
 }
 
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid rgba(255,255,255,0.15);
+  border-top-color: rgba(255,255,255,0.7);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
 .identifying {
   display: flex;
   align-items: center;

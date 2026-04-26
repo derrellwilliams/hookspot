@@ -34,9 +34,7 @@ export function SidebarItem({ group }) {
     >
       <div className={styles.thumbWrap}>
         <img className={styles.thumb} src={lead.url} alt={lead.name} loading="lazy" />
-        {group.length > 1 && (
-          <span className={styles.thumbCount}>{group.length}</span>
-        )}
+
       </div>
       <div className={styles.meta}>
         {species && <div className={styles.species}>{species}</div>}

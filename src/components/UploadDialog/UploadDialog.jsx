@@ -20,6 +20,7 @@ export function UploadDialog() {
   const [rod, setRod] = useState('')
   const [fly, setFly] = useState('')
   const [identifying, setIdentifying] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [dropOver, setDropOver] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -38,7 +39,9 @@ export function UploadDialog() {
     const existing = new Set()
     const unique = files.filter(f => existing.has(f.name) ? false : (existing.add(f.name), true))
     setDropOver(false)
+    setLoading(true)
     const blobs = await Promise.all(unique.map(f => toDisplayBlob(f)))
+    setLoading(false)
     const urls = blobs.map(b => URL.createObjectURL(b))
     setPendingFiles(unique)
     setPendingBlobs(blobs)
@@ -130,12 +133,18 @@ export function UploadDialog() {
               onDragLeave={() => setDropOver(false)}
               onDrop={onZoneDrop}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.4}}>
-                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
-              </svg>
-              <div className={styles.dropLabel}>Drop photos here</div>
-              <div className={styles.dropOr}>or</div>
-              <button className={styles.browseBtn} onClick={() => fileInputRef.current?.click()}>Browse</button>
+              {loading ? (
+                <div className={styles.spinner} />
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.4}}>
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+                  </svg>
+                  <div className={styles.dropLabel}>Drop photos here</div>
+                  <div className={styles.dropOr}>or</div>
+                  <button className={styles.browseBtn} onClick={() => fileInputRef.current?.click()}>Browse</button>
+                </>
+              )}
             </div>
           )}
 

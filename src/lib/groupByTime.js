@@ -13,5 +13,11 @@ export function groupByTime(gpsPhotos) {
     }
   }
 
+  groups.forEach(g => {
+    if (g.some(p => p.meta?.order !== undefined)) {
+      g.sort((a, b) => (a.meta?.order ?? 999) - (b.meta?.order ?? 999))
+    }
+  })
+
   return groups
 }

@@ -15,6 +15,7 @@ export function PopupCarousel({ initialGroup, onDelete }) {
   const leadName = initialGroup[0].name
   const groups = usePhotoStore(s => s.groups)
   const updatePhoto = usePhotoStore(s => s.updatePhoto)
+  const reorderGroup = usePhotoStore(s => s.reorderGroup)
 
   const group = groups.find(g => g.some(p => p.name === leadName)) ?? initialGroup
 
@@ -46,6 +47,11 @@ export function PopupCarousel({ initialGroup, onDelete }) {
     const updatedPhoto = { ...lead, species: species || undefined, meta: updatedMeta }
     await setMeta(lead.name, updatedMeta)
     updatePhoto(updatedPhoto)
+    if (localOrder) {
+      const newOrderedGroup = localOrder.map(i => group[i])
+      reorderGroup(newOrderedGroup)
+      await Promise.all(newOrderedGroup.map((p, i) => setMeta(p.name, { ...p.meta, order: i })))
+    }
     setEditing(false)
   }
 
