@@ -1,8 +1,8 @@
 # Hook Spot
 
-A personal fishing log — drop GPS-tagged photos onto a map, track species, gear, and catch stats over time.
+A work in progress personal fishing log — drop GPS-tagged photos onto a map, track species, gear, and catch stats over time.
 
-<img width="3064" height="1482" alt="fish" src="https://github.com/user-attachments/assets/8397efde-7323-4147-b05f-7494b42a529b" />
+<img width="2581" height="1581" alt="fish" src="https://github.com/user-attachments/assets/919b92ab-5f24-4b97-a826-259cf3be7983" />
 
 ## What it does
 
