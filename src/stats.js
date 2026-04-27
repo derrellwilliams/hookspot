@@ -63,6 +63,8 @@ export function renderStats(groups, refs = {}) {
   const photos = groups.flat()
   // One lead per group — same logic as the sidebar
   const leads = groups.map(g => g.find(p => p.species) ?? g[0])
+  // Use first photo in each group for weather (it's where weather is stored)
+  const leadsForWeather = groups.map(g => g[0])
 
   const totalEl = refs.total ?? document.getElementById('stats-total')
   if (totalEl) totalEl.textContent = `${groups.length} catch${groups.length !== 1 ? 'es' : ''}`
@@ -170,5 +172,45 @@ export function renderStats(groups, refs = {}) {
       fontSize: '12px',
       fontFamily: 'Roboto, sans-serif',
     },
+  })
+
+  // ── Weather charts (only when data available) ──────────────────────────────
+  const withWeather = leadsForWeather.filter(p => p.meta?.weather)
+  if (!withWeather.length) return
+
+  // Catches by condition
+  const condCounts = {}
+  withWeather.forEach(p => {
+    const c = p.meta.weather.condition ?? 'Unknown'
+    condCounts[c] = (condCounts[c] ?? 0) + 1
+  })
+  const condEntries = Object.entries(condCounts).sort((a, b) => b[1] - a[1])
+
+  make(refs.weatherCond ?? document.getElementById('chart-weather-cond'), {
+    ...BASE,
+    chart: { ...BASE_CHART, type: 'bar', height: 220 },
+    series: [{ name: 'Catches', data: condEntries.map(([, v]) => v) }],
+    xaxis: { ...BASE.xaxis, categories: condEntries.map(([k]) => k) },
+    colors: [BLUES[0]],
+    plotOptions: { bar: { borderRadius: 4, columnWidth: '52%' } },
+  })
+
+  // Catches by temperature (10°F buckets)
+  const tempCounts = {}
+  withWeather.forEach(p => {
+    const low = Math.floor(p.meta.weather.temp / 10) * 10
+    const label = `${low}–${low + 9}°`
+    tempCounts[label] = (tempCounts[label] ?? 0) + 1
+  })
+  const tempEntries = Object.entries(tempCounts)
+    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+
+  make(refs.weatherTemp ?? document.getElementById('chart-weather-temp'), {
+    ...BASE,
+    chart: { ...BASE_CHART, type: 'bar', height: 220 },
+    series: [{ name: 'Catches', data: tempEntries.map(([, v]) => v) }],
+    xaxis: { ...BASE.xaxis, categories: tempEntries.map(([k]) => k) },
+    colors: [BLUES[2]],
+    plotOptions: { bar: { borderRadius: 4, columnWidth: '52%' } },
   })
 }

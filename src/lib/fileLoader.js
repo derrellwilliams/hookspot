@@ -1,12 +1,25 @@
 import { extractExif, toDisplayBlob } from '../exif.js'
 import { getCached, setCached, getMeta, setMeta } from '../cache.js'
 import { identifySpecies } from '../identify.js'
+import { fetchWeather } from './weather.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { parseExifDate } from './formatters.js'
 import imageList from 'virtual:images'
 
 let metaSeed = {}
 let speciesData = {}
+
+function maybeFetchWeather(photo) {
+  if (!photo.hasGps || !photo.time || photo.meta?.weather) return
+  fetchWeather(photo.exif.latitude, photo.exif.longitude, photo.time)
+    .then(weather => {
+      if (!weather) return
+      const meta = { ...photo.meta, weather }
+      setMeta(photo.name, meta)
+      usePhotoStore.getState().updatePhoto({ ...photo, meta })
+    })
+    .catch(() => {})
+}
 
 function applySpecies(photo) {
   const s = photo.meta?.species || speciesData[photo.name]
@@ -55,6 +68,7 @@ export async function loadPhoto(filename, file, uploadMeta = {}, displayBlob) {
     const photo = { ...cached, url: URL.createObjectURL(cached.blob), meta: { ...metaSeed[filename], ...meta } }
     applySpecies(photo)
     addPhoto(photo)
+    maybeFetchWeather(photo)
     return
   }
 
@@ -83,6 +97,7 @@ export async function loadPhoto(filename, file, uploadMeta = {}, displayBlob) {
   else applySpecies(photo)
   if (Object.keys(mergedMeta).some(k => mergedMeta[k])) await setMeta(filename, mergedMeta)
   addPhoto(photo)
+  maybeFetchWeather(photo)
 
   if (!photo.species && !uploadMeta.identified) {
     const species = await identifySpecies(blob)

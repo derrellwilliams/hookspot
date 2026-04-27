@@ -11,6 +11,8 @@ export function StatsPage() {
   const hourlyRef = useRef(null)
   const speciesRef = useRef(null)
   const speciesMonthlyRef = useRef(null)
+  const weatherCondRef = useRef(null)
+  const weatherTempRef = useRef(null)
 
   useEffect(() => {
     renderStats(groups, {
@@ -19,6 +21,8 @@ export function StatsPage() {
       hourly: hourlyRef.current,
       species: speciesRef.current,
       speciesMonthly: speciesMonthlyRef.current,
+      weatherCond: weatherCondRef.current,
+      weatherTemp: weatherTempRef.current,
     })
   }, [groups])
 
@@ -46,6 +50,16 @@ export function StatsPage() {
             <div className={styles.card}>
               <div className={styles.cardLabel}>Species by Month</div>
               <div ref={speciesMonthlyRef} />
+            </div>
+          </div>
+          <div className={styles.row2}>
+            <div className={styles.card}>
+              <div className={styles.cardLabel}>Catches by Condition</div>
+              <div ref={weatherCondRef} />
+            </div>
+            <div className={styles.card}>
+              <div className={styles.cardLabel}>Catches by Temperature</div>
+              <div ref={weatherTempRef} />
             </div>
           </div>
         </div>

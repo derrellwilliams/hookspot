@@ -159,9 +159,10 @@ export function MapView() {
 
     const lngs = subset.map(p => p.lng)
     const lats = subset.map(p => p.lat)
+    const MILE = 0.008 // ~0.5 mile in degrees
     const bounds = new mapboxgl.LngLatBounds(
-      [Math.min(...lngs), Math.min(...lats)],
-      [Math.max(...lngs), Math.max(...lats)]
+      [Math.min(...lngs) - MILE, Math.min(...lats) - MILE],
+      [Math.max(...lngs) + MILE, Math.max(...lats) + MILE]
     )
     map.fitBounds(bounds, {
       padding: { top: 80, bottom: 60, left: 320, right: 60 },

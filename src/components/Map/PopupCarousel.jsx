@@ -143,6 +143,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
           </div>
           <div className={styles.popupDetail}>
             {d ? `${formatDay(photo.time)} ${formatTime(photo.time)}` : 'Unknown date'}
+            {photo.meta?.weather && ` · ${photo.meta.weather.temp}°F · ${photo.meta.weather.condition}`}
           </div>
           {(lead.meta?.rod || lead.meta?.fly) && (
             <div className={styles.popupDetail}>
