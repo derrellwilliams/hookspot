@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
 import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
@@ -6,11 +7,13 @@ import styles from './Sidebar.module.css'
 
 export function Sidebar() {
   const groups = usePhotoStore(s => s.groups)
-  const photos = usePhotoStore(s => s.photos)
+  const hasPhotos = usePhotoStore(s => s.photos.length > 0)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
 
-  const sorted = [...groups].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0))
-  const hasPhotos = photos.length > 0
+  const sorted = useMemo(
+    () => [...groups].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
+    [groups]
+  )
 
   return (
     <aside id="sidebar" className={styles.sidebar}>

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { EditPencil, Xmark } from 'iconoir-react'
-import { Button, Input } from '../ui/index.js'
+import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { setMeta } from '../../cache.js'
 import { formatDay, formatTime } from '../../lib/formatters.js'
@@ -11,6 +11,9 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const groups = usePhotoStore(s => s.groups)
   const updatePhoto = usePhotoStore(s => s.updatePhoto)
   const reorderGroup = usePhotoStore(s => s.reorderGroup)
+  const photos = usePhotoStore(s => s.photos)
+  const prevRods = [...new Set(photos.map(p => p.meta?.rod).filter(Boolean))]
+  const prevFlys = [...new Set(photos.map(p => p.meta?.fly).filter(Boolean))]
 
   const group = groups.find(g => g.some(p => p.name === leadName)) ?? initialGroup
 
@@ -124,9 +127,9 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
           <label>Species</label>
           <Input value={species} onChange={e => setSpecies(e.target.value)} placeholder="e.g. Brown Trout" />
           <label>Rod</label>
-          <Input value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" />
+          <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" suggestions={prevRods} />
           <label>Fly</label>
-          <Input value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" />
+          <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" suggestions={prevFlys} />
           <div className={styles.editActions}>
             <Button variant="danger" onClick={handleDelete}>Delete entry</Button>
             <Button variant="secondary" onClick={cancelEdit}>Cancel</Button>

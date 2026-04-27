@@ -131,19 +131,34 @@ export function MapView() {
       requestAnimationFrame(() => {
         const popupEl = popup.getElement()
         if (!popupEl) return
-        map.panBy([0, -(popupEl.offsetHeight / 2)], { duration: 0 })
+        map.panBy([0, -(popupEl.offsetHeight * 0.65)], { duration: 0 })
       })
     }
 
     setFlyToPhoto(flyToPhotoFn)
   }, [groups, mapReady])
 
-  // Fit bounds once on initial load
+  // Fit bounds once on initial load (closest 80% of catches by distance from centroid)
   useEffect(() => {
     if (!mapReady || groups.length === 0 || fitted) return
     const map = mapRef.current
-    const lngs = groups.flatMap(g => g.map(p => p.exif.longitude))
-    const lats = groups.flatMap(g => g.map(p => p.exif.latitude))
+
+    const points = groups.map(g => ({
+      lng: avg(g.map(p => p.exif.longitude)),
+      lat: avg(g.map(p => p.exif.latitude)),
+    }))
+
+    const cLng = avg(points.map(p => p.lng))
+    const cLat = avg(points.map(p => p.lat))
+
+    const count = Math.max(1, Math.ceil(points.length * 0.8))
+    const subset = points
+      .map(p => ({ ...p, d: (p.lng - cLng) ** 2 + (p.lat - cLat) ** 2 }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, count)
+
+    const lngs = subset.map(p => p.lng)
+    const lats = subset.map(p => p.lat)
     const bounds = new mapboxgl.LngLatBounds(
       [Math.min(...lngs), Math.min(...lats)],
       [Math.max(...lngs), Math.max(...lats)]

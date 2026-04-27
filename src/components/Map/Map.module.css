@@ -106,7 +106,8 @@
 }
 
 .popupDetail {
-  font-size: 14px;
+  font-size: 13px;
+  font-family: "Roboto Mono", monospace;
   color: var(--dark-muted);
   margin-top: 4px;
 }

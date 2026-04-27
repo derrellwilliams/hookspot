@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { NavArrowDown, Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
+import { Tooltip } from '../ui/index.js'
 import styles from './Nav.module.css'
 
 export function Nav() {
@@ -39,7 +40,9 @@ export function Nav() {
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
-      <button className={styles.fabAdd} onClick={() => setUploadOpen(true)} aria-label="Add catch"><Plus width={24} height={24} /></button>
+      <Tooltip label="Add a catch" side="bottom">
+        <button className={styles.fabAdd} onClick={() => setUploadOpen(true)} aria-label="Add catch"><Plus width={24} height={24} /></button>
+      </Tooltip>
     </div>
   )
 }

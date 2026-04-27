@@ -2,7 +2,7 @@ import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Xmark } from 'iconoir-react'
 import { tokens } from '../tokens.js'
-import { Button, Input, Card } from '../components/ui/index.js'
+import { Button, Input, Card, AutocompleteInput, Select, SelectWithCustom, Tooltip } from '../components/ui/index.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import styles from './DesignPage.module.css'
 import d from '../components/UploadDialog/UploadDialog.module.css'
@@ -99,6 +99,46 @@ export function DesignPage() {
           <div className={styles.inputRow}>
             <Input placeholder="Default input" />
             <Input placeholder="Disabled input" disabled />
+          </div>
+        </Section>
+
+        <Section label="Autocomplete Input">
+          <div className={styles.inputRow}>
+            <AutocompleteInput
+              placeholder="e.g. 9ft 5wt"
+              suggestions={['9ft 5wt', '8ft 4wt', '10ft 3wt', '7ft 3wt']}
+            />
+          </div>
+        </Section>
+
+        <Section label="Select">
+          <div className={styles.inputRow}>
+            <Select defaultValue="">
+              <option value="">Select…</option>
+              <option value="a">Option A</option>
+              <option value="b">Option B</option>
+              <option value="c">Option C</option>
+            </Select>
+          </div>
+        </Section>
+
+        <Section label="Select with Custom">
+          <div className={styles.inputRow}>
+            <SelectWithCustom
+              placeholder="e.g. 9ft 5wt"
+              suggestions={['9ft 5wt', '8ft 4wt', '10ft 3wt']}
+            />
+          </div>
+        </Section>
+
+        <Section label="Tooltip">
+          <div className={styles.buttonRow}>
+            <Tooltip label="Tooltip label" side="top">
+              <Button variant="secondary">Hover me (top)</Button>
+            </Tooltip>
+            <Tooltip label="Tooltip label" side="bottom">
+              <Button variant="secondary">Hover me (bottom)</Button>
+            </Tooltip>
           </div>
         </Section>
 

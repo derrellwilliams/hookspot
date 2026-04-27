@@ -200,25 +200,26 @@
   animation: spin 0.75s linear infinite;
 }
 
-.identifying {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--dark-muted);
-  margin-top: -4px;
+.inputWrap {
+  position: relative;
 }
 
-.identifying::before {
-  content: '';
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid var(--dark-muted);
-  border-top-color: transparent;
+.inputLoading {
+  padding-left: 36px;
+}
+
+.inputSpinner {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--dark-border);
+  border-top-color: var(--dark-muted);
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
-  flex-shrink: 0;
+  pointer-events: none;
 }
 
 @keyframes spin {

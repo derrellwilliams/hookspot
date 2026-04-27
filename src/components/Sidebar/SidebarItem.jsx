@@ -1,15 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { formatDay, formatTime } from '../../lib/formatters.js'
 import styles from './Sidebar.module.css'
 
-export function SidebarItem({ group }) {
+export const SidebarItem = memo(function SidebarItem({ group }) {
   const ref = useRef(null)
-  const flyToPhoto = usePhotoStore(s => s.flyToPhoto)
-  const activeGroup = usePhotoStore(s => s.activeGroup)
-  const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
+  const leadName = group[0].name
+  const isActive = usePhotoStore(s => s.activeGroup?.[0]?.name === leadName)
 
-  const isActive = activeGroup === group || activeGroup?.[0]?.name === group[0].name
   const lead = group.find(p => p.species) ?? group[0]
   const species = lead.species && lead.species !== 'none'
     ? lead.species.replace(/\s*\(.*?\)/g, '').trim()
@@ -22,6 +20,7 @@ export function SidebarItem({ group }) {
   }, [isActive])
 
   function handleClick() {
+    const { setActiveGroup, flyToPhoto } = usePhotoStore.getState()
     setActiveGroup(group)
     flyToPhoto?.(group[0])
   }
@@ -45,4 +44,4 @@ export function SidebarItem({ group }) {
       </div>
     </div>
   )
-}
+})

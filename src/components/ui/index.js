@@ -1,3 +1,7 @@
 export { Button } from './Button.jsx'
 export { Input } from './Input.jsx'
 export { Card } from './Card.jsx'
+export { AutocompleteInput } from './AutocompleteInput.jsx'
+export { Select } from './Select.jsx'
+export { SelectWithCustom } from './SelectWithCustom.jsx'
+export { Tooltip } from './Tooltip.jsx'

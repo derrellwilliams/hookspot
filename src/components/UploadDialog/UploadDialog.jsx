@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Xmark, MediaImage } from 'iconoir-react'
-import { Button, Input } from '../ui/index.js'
+import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { handleFiles } from '../../lib/fileLoader.js'
 import { toDisplayBlob } from '../../exif.js'
@@ -13,6 +13,9 @@ export function UploadDialog() {
   const uploadOpen = usePhotoStore(s => s.uploadOpen)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const showToast = usePhotoStore(s => s.showToast)
+  const photos = usePhotoStore(s => s.photos)
+  const prevRods = [...new Set(photos.map(p => p.meta?.rod).filter(Boolean))]
+  const prevFlys = [...new Set(photos.map(p => p.meta?.fly).filter(Boolean))]
 
   const [step, setStep] = useState(1)
   const [pendingFiles, setPendingFiles] = useState([])
@@ -164,18 +167,21 @@ export function UploadDialog() {
               />
               <div className={styles.form}>
                 <label>Species</label>
-                <Input
-                  value={species}
-                  onChange={e => setSpecies(e.target.value)}
-                  placeholder={identifying ? 'Identifying…' : 'e.g. Brown Trout'}
-                  disabled={identifying}
-                  autoFocus
-                />
-                {identifying && <div className={styles.identifying}>Identifying species…</div>}
+                <div className={styles.inputWrap}>
+                  <Input
+                    value={species}
+                    onChange={e => setSpecies(e.target.value)}
+                    placeholder={identifying ? 'Identifying…' : 'e.g. Brown Trout'}
+                    disabled={identifying}
+                    className={identifying ? styles.inputLoading : ''}
+                    autoFocus
+                  />
+                  {identifying && <div className={styles.inputSpinner} />}
+                </div>
                 <label>Rod</label>
-                <Input value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" />
+                <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" suggestions={prevRods} />
                 <label>Fly</label>
-                <Input value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" />
+                <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" suggestions={prevFlys} />
                 <div className={styles.actions}>
                   <Button variant="secondary" onClick={close}>Cancel</Button>
                   <Button variant="primary" onClick={submit}>Add Catch</Button>
