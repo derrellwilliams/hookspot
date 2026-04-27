@@ -5,8 +5,8 @@ export function groupByTime(gpsPhotos) {
 
   for (const photo of sorted) {
     const last = groups[groups.length - 1]
-    const lastTime = last?.[last.length - 1]?.time ?? null
-    if (last && lastTime !== null && photo.time !== null && photo.time - lastTime <= 3 * 60 * 1000) {
+    const firstTime = last?.[0]?.time ?? null
+    if (last && firstTime !== null && photo.time !== null && photo.time - firstTime <= 3 * 60 * 1000) {
       last.push(photo)
     } else {
       groups.push([photo])

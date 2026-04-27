@@ -50,4 +50,9 @@ export const usePhotoStore = create((set, get) => ({
   setUploadOpen(open) {
     set({ uploadOpen: open })
   },
+
+  clearPhotos() {
+    get().photos.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
+    set({ photos: [], groups: [], activeGroup: null })
+  },
 }))

@@ -98,6 +98,15 @@
   font-size: 12px;
 }
 
+.monthHeader {
+  padding: 8px 8px 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
 .item {
   display: flex;
   align-items: center;

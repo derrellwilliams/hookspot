@@ -33,7 +33,7 @@ export function MapView() {
       center: [-111.1, 39.5],
       zoom: 7,
     })
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right')
+    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
     map.on('click', () => {
       markersRef.current.forEach(({ popup }) => popup.remove())
     })
@@ -48,8 +48,20 @@ export function MapView() {
     const map = mapRef.current
 
     const groupKey = (group) => group.map(p => p.name).sort().join('|')
-    const existingByKey = new Map(markersRef.current.map(m => [m.key, m]))
     const newKeySet = new Set(groups.map(groupKey))
+
+    // If a group gained photos, its key changes (superset). Update the entry's key in place
+    // so the marker and open popup are preserved rather than destroyed and recreated.
+    for (const entry of markersRef.current) {
+      if (newKeySet.has(entry.key)) continue
+      const oldNames = entry.key.split('|')
+      for (const newKey of newKeySet) {
+        const newNames = new Set(newKey.split('|'))
+        if (oldNames.every(n => newNames.has(n))) { entry.key = newKey; break }
+      }
+    }
+
+    const existingByKey = new Map(markersRef.current.map(m => [m.key, m]))
 
     // Remove markers for deleted groups
     markersRef.current.forEach(({ key, marker, popup, root }) => {

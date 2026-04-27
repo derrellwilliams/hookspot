@@ -1,8 +1,10 @@
 import { useState, useRef } from 'react'
-import { EditPencil, Xmark } from 'iconoir-react'
+import { EditPencil, Xmark, Plus } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
-import { setMeta } from '../../cache.js'
+import { useAuthStore } from '../../store/useAuthStore.js'
+import { supabase } from '../../lib/supabase.js'
+import { uploadPhotoToGroup } from '../../lib/fileLoader.js'
 import { formatDay, formatTime } from '../../lib/formatters.js'
 import styles from './Map.module.css'
 
@@ -12,6 +14,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const updatePhoto = usePhotoStore(s => s.updatePhoto)
   const reorderGroup = usePhotoStore(s => s.reorderGroup)
   const photos = usePhotoStore(s => s.photos)
+  const showToast = usePhotoStore(s => s.showToast)
   const prevRods = [...new Set(photos.map(p => p.meta?.rod).filter(Boolean))]
   const prevFlys = [...new Set(photos.map(p => p.meta?.fly).filter(Boolean))]
 
@@ -41,14 +44,23 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   }
 
   async function saveEdit() {
+    const user = useAuthStore.getState().user
     const updatedMeta = { ...lead.meta, rod, fly, species: species || undefined }
     const updatedPhoto = { ...lead, species: species || undefined, meta: updatedMeta }
-    await setMeta(lead.name, updatedMeta)
+    await supabase.from('photos')
+      .update({ species: species || null, meta: updatedMeta })
+      .eq('filename', lead.name)
+      .eq('user_id', user.id)
     updatePhoto(updatedPhoto)
     if (localOrder) {
       const newOrderedGroup = localOrder.map(i => group[i])
       reorderGroup(newOrderedGroup)
-      await Promise.all(newOrderedGroup.map((p, i) => setMeta(p.name, { ...p.meta, order: i })))
+      await Promise.all(newOrderedGroup.map((p, i) =>
+        supabase.from('photos')
+          .update({ meta: { ...p.meta, order: i } })
+          .eq('filename', p.name)
+          .eq('user_id', user.id)
+      ))
     }
     setLocalOrder(null)
     setEditing(false)
@@ -56,6 +68,26 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
 
   function handleDelete() {
     onDelete?.(orderedGroup.slice())
+  }
+
+  // Add photo to group
+  const fileInputRef = useRef(null)
+  const [addingPhoto, setAddingPhoto] = useState(false)
+
+  async function handleAddFile(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setAddingPhoto(true)
+    try {
+      const photo = await uploadPhotoToGroup(file, orderedGroup[0])
+      if (photo) setLocalOrder(null)
+    } catch (err) {
+      console.error('[popup] add photo:', err)
+      showToast(err.message || 'Failed to add photo')
+    } finally {
+      setAddingPhoto(false)
+    }
   }
 
   // Drag reorder for edit mode thumb strip
@@ -101,7 +133,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
             </Button>
           )}
         </div>
-        {orderedGroup.length > 1 && (
+        {(editing || orderedGroup.length > 1) && (
           <div className={styles.stripRow}>
             {orderedGroup.map((p, i) => (
               <div
@@ -118,8 +150,26 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
                 <img src={p.url} alt="" />
               </div>
             ))}
+            {editing && (
+              <div
+                className={styles.thumbAdd}
+                onClick={(e) => { e.stopPropagation(); if (!addingPhoto) fileInputRef.current?.click() }}
+                title="Add photo to this catch"
+              >
+                {addingPhoto
+                  ? <div className={styles.thumbAddSpinner} />
+                  : <Plus width={22} height={22} />}
+              </div>
+            )}
           </div>
         )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.heic,.heif"
+          style={{ display: 'none' }}
+          onChange={handleAddFile}
+        />
       </div>
 
       {editing ? (

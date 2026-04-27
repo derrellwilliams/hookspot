@@ -9,7 +9,17 @@
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: opacity 0.15s;
+  transition: background 0.2s ease, color 0.2s ease, filter 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.btnWithIcon {
+  gap: 6px;
+}
+
+.btnIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .btn:disabled {
@@ -23,7 +33,7 @@
 }
 
 .btn-primary:not(:disabled):hover {
-  filter: brightness(1.15);
+  filter: brightness(0.88);
 }
 
 .btn-secondary {

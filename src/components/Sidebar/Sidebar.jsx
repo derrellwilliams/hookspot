@@ -10,10 +10,23 @@ export function Sidebar() {
   const hasPhotos = usePhotoStore(s => s.photos.length > 0)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
 
-  const sorted = useMemo(
-    () => [...groups].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
-    [groups]
-  )
+  const items = useMemo(() => {
+    const sorted = [...groups].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0))
+    const result = []
+    let lastKey = null
+    for (const group of sorted) {
+      const ts = group[0].time
+      const monthKey = ts
+        ? new Date(ts).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })
+        : null
+      if (monthKey && monthKey !== lastKey) {
+        result.push({ type: 'header', label: monthKey, key: monthKey })
+        lastKey = monthKey
+      }
+      result.push({ type: 'group', group })
+    }
+    return result
+  }, [groups])
 
   return (
     <aside id="sidebar" className={styles.sidebar}>
@@ -26,9 +39,11 @@ export function Sidebar() {
                 <p className={styles.hint}>Photos need GPS data embedded to appear on the map.</p>
               </div>
             )}
-            {sorted.map(group => (
-              <SidebarItem key={group[0].name} group={group} />
-            ))}
+            {items.map(item =>
+              item.type === 'header'
+                ? <div key={item.key} className={styles.monthHeader}>{item.label}</div>
+                : <SidebarItem key={item.group[0].name} group={item.group} />
+            )}
             <div className={styles.addCard} onClick={() => setUploadOpen(true)}>
               <Plus width={24} height={24} className={styles.addIcon} />
               <span className={styles.addLabel}>Add a catch</span>

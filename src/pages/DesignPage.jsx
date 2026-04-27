@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Xmark } from 'iconoir-react'
+import { Xmark, Plus } from 'iconoir-react'
 import { tokens } from '../tokens.js'
 import { Button, Input, Card, AutocompleteInput, Select, SelectWithCustom, Tooltip } from '../components/ui/index.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
@@ -88,6 +88,11 @@ export function DesignPage() {
             <Button variant="ghost">Ghost</Button>
             <Button variant="danger">Danger</Button>
             <Button variant="primary" disabled>Disabled</Button>
+          </div>
+          <div className={styles.buttonRow} style={{ marginTop: 12 }}>
+            <Button variant="primary" icon={<Plus width={18} height={18} />}>Add catch</Button>
+            <Button variant="secondary" icon={<Plus width={18} height={18} />}>Secondary</Button>
+            <Button variant="ghost" icon={<Plus width={18} height={18} />}>Ghost</Button>
           </div>
           <div className={styles.buttonRow} style={{ marginTop: 12 }}>
             <Button variant="icon"><Xmark width={24} height={24} /></Button>

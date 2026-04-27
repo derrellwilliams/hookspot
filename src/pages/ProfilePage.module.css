@@ -1,0 +1,30 @@
+.page {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--dark-bg);
+}
+
+.label {
+  font-family: "Roboto Mono", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dark-muted);
+}
+
+.soon {
+  font-family: "Space Mono", monospace;
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: 700;
+  color: var(--dark-text);
+  letter-spacing: -0.02em;
+}
+
+.signOut {
+  margin-top: 24px;
+}
