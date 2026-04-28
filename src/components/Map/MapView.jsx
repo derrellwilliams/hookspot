@@ -8,6 +8,15 @@ import { PopupCarousel } from './PopupCarousel.jsx'
 import styles from './Map.module.css'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
+const MAP_CENTER = [-111.1, 39.5]
+const MAP_ZOOM = 7
+const MARKER_COLOR = '#000000'
+const POPUP_MAX_WIDTH = '484px'
+const MIN_FLY_ZOOM = 13
+const POPUP_PAN_FACTOR = 0.65
+const BOUNDS_PADDING_DEGREES = 0.008  // ~0.55 miles
+const BOUNDS_SUBSET_FRACTION = 0.8
+const DEFAULT_SIDEBAR_RIGHT = 260
 
 function avg(arr) {
   return arr.reduce((s, v) => s + v, 0) / arr.length
@@ -16,7 +25,8 @@ function avg(arr) {
 export function MapView() {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
-  const markersRef = useRef([])  // { marker, popup, root }
+  const markersRef = useRef([])  // { key, marker, popup, root }
+  const markerByNameRef = useRef(new Map())
   const [mapReady, setMapReady] = useState(false)
   const [fitted, setFitted] = useState(false)
 
@@ -24,23 +34,43 @@ export function MapView() {
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
 
-  // Init map once
+  // Init map once. flyToPhotoFn is defined here so it only enters the store once,
+  // reading current marker state via markerByNameRef on each call.
   useEffect(() => {
     mapboxgl.accessToken = MAPBOX_TOKEN
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: 'mapbox://styles/derrellwilliams/cmoc96j0y000i01r90nqr62du',
-      center: [-111.1, 39.5],
-      zoom: 7,
+      center: MAP_CENTER,
+      zoom: MAP_ZOOM,
     })
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
     map.on('click', () => {
       markersRef.current.forEach(({ popup }) => popup.remove())
     })
-    map.on('load', () => setMapReady(true))
+    map.on('load', () => {
+      setFlyToPhoto((photo) => {
+        const entry = markerByNameRef.current.get(photo.name)
+        if (!entry) return
+        const { marker, popup } = entry
+        markersRef.current.forEach(m => m.popup.remove())
+        const lnglat = marker.getLngLat()
+        const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
+        const sidebar = document.getElementById('sidebar')
+        const sidebarRight = sidebar ? Math.ceil(sidebar.getBoundingClientRect().right) : DEFAULT_SIDEBAR_RIGHT
+        map.jumpTo({ center: lnglat, zoom, padding: { left: sidebarRight, right: 0, top: 0, bottom: 0 } })
+        popup.addTo(map)
+        requestAnimationFrame(() => {
+          const popupEl = popup.getElement()
+          if (!popupEl) return
+          map.panBy([0, -(popupEl.offsetHeight * POPUP_PAN_FACTOR)], { duration: 0 })
+        })
+      })
+      setMapReady(true)
+    })
     mapRef.current = map
     return () => map.remove()
-  }, [])
+  }, [setFlyToPhoto])
 
   // Rebuild markers when groups change
   useEffect(() => {
@@ -87,7 +117,7 @@ export function MapView() {
       const popup = new mapboxgl.Popup({
         closeButton: false,
         closeOnClick: false,
-        maxWidth: '484px',
+        maxWidth: POPUP_MAX_WIDTH,
         offset: 12,
       }).setDOMContent(el).setLngLat(lnglat)
 
@@ -98,11 +128,12 @@ export function MapView() {
           onDelete={async (toDelete) => {
             markersRef.current.forEach(({ popup: p }) => p.remove())
             await deletePhotos(toDelete)
+            usePhotoStore.getState().showToast('Catch deleted')
           }}
         />
       )
 
-      const marker = new mapboxgl.Marker({ color: '#000000' })
+      const marker = new mapboxgl.Marker({ color: MARKER_COLOR })
         .setLngLat(lnglat)
         .addTo(map)
       marker.getElement().style.cursor = 'pointer'
@@ -110,7 +141,7 @@ export function MapView() {
       markersRef.current.push({ key, marker, popup, root })
     }
 
-    // Rebuild name→marker lookup and refresh click handlers
+    // Rebuild name→entry lookup and refresh click handlers
     const markerByName = new Map()
     for (const group of groups) {
       const key = groupKey(group)
@@ -123,35 +154,14 @@ export function MapView() {
       entry._clickHandler = (e) => {
         e.stopPropagation()
         setActiveGroup(group)
-        flyToPhotoFn(group[0])
+        usePhotoStore.getState().flyToPhoto?.(group[0])
       }
       el.addEventListener('click', entry._clickHandler)
     }
 
-    function flyToPhotoFn(photo) {
-      const entry = markerByName.get(photo.name)
-      if (!entry) return
-      const { marker, popup } = entry
-
-      markersRef.current.forEach(m => m.popup.remove())
-
-      const lnglat = marker.getLngLat()
-      const zoom = Math.max(map.getZoom(), 13)
-
-      const sidebar = document.getElementById('sidebar')
-      const sidebarRight = sidebar ? Math.ceil(sidebar.getBoundingClientRect().right) : 260
-
-      map.jumpTo({ center: lnglat, zoom, padding: { left: sidebarRight, right: 0, top: 0, bottom: 0 } })
-      popup.addTo(map)
-      requestAnimationFrame(() => {
-        const popupEl = popup.getElement()
-        if (!popupEl) return
-        map.panBy([0, -(popupEl.offsetHeight * 0.65)], { duration: 0 })
-      })
-    }
-
-    setFlyToPhoto(flyToPhotoFn)
-  }, [groups, mapReady])
+    // Publish updated lookup so flyToPhotoFn (in init effect) sees current markers
+    markerByNameRef.current = markerByName
+  }, [groups, mapReady, setActiveGroup])
 
   // Fit bounds once on initial load (closest 80% of catches by distance from centroid)
   useEffect(() => {
@@ -166,7 +176,7 @@ export function MapView() {
     const cLng = avg(points.map(p => p.lng))
     const cLat = avg(points.map(p => p.lat))
 
-    const count = Math.max(1, Math.ceil(points.length * 0.8))
+    const count = Math.max(1, Math.ceil(points.length * BOUNDS_SUBSET_FRACTION))
     const subset = points
       .map(p => ({ ...p, d: (p.lng - cLng) ** 2 + (p.lat - cLat) ** 2 }))
       .sort((a, b) => a.d - b.d)
@@ -174,10 +184,9 @@ export function MapView() {
 
     const lngs = subset.map(p => p.lng)
     const lats = subset.map(p => p.lat)
-    const MILE = 0.008 // ~0.5 mile in degrees
     const bounds = new mapboxgl.LngLatBounds(
-      [Math.min(...lngs) - MILE, Math.min(...lats) - MILE],
-      [Math.max(...lngs) + MILE, Math.max(...lats) + MILE]
+      [Math.min(...lngs) - BOUNDS_PADDING_DEGREES, Math.min(...lats) - BOUNDS_PADDING_DEGREES],
+      [Math.max(...lngs) + BOUNDS_PADDING_DEGREES, Math.max(...lats) + BOUNDS_PADDING_DEGREES]
     )
     map.fitBounds(bounds, {
       padding: { top: 80, bottom: 60, left: 320, right: 60 },

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "identify": "node --env-file=.env scripts/identify.js"
+    "identify": "node --env-file=.env scripts/identify.js",
+    "serve": "node server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",

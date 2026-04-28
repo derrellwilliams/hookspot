@@ -45,25 +45,35 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
 
   async function saveEdit() {
     const user = useAuthStore.getState().user
+    if (!user) return
     const updatedMeta = { ...lead.meta, rod, fly, species: species || undefined }
     const updatedPhoto = { ...lead, species: species || undefined, meta: updatedMeta }
-    await supabase.from('photos')
-      .update({ species: species || null, meta: updatedMeta })
-      .eq('filename', lead.name)
-      .eq('user_id', user.id)
-    updatePhoto(updatedPhoto)
-    if (localOrder) {
-      const newOrderedGroup = localOrder.map(i => group[i])
-      reorderGroup(newOrderedGroup)
-      await Promise.all(newOrderedGroup.map((p, i) =>
-        supabase.from('photos')
-          .update({ meta: { ...p.meta, order: i } })
-          .eq('filename', p.name)
-          .eq('user_id', user.id)
-      ))
+    try {
+      const { error } = await supabase.from('photos')
+        .update({ species: species || null, meta: updatedMeta })
+        .eq('filename', lead.name)
+        .eq('user_id', user.id)
+      if (error) throw error
+      updatePhoto(updatedPhoto)
+      if (localOrder) {
+        const newOrderedGroup = localOrder.map(i => group[i])
+        const results = await Promise.all(newOrderedGroup.map((p, i) =>
+          supabase.from('photos')
+            .update({ meta: { ...p.meta, order: i } })
+            .eq('filename', p.name)
+            .eq('user_id', user.id)
+        ))
+        const reorderError = results.find(r => r.error)?.error
+        if (reorderError) throw reorderError
+        reorderGroup(newOrderedGroup)
+      }
+      setLocalOrder(null)
+      setEditing(false)
+      showToast('Changes saved')
+    } catch (err) {
+      console.error('[popup] saveEdit failed:', err)
+      showToast('Failed to save changes')
     }
-    setLocalOrder(null)
-    setEditing(false)
   }
 
   function handleDelete() {
@@ -81,7 +91,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
     setAddingPhoto(true)
     try {
       const photo = await uploadPhotoToGroup(file, orderedGroup[0])
-      if (photo) setLocalOrder(null)
+      if (photo) { setLocalOrder(null); showToast('Photo added') }
     } catch (err) {
       console.error('[popup] add photo:', err)
       showToast(err.message || 'Failed to add photo')
@@ -98,6 +108,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
       if (!remaining) { onClose?.(); return }
       setCurrent(c => Math.min(c, remaining.length - 1))
       setLocalOrder(null)
+      showToast('Photo removed')
     } catch (err) {
       console.error('[popup] remove photo:', err)
       showToast(err.message || 'Failed to remove photo')

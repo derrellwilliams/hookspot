@@ -11,9 +11,9 @@ function getUser() {
   return useAuthStore.getState().user
 }
 
-// Supabase Storage rejects spaces and some special chars in object keys
+// Supabase Storage rejects spaces and special chars in object keys
 function storageKey(filename) {
-  return filename.replace(/\s/g, '_')
+  return filename.replace(/[^\w.\-]/g, '_')
 }
 
 function buildPhoto(blob, exif, row) {
@@ -40,11 +40,11 @@ function maybeFetchWeather(photo) {
   const user = getUser()
   if (!photo.hasGps || !photo.time || photo.meta?.weather || !user) return
   fetchWeather(photo.exif.latitude, photo.exif.longitude, photo.time)
-    .then(weather => {
+    .then(async weather => {
       if (!weather) return
       const meta = { ...photo.meta, weather }
-      supabase.from('photos').update({ meta }).eq('filename', photo.name).eq('user_id', user.id)
-      usePhotoStore.getState().updatePhoto({ ...photo, meta })
+      const { error } = await supabase.from('photos').update({ meta }).eq('filename', photo.name).eq('user_id', user.id)
+      if (!error) usePhotoStore.getState().updatePhoto({ ...photo, meta })
     })
     .catch(() => {})
 }
@@ -53,21 +53,24 @@ let _initInProgress = false
 export async function initPhotos() {
   if (_initInProgress) return
   _initInProgress = true
-  const user = getUser()
-  if (!user) { _initInProgress = false; return }
+  try {
+    const user = getUser()
+    if (!user) return
 
-  const { data: rows, error } = await supabase
-    .from('photos')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('time', { ascending: false })
+    const { data: rows, error } = await supabase
+      .from('photos')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('time', { ascending: false })
 
-  if (error || !rows?.length) { _initInProgress = false; return }
+    if (error || !rows?.length) return
 
-  await Promise.all(rows.map(row =>
-    loadPhotoFromRow(row).catch(e => console.error('[hookspot] failed to load', row.filename, e))
-  ))
-  _initInProgress = false
+    await Promise.all(rows.map(row =>
+      loadPhotoFromRow(row).catch(e => console.error('[hookspot] failed to load', row.filename, e))
+    ))
+  } finally {
+    _initInProgress = false
+  }
 }
 
 async function loadPhotoFromRow(row) {
@@ -103,12 +106,14 @@ export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
   const files = Array.from(fileList)
   if (!files.length) return
 
+  const uploads = []
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) continue
     if (existingNames.has(file.name)) continue
-    await uploadPhoto(file, user, meta, displayBlobs[i])
+    uploads.push(uploadPhoto(file, user, meta, displayBlobs[i]))
   }
+  await Promise.all(uploads)
 }
 
 async function uploadPhoto(file, user, uploadMeta, displayBlob) {
@@ -136,8 +141,8 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     storage_path: storagePath,
     url: publicUrl,
     species: uploadMeta.species || null,
-    lat: exif?.latitude || null,
-    lng: exif?.longitude || null,
+    lat: exif?.latitude ?? null,
+    lng: exif?.longitude ?? null,
     time: time ? new Date(time).toISOString() : null,
     meta: uploadMeta,
   }
@@ -212,11 +217,14 @@ export async function deletePhotos(toDelete) {
   const paths = list.map(p => `${user.id}/${storageKey(p.name)}`)
   const filenames = list.map(p => p.name)
 
-  await Promise.all([
+  const [{ error: storageError }, { error: dbError }] = await Promise.all([
     supabase.storage.from('catches').remove(paths),
     supabase.from('photos').delete().in('filename', filenames).eq('user_id', user.id),
-    ...list.map(p => setCached(p.name, undefined)),
   ])
+  await Promise.all(list.map(p => setCached(p.name, undefined)))
+
+  if (storageError) console.error('[hookspot] storage delete failed', storageError)
+  if (dbError) { console.error('[hookspot] db delete failed', dbError); return }
 
   usePhotoStore.getState().removePhotos(list)
 }

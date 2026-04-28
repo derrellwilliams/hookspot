@@ -33,7 +33,7 @@ function AppInner() {
       }
     })
     return () => subscription.unsubscribe()
-  }, [])
+  }, [setUser])
 
   return (
     <div className={styles.app}>

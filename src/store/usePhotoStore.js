@@ -20,10 +20,10 @@ export const usePhotoStore = create((set, get) => ({
   },
 
   removePhotos(toDelete) {
-    const deleteSet = new Set(Array.isArray(toDelete) ? toDelete : [toDelete])
-    const removed = get().photos.filter(p => deleteSet.has(p))
+    const nameSet = new Set((Array.isArray(toDelete) ? toDelete : [toDelete]).map(p => p.name))
+    const removed = get().photos.filter(p => nameSet.has(p.name))
     removed.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
-    const photos = get().photos.filter(p => !deleteSet.has(p))
+    const photos = get().photos.filter(p => !nameSet.has(p.name))
     set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: null })
   },
 
@@ -53,6 +53,6 @@ export const usePhotoStore = create((set, get) => ({
 
   clearPhotos() {
     get().photos.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
-    set({ photos: [], groups: [], activeGroup: null })
+    set({ photos: [], groups: [], activeGroup: null, uploadOpen: false, toast: null, flyToPhoto: null })
   },
 }))

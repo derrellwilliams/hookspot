@@ -9,6 +9,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import heicConvert from 'heic-convert'
+import { IDENTIFY_MODEL, IDENTIFY_PROMPT } from '../identify-config.js'
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -43,13 +44,13 @@ for (const photo of photos) {
     const mediaType = /\.png$/i.test(photo.filename) ? 'image/png' : 'image/jpeg'
 
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: IDENTIFY_MODEL,
       max_tokens: 64,
       messages: [{
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: buffer.toString('base64') } },
-          { type: 'text', text: 'Is there a fish in this photo? If yes, identify the species as specifically as possible. If no fish is visible, reply with "none". Reply with only the species name or "none" — no other text.' },
+          { type: 'text', text: IDENTIFY_PROMPT },
         ],
       }],
     })
