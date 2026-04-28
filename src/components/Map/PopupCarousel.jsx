@@ -4,7 +4,7 @@ import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
-import { uploadPhotoToGroup } from '../../lib/fileLoader.js'
+import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
 import { formatDay, formatTime } from '../../lib/formatters.js'
 import styles from './Map.module.css'
 
@@ -90,6 +90,20 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
     }
   }
 
+  async function handleRemoveFromGroup(e, photo) {
+    e.stopPropagation()
+    try {
+      await deletePhotos([photo])
+      const remaining = usePhotoStore.getState().groups.find(g => g.some(p => p.name === leadName))
+      if (!remaining) { onClose?.(); return }
+      setCurrent(c => Math.min(c, remaining.length - 1))
+      setLocalOrder(null)
+    } catch (err) {
+      console.error('[popup] remove photo:', err)
+      showToast(err.message || 'Failed to remove photo')
+    }
+  }
+
   // Drag reorder for edit mode thumb strip
   const dragSrcRef = useRef(null)
 
@@ -148,6 +162,9 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
                 onClick={() => setCurrent(i)}
               >
                 <img src={p.url} alt="" />
+                {editing && (
+                  <button className={styles.thumbRemoveBtn} onClick={e => handleRemoveFromGroup(e, p)} title="Remove photo">×</button>
+                )}
               </div>
             ))}
             {editing && (

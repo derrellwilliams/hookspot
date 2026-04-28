@@ -19,7 +19,7 @@
   right: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   pointer-events: auto;
 }
 
@@ -108,5 +108,19 @@
 
 .dropItem.active {
   font-weight: 600;
+  background: var(--dark-bg);
+}
+
+.addCatchBtn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.addCatchBtn:not(:disabled):hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  opacity: 0.85;
 }
 

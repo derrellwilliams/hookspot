@@ -74,6 +74,7 @@
   cursor: grab;
   border: 2px solid rgba(0,0,0,0.7);
   transition: border-color 0.1s, opacity 0.1s;
+  position: relative;
 }
 
 .editThumb img {
@@ -82,6 +83,32 @@
   object-fit: cover;
   border-radius: 4px;
   display: block;
+}
+
+.thumbRemoveBtn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #111;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  color: white;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 5;
+  padding: 0;
+}
+
+.editThumb:hover .thumbRemoveBtn {
+  opacity: 1;
 }
 
 .dragging {

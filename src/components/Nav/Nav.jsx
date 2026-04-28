@@ -52,12 +52,14 @@ export function Nav() {
         </DropdownMenu.Root>
       </div>
       <div className={styles.navRight}>
-        <Button variant="primary" icon={<Plus width={18} height={18} />} onClick={() => setUploadOpen(true)}>
-          Add catch
-        </Button>
+        <Tooltip label="Add catch" side="bottom">
+          <Button variant="icon" className={styles.addCatchBtn} onClick={() => setUploadOpen(true)} aria-label="Add catch">
+            <Plus width={20} height={20} />
+          </Button>
+        </Tooltip>
         <Tooltip label="Profile" side="bottom">
-          <Button variant="icon-sm" onClick={() => navigate('/profile')} aria-label="Profile">
-            <User width={22} height={22} />
+          <Button variant="icon" onClick={() => navigate('/profile')} aria-label="Profile">
+            <User width={20} height={20} />
           </Button>
         </Tooltip>
       </div>

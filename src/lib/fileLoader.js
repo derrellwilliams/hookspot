@@ -19,7 +19,11 @@ function storageKey(filename) {
 function buildPhoto(blob, exif, row) {
   const time = row.time ? new Date(row.time).getTime() : null
   const hasGps = !!(row.lat && row.lng)
-  const effectiveExif = exif ?? (hasGps ? { latitude: row.lat, longitude: row.lng } : null)
+  // Always ensure latitude/longitude are set when the DB has GPS coords.
+  // Using ?? alone isn't enough — exif may be a non-null object without GPS fields.
+  const effectiveExif = hasGps
+    ? { ...exif, latitude: exif?.latitude ?? row.lat, longitude: exif?.longitude ?? row.lng }
+    : exif ?? null
   return {
     name: row.filename,
     blob,
@@ -45,9 +49,12 @@ function maybeFetchWeather(photo) {
     .catch(() => {})
 }
 
+let _initInProgress = false
 export async function initPhotos() {
+  if (_initInProgress) return
+  _initInProgress = true
   const user = getUser()
-  if (!user) return
+  if (!user) { _initInProgress = false; return }
 
   const { data: rows, error } = await supabase
     .from('photos')
@@ -55,11 +62,12 @@ export async function initPhotos() {
     .eq('user_id', user.id)
     .order('time', { ascending: false })
 
-  if (error || !rows?.length) return
+  if (error || !rows?.length) { _initInProgress = false; return }
 
   await Promise.all(rows.map(row =>
     loadPhotoFromRow(row).catch(e => console.error('[hookspot] failed to load', row.filename, e))
   ))
+  _initInProgress = false
 }
 
 async function loadPhotoFromRow(row) {
@@ -158,15 +166,16 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
 }
 
 export async function uploadPhotoToGroup(file, groupLead) {
-  const user = getUser()
-  if (!user) throw new Error('Not signed in')
+  // Use getUser() (server-verified) so user_id exactly matches auth.uid() in RLS
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) throw new Error('Not signed in')
 
   const storagePath = `${user.id}/${storageKey(file.name)}`
 
   const { error: uploadError } = await supabase.storage
     .from('catches')
-    .upload(storagePath, file, { upsert: true })
-  if (uploadError) throw new Error('Storage: ' + uploadError.message)
+    .upload(storagePath, file, { upsert: false })
+  if (uploadError && uploadError.statusCode !== '409') throw new Error('Storage: ' + uploadError.message)
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
   const [blob, exif] = await Promise.all([toDisplayBlob(file), extractExif(file)])

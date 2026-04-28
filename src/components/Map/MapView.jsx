@@ -50,14 +50,16 @@ export function MapView() {
     const groupKey = (group) => group.map(p => p.name).sort().join('|')
     const newKeySet = new Set(groups.map(groupKey))
 
-    // If a group gained photos, its key changes (superset). Update the entry's key in place
+    // If a group gained or lost photos, its key changes. Update the entry's key in place
     // so the marker and open popup are preserved rather than destroyed and recreated.
     for (const entry of markersRef.current) {
       if (newKeySet.has(entry.key)) continue
-      const oldNames = entry.key.split('|')
+      const oldNames = new Set(entry.key.split('|'))
       for (const newKey of newKeySet) {
         const newNames = new Set(newKey.split('|'))
-        if (oldNames.every(n => newNames.has(n))) { entry.key = newKey; break }
+        const grew = [...oldNames].every(n => newNames.has(n))   // old ⊆ new
+        const shrank = [...newNames].every(n => oldNames.has(n)) // new ⊆ old
+        if (grew || shrank) { entry.key = newKey; break }
       }
     }
 
@@ -76,6 +78,7 @@ export function MapView() {
 
       const lng = avg(group.map(p => p.exif.longitude))
       const lat = avg(group.map(p => p.exif.latitude))
+      if (isNaN(lng) || isNaN(lat)) continue
       const lnglat = [lng, lat]
 
       const el = document.createElement('div')
