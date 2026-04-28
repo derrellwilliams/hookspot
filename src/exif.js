@@ -1,6 +1,9 @@
 import exifr from 'exifr'
 import heic2any from 'heic2any'
 
+const STORAGE_MAX_PX = 2048
+const STORAGE_QUALITY = 0.85
+
 export async function extractExif(file) {
   try {
     return await exifr.parse(file, { gps: true }) ?? null
@@ -25,4 +28,22 @@ export async function toDisplayBlob(file) {
   }
 
   return file
+}
+
+export async function resizeForStorage(source) {
+  const url = URL.createObjectURL(source)
+  const img = new Image()
+  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url })
+  URL.revokeObjectURL(url)
+
+  const scale = Math.min(1, STORAGE_MAX_PX / Math.max(img.naturalWidth, img.naturalHeight))
+  if (scale === 1 && source.type === 'image/jpeg') return source
+
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(img.naturalWidth * scale)
+  canvas.height = Math.round(img.naturalHeight * scale)
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas toBlob failed')), 'image/jpeg', STORAGE_QUALITY)
+  )
 }

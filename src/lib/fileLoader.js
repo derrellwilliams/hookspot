@@ -1,4 +1,4 @@
-import { extractExif, toDisplayBlob } from '../exif.js'
+import { extractExif, toDisplayBlob, resizeForStorage } from '../exif.js'
 import { getCached, setCached } from '../cache.js'
 import { identifySpecies } from '../identify.js'
 import { fetchWeather } from './weather.js'
@@ -119,17 +119,18 @@ export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
 async function uploadPhoto(file, user, uploadMeta, displayBlob) {
   const storagePath = `${user.id}/${storageKey(file.name)}`
 
-  const { error: uploadError } = await supabase.storage
-    .from('catches')
-    .upload(storagePath, file, { upsert: false })
-  if (uploadError) { console.error('[hookspot] storage upload failed', uploadError); return }
-
-  const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
-
   const [blob, exif] = await Promise.all([
     displayBlob ? Promise.resolve(displayBlob) : toDisplayBlob(file),
     extractExif(file),
   ])
+  const storageBlob = await resizeForStorage(blob).catch(() => blob)
+
+  const { error: uploadError } = await supabase.storage
+    .from('catches')
+    .upload(storagePath, storageBlob, { upsert: false, contentType: 'image/jpeg' })
+  if (uploadError) { console.error('[hookspot] storage upload failed', uploadError); return }
+
+  const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
 
   const time = exif?.DateTimeOriginal instanceof Date
     ? exif.DateTimeOriginal.getTime()
@@ -177,13 +178,15 @@ export async function uploadPhotoToGroup(file, groupLead) {
 
   const storagePath = `${user.id}/${storageKey(file.name)}`
 
+  const [blob, exif] = await Promise.all([toDisplayBlob(file), extractExif(file)])
+  const storageBlob = await resizeForStorage(blob).catch(() => blob)
+
   const { error: uploadError } = await supabase.storage
     .from('catches')
-    .upload(storagePath, file, { upsert: false })
+    .upload(storagePath, storageBlob, { upsert: false, contentType: 'image/jpeg' })
   if (uploadError && uploadError.statusCode !== '409') throw new Error('Storage: ' + uploadError.message)
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
-  const [blob, exif] = await Promise.all([toDisplayBlob(file), extractExif(file)])
 
   const row = {
     user_id: user.id,
