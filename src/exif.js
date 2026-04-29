@@ -30,20 +30,24 @@ export async function toDisplayBlob(file) {
   return file
 }
 
-export async function resizeForStorage(source) {
-  const url = URL.createObjectURL(source)
+export async function resizeBlob(blob, maxPx, quality = 0.85) {
+  const url = URL.createObjectURL(blob)
   const img = new Image()
   await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url })
   URL.revokeObjectURL(url)
 
-  const scale = Math.min(1, STORAGE_MAX_PX / Math.max(img.naturalWidth, img.naturalHeight))
-  if (scale === 1 && source.type === 'image/jpeg') return source
+  const scale = Math.min(1, maxPx / Math.max(img.naturalWidth, img.naturalHeight))
+  if (scale === 1 && blob.type === 'image/jpeg') return blob
 
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(img.naturalWidth * scale)
   canvas.height = Math.round(img.naturalHeight * scale)
   canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
   return new Promise((resolve, reject) =>
-    canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas toBlob failed')), 'image/jpeg', STORAGE_QUALITY)
+    canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas toBlob failed')), 'image/jpeg', quality)
   )
+}
+
+export function resizeForStorage(blob) {
+  return resizeBlob(blob, STORAGE_MAX_PX, STORAGE_QUALITY)
 }
