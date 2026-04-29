@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
@@ -9,13 +9,44 @@ export function LoginPage() {
   const user = useAuthStore(s => s.user)
   const loading = useAuthStore(s => s.loading)
   const [email, setEmail] = useState('')
+  const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState(null)
+  const fishRef = useRef(null)
 
   useEffect(() => {
     if (!loading && user) navigate('/', { replace: true })
   }, [loading, user, navigate])
-  const [sent, setSent] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fish = fishRef.current
+    if (!fish) return
+
+    let x = -110
+    let direction = 1
+    let y = 20 + Math.random() * 60
+    let rafId
+
+    function step() {
+      x += direction * 1.5
+      fish.style.left = `${x}px`
+      fish.style.top = `${y}%`
+      fish.style.transform = `translateY(-50%) scaleX(${-direction})`
+
+      if (direction === 1 && x > window.innerWidth + 10) {
+        direction = -1
+        y = 20 + Math.random() * 60
+      } else if (direction === -1 && x < -110) {
+        direction = 1
+        y = 20 + Math.random() * 60
+      }
+
+      rafId = requestAnimationFrame(step)
+    }
+
+    rafId = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(rafId)
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -32,12 +63,9 @@ export function LoginPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.wordmark}>
-        <span>Hook</span>
-        <span>Spot</span>
-      </div>
-      <div className={styles.card}>
-        {!sent && <p className={styles.heading}>Login / Create an account</p>}
+      <div className={styles.wordmark}>Hook Spot</div>
+      <img ref={fishRef} className={styles.fish} src="/fish.svg" alt="" aria-hidden="true" />
+      <div className={styles.center}>
         {sent ? (
           <div className={styles.sent}>
             <p>Magic link sent!</p>
