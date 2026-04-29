@@ -65,8 +65,6 @@ export async function initPhotos() {
 
     if (error || !rows?.length) return
 
-    console.log('[hookspot] fetched rows:', rows.length, rows.map(r => r.filename))
-
     await Promise.all(rows.map(row =>
       loadPhotoFromRow(row).catch(e => console.error('[hookspot] failed to load', row.filename, e))
     ))
@@ -88,7 +86,7 @@ async function loadPhotoFromRow(row) {
   }
 
   const res = await fetch(row.url)
-  if (!res.ok) { console.warn('[hookspot] fetch failed', row.filename, res.status); return }
+  if (!res.ok) return
   const rawBlob = await res.blob()
   const file = new File([rawBlob], row.filename, { type: rawBlob.type || 'image/heic' })
 
