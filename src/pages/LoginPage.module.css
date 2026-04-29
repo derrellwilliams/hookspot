@@ -9,9 +9,11 @@
   font-family: "Space Mono", monospace;
   font-size: 36px;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 0.95;
   color: #ffffff;
   letter-spacing: -0.02em;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .wordmarkSpot {
