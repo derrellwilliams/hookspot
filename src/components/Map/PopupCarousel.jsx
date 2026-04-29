@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { EditPencil, Xmark, Plus } from 'iconoir-react'
+import { IconoirProvider, EditPencil, Xmark, Plus } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
@@ -145,6 +145,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const d = photo.time ? new Date(photo.time) : null
 
   return (
+    <IconoirProvider iconProps={{ strokeWidth: 2 }}>
     <div className={styles.popup}>
       <div className={styles.imgWrapper}>
         <img className={styles.popupImg} src={photo.url} alt={photo.name} />
@@ -231,5 +232,6 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
         </div>
       )}
     </div>
+    </IconoirProvider>
   )
 }

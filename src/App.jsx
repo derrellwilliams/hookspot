@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { IconoirProvider } from 'iconoir-react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Nav } from './components/Nav/Nav.jsx'
 import { Toast } from './components/Toast/Toast.jsx'
@@ -55,8 +56,10 @@ function AppInner() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppInner />
-    </BrowserRouter>
+    <IconoirProvider iconProps={{ strokeWidth: 2 }}>
+      <BrowserRouter>
+        <AppInner />
+      </BrowserRouter>
+    </IconoirProvider>
   )
 }
