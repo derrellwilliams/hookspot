@@ -63,9 +63,12 @@ export function LoginPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.wordmark}>Hook Spot</div>
       <img ref={fishRef} className={styles.fish} src="/fish.svg" alt="" aria-hidden="true" />
       <div className={styles.center}>
+        <div className={styles.wordmark}>
+          <div>Hook</div>
+          <div className={styles.wordmarkSpot}>Spot</div>
+        </div>
         {sent ? (
           <div className={styles.sent}>
             <p>Magic link sent!</p>

@@ -6,16 +6,16 @@
 }
 
 .wordmark {
-  position: absolute;
-  top: 32px;
-  left: 0;
-  right: 0;
-  text-align: center;
   font-family: "Space Mono", monospace;
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
+  line-height: 1.1;
   color: #ffffff;
   letter-spacing: -0.02em;
+}
+
+.wordmarkSpot {
+  padding-left: 1.3em;
 }
 
 .fish {
@@ -33,6 +33,9 @@
   transform: translate(-50%, -50%);
   width: 300px;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .form {
