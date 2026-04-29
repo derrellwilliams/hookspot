@@ -5,6 +5,32 @@
   overflow: hidden;
 }
 
+.blurContainer {
+  position: absolute;
+  inset: 0;
+  filter: blur(80px);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.shape {
+  position: absolute;
+  aspect-ratio: 1;
+  width: var(--width);
+  top: var(--top);
+  left: var(--left);
+  clip-path: var(--path);
+  background: var(--background);
+  opacity: var(--opacity);
+  rotate: var(--offset);
+  mix-blend-mode: screen;
+  animation: turn var(--speed) linear infinite;
+}
+
+@keyframes turn {
+  to { rotate: calc(var(--offset) + 1turn); }
+}
+
 .wordmark {
   font-family: "Space Mono", monospace;
   font-size: 36px;
