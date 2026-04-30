@@ -16,7 +16,7 @@
   height: 76px;
   background: #202020;
   border-radius: 16px;
-  padding: 5px;
+  padding: 5px 5px 5px 14px;
   gap: 2px;
   pointer-events: auto;
 }
