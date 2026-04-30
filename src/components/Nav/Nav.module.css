@@ -43,6 +43,8 @@
   background: #363636;
   color: #fff;
   border-radius: 36px;
+  height: 44px;
+  padding: 0 14px;
 }
 
 .label {
