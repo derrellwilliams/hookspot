@@ -1,126 +1,81 @@
 .navBar {
   position: fixed;
   top: 16px;
-  left: 16px;
-  right: 16px;
+  left: 0;
+  right: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
+  padding: 0 16px;
   pointer-events: none;
   z-index: 1000;
 }
 
-.navCenter {
+.pill {
+  display: flex;
+  align-items: center;
+  height: 76px;
+  background: #202020;
+  border-radius: 16px;
+  padding: 5px;
+  gap: 2px;
   pointer-events: auto;
 }
 
-.navRight {
-  position: absolute;
-  right: 0;
+.navItem {
   display: flex;
   align-items: center;
-  gap: 6px;
-  pointer-events: auto;
-}
-
-.navPill {
-  position: relative;
-  background: #000;
-  color: #fff;
-  border-radius: 999px;
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2);
-  white-space: nowrap;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.navPill:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.navBtn {
-  background: none;
+  justify-content: center;
+  height: 66px;
+  padding: 0 16px;
   border: none;
-  color: #fff;
-  font-family: "Space Mono", monospace;
-  font-size: 22px;
-  font-weight: 700;
+  background: none;
+  color: #666;
+  border-radius: 12px;
   cursor: pointer;
-  padding: 8px;
-  line-height: 1;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: "Roboto", sans-serif;
+  white-space: nowrap;
+  transition: background 0.25s ease, color 0.2s ease, border-radius 0.3s ease;
+}
+
+.navItem.active {
+  background: #363636;
+  color: #fff;
+  border-radius: 36px;
+}
+
+.label {
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  white-space: nowrap;
+  transition: max-width 0.3s ease, opacity 0.2s ease, margin-left 0.3s ease;
+  margin-left: 0;
+}
+
+.navItem.active .label {
+  max-width: 80px;
+  opacity: 1;
+  margin-left: 8px;
+}
+
+.plusBtn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 66px;
+  height: 66px;
+  flex-shrink: 0;
+  margin-left: 2px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
   transition: opacity 0.15s;
 }
 
-.navBtn:hover {
-  opacity: 0.8;
+.plusBtn:hover {
+  opacity: 0.88;
 }
-
-.chevron {
-  display: inline-block;
-  vertical-align: middle;
-  transition: transform 0.2s;
-}
-
-[data-state="open"] .chevron {
-  transform: rotate(180deg);
-}
-
-.dropMenu {
-  background: #000;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-  overflow: hidden;
-  width: var(--radix-dropdown-menu-trigger-width);
-  z-index: 1001;
-}
-
-.dropItem {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 10px 16px;
-  background: none;
-  border: none;
-  text-align: left;
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.1s;
-  outline: none;
-}
-
-.activeArrow {
-  margin-left: auto;
-  opacity: 0.5;
-}
-
-.dropItem:hover,
-.dropItem[data-highlighted] {
-  background: rgba(255,255,255,0.1);
-}
-
-.dropItem.active {
-  font-weight: 600;
-  background: var(--dark-bg);
-}
-
-.addCatchBtn {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.addCatchBtn:not(:disabled):hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  opacity: 0.85;
-}
-
