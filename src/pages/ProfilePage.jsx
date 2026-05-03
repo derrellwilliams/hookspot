@@ -7,7 +7,7 @@ import { renderStats } from '../stats.js'
 import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { supabase } from '../lib/supabase.js'
-import { formatDay, cleanSpecies } from '../lib/formatters.js'
+import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
 import styles from './ProfilePage.module.css'
 
 const FAVORITES_KEY = 'hookspot:favorites'
@@ -122,6 +122,7 @@ export function ProfilePage() {
   const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || ''
   const bio = user?.user_metadata?.bio || ''
   const avatarUrl = user?.user_metadata?.avatar_url
+  const initial = displayName ? displayName[0].toUpperCase() : '?'
   function openDialog() {
     setEditName(displayName)
     setEditBio(bio)
@@ -208,10 +209,13 @@ export function ProfilePage() {
               const species = cleanSpecies(photo.species)
               return (
                 <button key={i} className={`${styles.favoriteSlot} ${styles.favoriteSlotFilled}`} onClick={() => setPickerSlot(i)}>
-                  <img src={photo.url} alt={species ?? photo.name} className={styles.favoriteImg} />
+                  <img src={photo.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={styles.favoriteImg} />
                   <div className={styles.favoriteMeta}>
-                    {species && <span className={styles.favoriteSpecies}>{species}</span>}
-                    {photo.time && <span className={styles.favoriteDate}>{formatDay(photo.time)}</span>}
+                    {species && <div className={styles.favoriteSpecies}>{species}</div>}
+                    {photo.time && <div className={styles.favoriteDatetime}>{formatDateFull(photo.time).split(' •')[0]}</div>}
+                    {photo.meta?.location?.city && photo.meta?.location?.state && (
+                      <div className={styles.favoriteLocation}>{photo.meta.location.city}, {photo.meta.location.state}</div>
+                    )}
                   </div>
                 </button>
               )

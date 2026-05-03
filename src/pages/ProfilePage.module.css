@@ -8,29 +8,29 @@
 .scroll {
   max-width: 860px;
   margin: 0 auto;
-  padding: 36px 24px 40px;
+  padding: 96px 24px 40px;
 }
 
 /* ── Profile header ── */
 .profileHeader {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
   margin-bottom: 32px;
 }
 
 .avatarWrap {
   position: relative;
   flex-shrink: 0;
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
 }
 
 .avatar {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   background: var(--dark-surface);
   border: 1px solid var(--dark-border);
@@ -109,10 +109,9 @@
 .profileInfo {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
   min-width: 0;
-  justify-content: center;
-  padding-top: 8px;
 }
 
 .profileNameRow {
@@ -122,33 +121,46 @@
 }
 
 .profileName {
-  font-family: 'Roboto', sans-serif;
-  font-size: 20px;
+  font-family: 'Space Mono', monospace;
+  font-size: 32px;
   font-weight: 700;
   color: var(--dark-text);
 }
 
 .profileNameEmpty {
-  font-family: 'Roboto', sans-serif;
-  font-size: 20px;
-  font-weight: 400;
+  font-family: 'Space Mono', monospace;
+  font-size: 32px;
+  font-weight: 700;
   color: var(--dark-muted);
   font-style: italic;
 }
 
 .profileBio {
+  font-family: 'Roboto', sans-serif;
   font-size: 14px;
+  font-weight: 400;
   color: var(--dark-muted);
   line-height: 1.5;
   margin: 0;
-  max-width: 360px;
+  text-align: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .profileBioEmpty {
+  font-family: 'Roboto', sans-serif;
   font-size: 14px;
+  font-weight: 400;
   color: var(--dark-border);
   line-height: 1.5;
   margin: 0;
+  text-align: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   font-style: italic;
   cursor: pointer;
 }
@@ -355,26 +367,80 @@
 .favoriteMeta {
   flex-shrink: 0;
   background: var(--dark-surface);
-  padding: 6px 8px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+}
+
+.favoriteAngler {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.favoriteAnglerAvatar {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.favoriteAnglerFallback {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--dark-border);
+  color: var(--dark-muted);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.favoriteAnglerName {
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #8d8d8d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .favoriteSpecies {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--dark-text);
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
 }
 
-.favoriteDate {
-  font-size: 10px;
-  color: var(--dark-muted);
-  font-family: 'Roboto Mono', monospace;
+.favoriteDatetime {
+  font-family: "Roboto Mono", monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: #8d8d8d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.favoriteLocation {
+  font-family: "Roboto Mono", monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: #8d8d8d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: left;
 }
 
