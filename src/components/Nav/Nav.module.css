@@ -5,18 +5,21 @@
   right: 0;
   display: flex;
   justify-content: flex-end;
+  align-items: flex-start;
   padding: 0 16px;
   pointer-events: none;
   z-index: 1000;
 }
 
+
+
 .pill {
   display: flex;
   align-items: center;
-  height: 76px;
-  background: #202020;
+  height: 60px;
+  background: var(--ui-bg);
   border-radius: 16px;
-  padding: 5px 5px 5px 14px;
+  padding: 6px;
   gap: 2px;
   pointer-events: auto;
 }
@@ -25,49 +28,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 66px;
-  padding: 0 16px;
+  gap: 8px;
+  height: 48px;
+  padding: 0 14px;
   border: none;
   background: none;
-  color: #666;
-  border-radius: 12px;
+  color: #555;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
   font-family: "Roboto", sans-serif;
   white-space: nowrap;
-  transition: background 0.25s ease, color 0.2s ease, border-radius 0.3s ease;
+  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .navItem.active {
   background: #363636;
   color: #fff;
-  border-radius: 36px;
-  height: 44px;
-  padding: 0 14px;
+}
+
+.navItem:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .label {
-  overflow: hidden;
-  max-width: 0;
-  opacity: 0;
   white-space: nowrap;
-  transition: max-width 0.3s ease, opacity 0.2s ease, margin-left 0.3s ease;
-  margin-left: 0;
-}
-
-.navItem.active .label {
-  max-width: 80px;
-  opacity: 1;
-  margin-left: 8px;
 }
 
 .plusBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 66px;
-  height: 66px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   margin-left: 2px;
   border: none;
@@ -80,4 +76,9 @@
 
 .plusBtn:hover {
   opacity: 0.88;
+}
+
+.plusBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

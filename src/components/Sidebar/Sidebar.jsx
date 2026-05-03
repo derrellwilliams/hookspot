@@ -44,10 +44,10 @@ export function Sidebar() {
                 ? <div key={item.key} className={styles.monthHeader}>{item.label}</div>
                 : <SidebarItem key={item.group[0].name} group={item.group} />
             )}
-            <div className={styles.addCard} onClick={() => setUploadOpen(true)}>
+            <button className={styles.addCard} onClick={() => setUploadOpen(true)}>
               <Plus width={24} height={24} className={styles.addIcon} />
               <span className={styles.addLabel}>Add a catch</span>
-            </div>
+            </button>
           </div>
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar className={styles.scrollbar} orientation="vertical">

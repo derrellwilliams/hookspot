@@ -5,7 +5,6 @@
 }
 
 :root {
-  --sidebar-width: 240px;
   --accent: #2563eb;
   --bg: #f8fafc;
   --surface: #ffffff;
@@ -15,7 +14,7 @@
   --radius: 8px;
 
   /* Dark UI (sidebar + popups) */
-  --dark-bg: #1A1953;
+  --ui-bg: #202020;
   --dark-surface: #2c2c2e;
   --dark-border: #3a3a3c;
   --dark-text: #f4f4f5;

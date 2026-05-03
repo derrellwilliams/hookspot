@@ -2,6 +2,7 @@ import { extractExif, toDisplayBlob, resizeForStorage } from '../exif.js'
 import { getCached, setCached } from '../cache.js'
 import { identifySpecies } from '../identify.js'
 import { fetchWeather } from './weather.js'
+import { reverseGeocode } from './geocode.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { supabase } from '../lib/supabase.js'
@@ -36,16 +37,27 @@ function buildPhoto(blob, exif, row) {
   }
 }
 
+async function saveMeta(photoName, key, value, userId) {
+  const current = usePhotoStore.getState().photos.find(p => p.name === photoName)
+  if (!current) return
+  const meta = { ...current.meta, [key]: value }
+  const { error } = await supabase.from('photos').update({ meta }).eq('filename', photoName).eq('user_id', userId)
+  if (!error) usePhotoStore.getState().updatePhoto({ ...current, meta })
+}
+
+function maybeFetchLocation(photo) {
+  const user = getUser()
+  if (!photo.hasGps || !photo.exif?.latitude || !photo.exif?.longitude || photo.meta?.location || !user) return
+  reverseGeocode(photo.exif.latitude, photo.exif.longitude)
+    .then(loc => loc && saveMeta(photo.name, 'location', loc, user.id))
+    .catch(() => {})
+}
+
 function maybeFetchWeather(photo) {
   const user = getUser()
-  if (!photo.hasGps || !photo.time || photo.meta?.weather || !user) return
+  if (!photo.hasGps || !photo.time || !photo.exif?.latitude || !photo.exif?.longitude || photo.meta?.weather || !user) return
   fetchWeather(photo.exif.latitude, photo.exif.longitude, photo.time)
-    .then(async weather => {
-      if (!weather) return
-      const meta = { ...photo.meta, weather }
-      const { error } = await supabase.from('photos').update({ meta }).eq('filename', photo.name).eq('user_id', user.id)
-      if (!error) usePhotoStore.getState().updatePhoto({ ...photo, meta })
-    })
+    .then(weather => weather && saveMeta(photo.name, 'weather', weather, user.id))
     .catch(() => {})
 }
 
@@ -82,6 +94,7 @@ async function loadPhotoFromRow(row) {
     const photo = buildPhoto(cached.blob, cached.exif, row)
     addPhoto(photo)
     maybeFetchWeather(photo)
+    maybeFetchLocation(photo)
     return
   }
 
@@ -96,6 +109,7 @@ async function loadPhotoFromRow(row) {
   const photo = buildPhoto(blob, exif, row)
   addPhoto(photo)
   maybeFetchWeather(photo)
+  maybeFetchLocation(photo)
 }
 
 export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
@@ -161,6 +175,7 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
   if (uploadMeta.species) photo.species = uploadMeta.species
   usePhotoStore.getState().addPhoto(photo)
   maybeFetchWeather(photo)
+  maybeFetchLocation(photo)
 
   if (!photo.species && !uploadMeta.identified) {
     const species = await identifySpecies(blob)
@@ -209,6 +224,7 @@ export async function uploadPhotoToGroup(file, groupLead) {
   await setCached(file.name, { blob, exif })
   const photo = buildPhoto(blob, exif, row)
   usePhotoStore.getState().addPhoto(photo)
+  maybeFetchLocation(photo)
   return photo
 }
 
@@ -224,10 +240,10 @@ export async function deletePhotos(toDelete) {
     supabase.storage.from('catches').remove(paths),
     supabase.from('photos').delete().in('filename', filenames).eq('user_id', user.id),
   ])
-  await Promise.all(list.map(p => setCached(p.name, undefined)))
 
   if (storageError) console.error('[hookspot] storage delete failed', storageError)
   if (dbError) { console.error('[hookspot] db delete failed', dbError); return }
 
+  await Promise.all(list.map(p => setCached(p.name, undefined)))
   usePhotoStore.getState().removePhotos(list)
 }

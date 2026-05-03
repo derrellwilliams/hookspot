@@ -6,11 +6,9 @@ import { Toast } from './components/Toast/Toast.jsx'
 import { DropOverlay } from './components/DropOverlay/DropOverlay.jsx'
 import { UploadDialog } from './components/UploadDialog/UploadDialog.jsx'
 import { MapPage } from './pages/MapPage.jsx'
-import { StatsPage } from './pages/StatsPage.jsx'
 import { DesignPage } from './pages/DesignPage.jsx'
 import { LoginPage } from './pages/LoginPage.jsx'
 import { ProfilePage } from './pages/ProfilePage.jsx'
-import { FeedPage } from './pages/FeedPage.jsx'
 import { RequireAuth } from './components/RequireAuth.jsx'
 import { supabase } from './lib/supabase.js'
 import { useAuthStore } from './store/useAuthStore.js'
@@ -36,14 +34,18 @@ function AppInner() {
     return () => subscription.unsubscribe()
   }, [setUser])
 
+  const isMap = location.pathname === '/'
+
   return (
     <div className={styles.app}>
       {!isLogin && <Nav />}
+      <RequireAuth>
+        <div style={{ display: isMap ? 'contents' : 'none' }}>
+          <MapPage />
+        </div>
+      </RequireAuth>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<RequireAuth><MapPage /></RequireAuth>} />
-        <Route path="/stats" element={<RequireAuth><StatsPage /></RequireAuth>} />
-        <Route path="/feed" element={<RequireAuth><FeedPage /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
         <Route path="/design" element={<DesignPage />} />
       </Routes>

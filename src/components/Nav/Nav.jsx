@@ -1,12 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Plus, User, Compass, List } from 'iconoir-react'
+import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import styles from './Nav.module.css'
 
 const NAV_ITEMS = [
-  { path: '/', icon: Compass, label: 'Map' },
-  { path: '/feed', icon: List, label: 'Feed' },
-  { path: '/profile', icon: User, label: 'Profile' },
+  { path: '/', label: 'Catches' },
+  { path: '/profile', label: 'Profile' },
 ]
 
 export function Nav() {
@@ -18,7 +17,7 @@ export function Nav() {
   return (
     <nav className={styles.navBar}>
       <div className={styles.pill}>
-        {NAV_ITEMS.map(({ path: itemPath, icon: Icon, label }) => {
+        {NAV_ITEMS.map(({ path: itemPath, label }) => {
           const isActive = path === itemPath
           return (
             <button
@@ -27,7 +26,6 @@ export function Nav() {
               onClick={() => navigate(itemPath)}
               aria-label={label}
             >
-              <Icon width={20} height={20} />
               <span className={styles.label}>{label}</span>
             </button>
           )

@@ -5,7 +5,7 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
-import { formatDay, formatTime } from '../../lib/formatters.js'
+import { formatDateFull, cleanSpecies } from '../../lib/formatters.js'
 import styles from './Map.module.css'
 
 export function PopupCarousel({ initialGroup, onClose, onDelete }) {
@@ -117,6 +117,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
 
   // Drag reorder for edit mode thumb strip
   const dragSrcRef = useRef(null)
+  const dragGhostRef = useRef(null)
 
   function onThumbDragStart(e, i) {
     dragSrcRef.current = i
@@ -125,8 +126,8 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
     const ghost = e.currentTarget.cloneNode(true)
     ghost.style.cssText = 'position:fixed;top:-200px;left:-200px;width:64px;height:64px;overflow:hidden;border-radius:8px;transform:rotate(4deg) scale(1.12);box-shadow:0 12px 32px rgba(0,0,0,0.7);border:2px solid rgba(255,255,255,0.5);'
     document.body.appendChild(ghost)
+    dragGhostRef.current = ghost
     e.dataTransfer.setDragImage(ghost, 32, 32)
-    requestAnimationFrame(() => document.body.removeChild(ghost))
   }
 
   function onThumbDrop(e, dest) {
@@ -169,7 +170,11 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
                 onDragStart={editing ? e => onThumbDragStart(e, i) : undefined}
                 onDragOver={editing ? e => { e.preventDefault(); e.currentTarget.classList.add(styles.dragOver) } : undefined}
                 onDragLeave={editing ? e => e.currentTarget.classList.remove(styles.dragOver) : undefined}
-                onDragEnd={editing ? () => { document.querySelectorAll(`.${styles.editThumb}`).forEach(t => t.classList.remove(styles.dragging, styles.dragOver)); dragSrcRef.current = null } : undefined}
+                onDragEnd={editing ? () => {
+                  document.querySelectorAll(`.${styles.editThumb}`).forEach(t => t.classList.remove(styles.dragging, styles.dragOver))
+                  dragSrcRef.current = null
+                  if (dragGhostRef.current) { document.body.removeChild(dragGhostRef.current); dragGhostRef.current = null }
+                } : undefined}
                 onDrop={editing ? e => onThumbDrop(e, i) : undefined}
                 onClick={() => setCurrent(i)}
               >
@@ -218,15 +223,23 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
       ) : (
         <div className={styles.popupBody}>
           <div className={styles.popupSpecies}>
-            {photo.species && photo.species !== 'none' ? photo.species : '—'}
+            {cleanSpecies(lead.species) ?? '—'}
           </div>
           <div className={styles.popupDetail}>
-            {d ? `${formatDay(photo.time)} ${formatTime(photo.time)}` : 'Unknown date'}
-            {photo.meta?.weather && ` · ${photo.meta.weather.temp}°F · ${photo.meta.weather.condition}`}
+            {d ? formatDateFull(photo.time) : 'Unknown date'}
+            {lead.meta?.location?.city && lead.meta?.location?.state
+              ? ` · ${lead.meta.location.city}, ${lead.meta.location.state}`
+              : ''}
           </div>
+          {photo.meta?.weather?.temp != null && photo.meta?.weather?.condition && (
+            <div className={styles.popupDetail}>
+              {photo.meta.weather.temp}°F · {photo.meta.weather.condition}
+            </div>
+          )}
+          {/* rod/fly are stored on the group lead; stable across photo carousel navigation */}
           {(lead.meta?.rod || lead.meta?.fly) && (
             <div className={styles.popupDetail}>
-              {[lead.meta?.rod, lead.meta?.fly].filter(Boolean).join(' with ')}
+              {[lead.meta?.rod, lead.meta?.fly].filter(Boolean).join(' · ')}
             </div>
           )}
         </div>
