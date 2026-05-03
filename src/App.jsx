@@ -41,7 +41,7 @@ function AppInner() {
       {!isLogin && <Nav />}
       <RequireAuth>
         <div style={{ display: isMap ? 'contents' : 'none' }}>
-          <MapPage />
+          <MapPage active={isMap} />
         </div>
       </RequireAuth>
       <Routes>

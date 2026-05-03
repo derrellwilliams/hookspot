@@ -22,7 +22,7 @@ function avg(arr) {
   return arr.reduce((s, v) => s + v, 0) / arr.length
 }
 
-export function MapView() {
+export function MapView({ active }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const markersRef = useRef([])  // { key, marker, popup, root }
@@ -162,6 +162,11 @@ export function MapView() {
     // Publish updated lookup so flyToPhotoFn (in init effect) sees current markers
     markerByNameRef.current = markerByName
   }, [groups, mapReady, setActiveGroup])
+
+  // Resize map when it becomes visible (e.g. navigating from /profile to /)
+  useEffect(() => {
+    if (active && mapRef.current) mapRef.current.resize()
+  }, [active])
 
   // Fit bounds once on initial load (closest 80% of catches by distance from centroid)
   useEffect(() => {
