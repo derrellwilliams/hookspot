@@ -35,8 +35,9 @@ export function Sidebar() {
           <div className={styles.list}>
             {!hasPhotos && (
               <div className={styles.empty}>
-                <p>Drop photos here or click <strong>+</strong> to get started.</p>
-                <p className={styles.hint}>Photos need GPS data embedded to appear on the map.</p>
+                <p className={styles.emptyTitle}>Welcome to Hook Spot!</p>
+                <p className={styles.emptySubtitle}>Add photos of your catches to pin them to the map. Follow other anglers to see their catches here too.</p>
+                <p className={styles.emptySubtitle}>Just make sure your photos have GPS data so spots show up correctly.</p>
               </div>
             )}
             {items.map(item =>

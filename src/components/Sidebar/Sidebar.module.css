@@ -3,7 +3,7 @@
   top: 16px;
   left: 16px;
   bottom: 16px;
-  width: max-content;
+  width: 375px;
   background: #202020;
   border-radius: 16px;
   display: flex;
@@ -91,16 +91,26 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 24px;
-  text-align: center;
-  color: var(--dark-muted);
-  gap: 8px;
+  gap: 12px;
 }
 
-.hint {
-  font-size: 12px;
+.emptyTitle {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  margin: 0;
+}
+
+.emptySubtitle {
+  font-family: 'Roboto', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--dark-muted);
+  margin: 0;
 }
 
 .monthHeader {

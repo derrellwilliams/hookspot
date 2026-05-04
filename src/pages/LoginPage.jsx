@@ -12,6 +12,8 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
+  const [code, setCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState(null)
   const meshRef = useRef(null)
 
@@ -28,13 +30,20 @@ export function LoginPage() {
     e.preventDefault()
     setSending(true)
     setError(null)
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin },
-    })
+    const { error } = await supabase.auth.signInWithOtp({ email })
     setSending(false)
     if (error) setError(error.message)
     else setSent(true)
+  }
+
+  async function handleVerify(e) {
+    e.preventDefault()
+    setVerifying(true)
+    setError(null)
+    const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: 'email' })
+    setVerifying(false)
+    if (error) setError(error.message)
+    // on success, auth state change in App.jsx will navigate away
   }
 
   return (
@@ -46,11 +55,7 @@ export function LoginPage() {
       <div className={styles.center}>
         <div className={styles.wordmark}>Hook Spot</div>
         <div className={styles.card}>
-          {sent ? (
-            <div className={styles.sent}>
-              <p>Check your email for a link to sign in.</p>
-            </div>
-          ) : (
+          {!sent ? (
             <form onSubmit={handleSubmit} className={styles.form}>
               <label className={styles.label}>Email</label>
               <input
@@ -63,9 +68,31 @@ export function LoginPage() {
                 autoFocus
               />
               <button className={styles.button} disabled={sending}>
-                {sending ? 'Sending…' : 'Create account'}
+                {sending ? 'Sending…' : 'Continue'}
               </button>
               {error && <p className={styles.error}>{error}</p>}
+            </form>
+          ) : (
+            <form onSubmit={handleVerify} className={styles.form}>
+              <div className={styles.sent}>Check your email for a 6-digit code.</div>
+              <label className={styles.label}>Code</label>
+              <input
+                className={styles.input}
+                type="text"
+                inputMode="numeric"
+                placeholder="123456"
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                required
+                autoFocus
+              />
+              <button className={styles.button} disabled={verifying || code.length < 6}>
+                {verifying ? 'Verifying…' : 'Sign in'}
+              </button>
+              {error && <p className={styles.error}>{error}</p>}
+              <button type="button" className={styles.resend} onClick={() => { setSent(false); setCode(''); setError(null) }}>
+                Use a different email
+              </button>
             </form>
           )}
         </div>

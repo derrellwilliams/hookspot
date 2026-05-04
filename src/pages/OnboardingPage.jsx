@@ -2,20 +2,19 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EditPencil, User } from 'iconoir-react'
 import { Button } from '../components/ui/index.js'
-import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { createImageDataUrl } from '../lib/imageUtils.js'
 import { initPhotos } from '../lib/fileLoader.js'
 import { animateMesh, DEFAULT_BLOBS } from '../lib/mesh.js'
+import { USERNAME_RE } from '../lib/validation.js'
 import styles from './OnboardingPage.module.css'
-
-const USERNAME_RE = /^[a-z0-9_-]{3,20}$/
 
 export function OnboardingPage() {
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
   const setUser = useAuthStore(s => s.setUser)
   const setStoreUsername = useAuthStore(s => s.setUsername)
+  const session = useAuthStore(s => s.session)
 
   const [username, setUsername] = useState('')
   const [displayName, setDisplayName] = useState(
@@ -30,6 +29,7 @@ export function OnboardingPage() {
   const [saveError, setSaveError] = useState('')
   const fileInputRef = useRef(null)
   const checkCountRef = useRef(0)
+  const lastCheckedRef = useRef({ val: null, result: false })
   const meshRef = useRef(null)
 
   useEffect(() => {
@@ -43,20 +43,31 @@ export function OnboardingPage() {
       setUsernameOk(false)
       return false
     }
+    if (lastCheckedRef.current.val === val) return lastCheckedRef.current.result
     setChecking(true)
     const thisCheck = ++checkCountRef.current
-    const { data } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', val)
-      .maybeSingle()
-    if (thisCheck !== checkCountRef.current) return false // stale response, a newer check is in flight
+    let available = false
+    try {
+      const res = await fetch(`/api/check-username?username=${encodeURIComponent(val)}`)
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      available = json.available
+    } catch (err) {
+      console.error('[checkUsername] failed', err)
+      if (thisCheck !== checkCountRef.current) return false
+      setChecking(false)
+      setUsernameError('Could not check username. Try again.')
+      return false
+    }
+    if (thisCheck !== checkCountRef.current) return false
     setChecking(false)
-    if (data) {
+    if (!available) {
+      lastCheckedRef.current = { val, result: false }
       setUsernameError('That username is taken')
       setUsernameOk(false)
       return false
     } else {
+      lastCheckedRef.current = { val, result: true }
       setUsernameError('')
       setUsernameOk(true)
       return true
@@ -77,30 +88,28 @@ export function OnboardingPage() {
 
   async function handleSave(e) {
     e.preventDefault()
-    if (saving) return
+    if (saving || !session) return
     // Re-validate at submit time to guard against stale usernameOk state
     const valid = await checkUsername(username)
     if (!valid) return
     setSaving(true)
     setSaveError('')
     try {
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: user.id,
-        username,
-        display_name: displayName.trim() || null,
-        avatar_url: avatarUrl || null,
-        bio: bio.trim() || null,
+      const res = await fetch('/api/save-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: session.access_token,
+          username,
+          displayName: displayName.trim() || null,
+          bio: bio.trim() || null,
+          avatarUrl: avatarUrl || null,
+        }),
       })
-      if (profileError) throw profileError
-
-      const updateData = {}
-      if (displayName.trim()) updateData.display_name = displayName.trim()
-      if (bio.trim()) updateData.bio = bio.trim()
-      if (avatarUrl) updateData.avatar_url = avatarUrl
-
-      const { data, error: authError } = await supabase.auth.updateUser({ data: updateData })
-      if (authError) throw authError
-      setUser(data.user)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Save failed')
+      // Merge updated metadata into the existing user object to preserve the correct shape
+      if (user) setUser({ ...user, user_metadata: { ...user.user_metadata, ...json.user.user_metadata } })
       setStoreUsername(username)
       initPhotos()
       navigate('/', { replace: true })
@@ -162,6 +171,7 @@ export function OnboardingPage() {
               setUsername(v)
               setUsernameOk(false)
               setUsernameError('')
+              lastCheckedRef.current = { val: null, result: false }
             }}
             onBlur={() => username && checkUsername(username)}
             placeholder="your-handle"

@@ -4,7 +4,7 @@
   "description": "Drop photos on a map — plots GPS-tagged images as clickable pins with date/time details",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "NODE_OPTIONS=--max-http-header-size=65536 vite",
     "build": "vite build",
     "preview": "vite preview",
     "identify": "node --env-file=.env scripts/identify.js",

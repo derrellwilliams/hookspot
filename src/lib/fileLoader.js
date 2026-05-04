@@ -74,21 +74,10 @@ export async function initPhotos() {
     const user = getUser()
     if (!user) return
 
-    // No user_id filter — RLS returns only own + followed users' photos.
-    // This requires RLS to be correctly configured on the photos table.
-    const { data: rows, error } = await supabase
-      .from('photos')
-      .select('*')
-      .order('time', { ascending: false })
-      .limit(500)
+    const res = await fetch(`/api/photos?userId=${user.id}`)
+    const { rows, profiles: profileRows, error } = await res.json()
 
     if (error || !rows?.length) return
-
-    const userIds = [...new Set(rows.map(r => r.user_id))]
-    const { data: profileRows } = await supabase
-      .from('profiles')
-      .select('id, username, display_name, avatar_url')
-      .in('id', userIds)
 
     const profileMap = Object.fromEntries((profileRows ?? []).map(p => [p.id, p]))
 

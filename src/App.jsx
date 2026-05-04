@@ -22,6 +22,7 @@ function AppInner() {
   const location = useLocation()
   const navigate = useNavigate()
   const setUser = useAuthStore(s => s.setUser)
+  const setSession = useAuthStore(s => s.setSession)
   const setUsername = useAuthStore(s => s.setUsername)
 
   const isPublicPage = ['/login', '/onboarding'].includes(location.pathname)
@@ -29,23 +30,22 @@ function AppInner() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-        // Check onboarding before setUser so RequireAuth stays in loading state,
-        // preventing a flash of the map before the redirect fires.
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', session.user.id)
-          .maybeSingle()
-
         setUser(session.user)
+        setSession(session)
 
-        if (profileError) {
-          console.error('[auth] profile check failed', profileError)
-        } else if (!profile?.username) {
-          navigate('/onboarding', { replace: true })
-        } else {
-          setUsername(profile.username)
-          initPhotos()
+        try {
+          const res = await fetch(`/api/profile?userId=${session.user.id}`)
+          const { username, error: profileError } = await res.json()
+          if (profileError) {
+            console.error('[auth] profile check failed', profileError)
+          } else if (!username) {
+            navigate('/onboarding', { replace: true })
+          } else {
+            setUsername(username)
+            initPhotos()
+          }
+        } catch (err) {
+          console.error('[auth] profile fetch failed', err)
         }
       } else {
         setUser(session?.user ?? null)
@@ -55,7 +55,7 @@ function AppInner() {
       }
     })
     return () => subscription.unsubscribe()
-  }, [setUser, setUsername])
+  }, [setUser, setSession, setUsername])
 
   const isMap = location.pathname === '/'
 
