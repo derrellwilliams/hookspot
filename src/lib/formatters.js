@@ -1,3 +1,11 @@
+export function formatLocation(location) {
+  return location?.city && location?.state ? `${location.city}, ${location.state}` : null
+}
+
+export function getDisplayName(userOrProfile) {
+  return userOrProfile?.display_name || userOrProfile?.full_name || userOrProfile?.username || ''
+}
+
 export function cleanSpecies(s) {
   if (!s || s === 'none') return null
   return s.replace(/\s*\(.*?\)/g, '').trim()

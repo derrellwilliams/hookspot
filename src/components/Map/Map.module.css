@@ -158,6 +158,42 @@
   padding: 20px;
 }
 
+.popupAttribution {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.popupAttributionAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.popupAttributionAvatarFallback {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--dark-border);
+  color: var(--dark-muted);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.popupAttributionName {
+  font-family: 'Roboto', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dark-muted);
+}
+
 .popupSpecies {
   font-family: "Roboto", sans-serif;
   font-weight: 700;

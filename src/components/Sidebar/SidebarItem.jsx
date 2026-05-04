@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from 'react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
-import { formatDateFull, cleanSpecies } from '../../lib/formatters.js'
+import { formatDateFull, cleanSpecies, formatLocation, getDisplayName } from '../../lib/formatters.js'
 import styles from './Sidebar.module.css'
 
 export const SidebarItem = memo(function SidebarItem({ group }) {
@@ -13,14 +13,14 @@ export const SidebarItem = memo(function SidebarItem({ group }) {
   const lead = group.find(p => p.species) ?? group[0]
   const species = cleanSpecies(lead.species)
 
-  const avatarUrl = user?.user_metadata?.avatar_url
-  const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || ''
+  const isOwn = group[0].isOwn ?? true
+  const ownerProfile = group[0].ownerProfile
+  const avatarUrl = isOwn
+    ? user?.user_metadata?.avatar_url
+    : ownerProfile?.avatar_url
+  const displayName = isOwn ? getDisplayName(user?.user_metadata) : getDisplayName(ownerProfile)
   const initial = displayName ? displayName[0].toUpperCase() : '?'
-
-  const location = lead.meta?.location
-  const locationStr = location?.city && location?.state
-    ? `${location.city}, ${location.state}`
-    : null
+  const locationStr = formatLocation(lead.meta?.location)
 
   useEffect(() => {
     if (isActive && ref.current) {

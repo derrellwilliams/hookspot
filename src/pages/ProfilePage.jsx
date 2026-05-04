@@ -8,6 +8,7 @@ import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { supabase } from '../lib/supabase.js'
 import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
+import { createImageDataUrl } from '../lib/imageUtils.js'
 import styles from './ProfilePage.module.css'
 
 const FAVORITES_KEY = 'hookspot:favorites'
@@ -28,28 +29,6 @@ async function uploadAvatar(file) {
   return data.user
 }
 
-function createImageDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      const size = 128
-      const canvas = document.createElement('canvas')
-      canvas.width = size
-      canvas.height = size
-      const ctx = canvas.getContext('2d')
-      const s = Math.min(img.width, img.height)
-      const sx = (img.width - s) / 2
-      const sy = (img.height - s) / 2
-      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size)
-      resolve(canvas.toDataURL('image/jpeg', 0.82))
-    }
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read image')) }
-    img.src = url
-  })
-}
-
 export function ProfilePage() {
   const photos = usePhotoStore(s => s.photos)
   const groups = usePhotoStore(s => s.groups)
@@ -57,6 +36,7 @@ export function ProfilePage() {
   const user = useAuthStore(s => s.user)
   const setUser = useAuthStore(s => s.setUser)
   const signOut = useAuthStore(s => s.signOut)
+  const profileUsername = useAuthStore(s => s.username)
 
   const [uploading, setUploading] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -94,6 +74,11 @@ export function ProfilePage() {
     try {
       const updatedUser = await uploadAvatar(file)
       setUser(updatedUser)
+      // Sync avatar to profiles table so followers see the update
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        avatar_url: updatedUser.user_metadata?.avatar_url || null,
+      })
       showToast('Profile photo updated!')
     } catch (err) {
       console.error('[hookspot] avatar upload failed', err)
@@ -118,7 +103,7 @@ export function ProfilePage() {
     setPickerSlot(null)
   }
 
-  const photoMap = useMemo(() => Object.fromEntries(photos.map(p => [p.name, p])), [photos])
+  const photoMap = useMemo(() => Object.fromEntries(photos.filter(p => p.isOwn).map(p => [p.name, p])), [photos])
   const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || ''
   const bio = user?.user_metadata?.bio || ''
   const avatarUrl = user?.user_metadata?.avatar_url
@@ -136,6 +121,15 @@ export function ProfilePage() {
         data: { display_name: editName.trim(), bio: editBio.trim() },
       })
       if (error) throw error
+
+      // Sync to profiles table for public visibility
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        display_name: editName.trim() || null,
+        bio: editBio.trim() || null,
+        avatar_url: avatarUrl || null,
+      })
+
       setUser(data.user)
       setDialogOpen(false)
     } catch (err) {
@@ -197,6 +191,21 @@ export function ProfilePage() {
             >
               {bio || 'Tell us about yourself'}
             </button>
+            {profileUsername && (
+              <div className={styles.profileLinkRow}>
+                <span className={styles.profileLinkUrl}>hookspot.app/user/{profileUsername}</span>
+                <button
+                  className={styles.profileLinkCopy}
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/user/${profileUsername}`)
+                    showToast('Link copied!')
+                  }}
+                  type="button"
+                >
+                  Copy
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

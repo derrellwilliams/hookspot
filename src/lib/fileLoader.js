@@ -17,7 +17,7 @@ function storageKey(filename) {
   return filename.replace(/[^\w.\-]/g, '_')
 }
 
-function buildPhoto(blob, exif, row) {
+function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
   const time = row.time ? new Date(row.time).getTime() : null
   const hasGps = !!(row.lat && row.lng)
   // Always ensure latitude/longitude are set when the DB has GPS coords.
@@ -27,6 +27,9 @@ function buildPhoto(blob, exif, row) {
     : exif ?? null
   return {
     name: row.filename,
+    userId: row.user_id,
+    isOwn: row.user_id === currentUserId,
+    ownerProfile: ownerProfile ?? null,
     blob,
     exif: effectiveExif,
     hasGps,
@@ -38,7 +41,7 @@ function buildPhoto(blob, exif, row) {
 }
 
 async function saveMeta(photoName, key, value, userId) {
-  const current = usePhotoStore.getState().photos.find(p => p.name === photoName)
+  const current = usePhotoStore.getState().photos.find(p => p.name === photoName && p.userId === userId)
   if (!current) return
   const meta = { ...current.meta, [key]: value }
   const { error } = await supabase.from('photos').update({ meta }).eq('filename', photoName).eq('user_id', userId)
@@ -46,6 +49,7 @@ async function saveMeta(photoName, key, value, userId) {
 }
 
 function maybeFetchLocation(photo) {
+  if (!photo.isOwn) return
   const user = getUser()
   if (!photo.hasGps || !photo.exif?.latitude || !photo.exif?.longitude || photo.meta?.location || !user) return
   reverseGeocode(photo.exif.latitude, photo.exif.longitude)
@@ -54,6 +58,7 @@ function maybeFetchLocation(photo) {
 }
 
 function maybeFetchWeather(photo) {
+  if (!photo.isOwn) return
   const user = getUser()
   if (!photo.hasGps || !photo.time || !photo.exif?.latitude || !photo.exif?.longitude || photo.meta?.weather || !user) return
   fetchWeather(photo.exif.latitude, photo.exif.longitude, photo.time)
@@ -69,29 +74,41 @@ export async function initPhotos() {
     const user = getUser()
     if (!user) return
 
+    // No user_id filter — RLS returns only own + followed users' photos.
+    // This requires RLS to be correctly configured on the photos table.
     const { data: rows, error } = await supabase
       .from('photos')
       .select('*')
-      .eq('user_id', user.id)
       .order('time', { ascending: false })
+      .limit(500)
 
     if (error || !rows?.length) return
 
+    const userIds = [...new Set(rows.map(r => r.user_id))]
+    const { data: profileRows } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, avatar_url')
+      .in('id', userIds)
+
+    const profileMap = Object.fromEntries((profileRows ?? []).map(p => [p.id, p]))
+
     await Promise.all(rows.map(row =>
-      loadPhotoFromRow(row).catch(e => console.error('[hookspot] failed to load', row.filename, e))
+      loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
+        .catch(e => console.error('[hookspot] failed to load', row.filename, e))
     ))
   } finally {
     _initInProgress = false
   }
 }
 
-async function loadPhotoFromRow(row) {
+async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
   const { photos, addPhoto } = usePhotoStore.getState()
-  if (photos.find(p => p.name === row.filename)) return
+  if (photos.find(p => p.name === row.filename && p.userId === row.user_id)) return
 
-  const cached = await getCached(row.filename)
+  const cacheKey = `${row.user_id}/${row.filename}`
+  const cached = await getCached(cacheKey)
   if (cached) {
-    const photo = buildPhoto(cached.blob, cached.exif, row)
+    const photo = buildPhoto(cached.blob, cached.exif, row, ownerProfile, currentUserId)
     addPhoto(photo)
     maybeFetchWeather(photo)
     maybeFetchLocation(photo)
@@ -104,9 +121,9 @@ async function loadPhotoFromRow(row) {
   const file = new File([rawBlob], row.filename, { type: rawBlob.type || 'image/heic' })
 
   const [blob, exif] = await Promise.all([toDisplayBlob(file), extractExif(file)])
-  await setCached(row.filename, { blob, exif })
+  await setCached(cacheKey, { blob, exif })
 
-  const photo = buildPhoto(blob, exif, row)
+  const photo = buildPhoto(blob, exif, row, ownerProfile, currentUserId)
   addPhoto(photo)
   maybeFetchWeather(photo)
   maybeFetchLocation(photo)
@@ -116,7 +133,9 @@ export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
   const user = getUser()
   if (!user) return
 
-  const existingNames = new Set(usePhotoStore.getState().photos.map(p => p.name))
+  const existingNames = new Set(
+    usePhotoStore.getState().photos.filter(p => p.isOwn).map(p => p.name)
+  )
   const files = Array.from(fileList)
   if (!files.length) return
 
@@ -169,9 +188,9 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     return
   }
 
-  await setCached(file.name, { blob, exif })
+  await setCached(`${user.id}/${file.name}`, { blob, exif })
 
-  const photo = buildPhoto(blob, exif, row)
+  const photo = buildPhoto(blob, exif, row, null, user.id)
   if (uploadMeta.species) photo.species = uploadMeta.species
   usePhotoStore.getState().addPhoto(photo)
   maybeFetchWeather(photo)
@@ -221,8 +240,8 @@ export async function uploadPhotoToGroup(file, groupLead) {
     throw new Error('DB: ' + dbError.message)
   }
 
-  await setCached(file.name, { blob, exif })
-  const photo = buildPhoto(blob, exif, row)
+  await setCached(`${user.id}/${file.name}`, { blob, exif })
+  const photo = buildPhoto(blob, exif, row, null, user.id)
   usePhotoStore.getState().addPhoto(photo)
   maybeFetchLocation(photo)
   return photo
@@ -244,6 +263,6 @@ export async function deletePhotos(toDelete) {
   if (storageError) console.error('[hookspot] storage delete failed', storageError)
   if (dbError) { console.error('[hookspot] db delete failed', dbError); return }
 
-  await Promise.all(list.map(p => setCached(p.name, undefined)))
+  await Promise.all(list.map(p => setCached(`${user.id}/${p.name}`, undefined)))
   usePhotoStore.getState().removePhotos(list)
 }

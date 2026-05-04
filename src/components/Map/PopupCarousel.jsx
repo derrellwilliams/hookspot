@@ -5,11 +5,13 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
-import { formatDateFull, cleanSpecies } from '../../lib/formatters.js'
+import { formatDateFull, cleanSpecies, formatLocation } from '../../lib/formatters.js'
 import styles from './Map.module.css'
 
 export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const leadName = initialGroup[0].name
+  const isOwn = initialGroup[0]?.isOwn ?? true
+  const ownerProfile = initialGroup[0]?.ownerProfile
   const groups = usePhotoStore(s => s.groups)
   const updatePhoto = usePhotoStore(s => s.updatePhoto)
   const reorderGroup = usePhotoStore(s => s.reorderGroup)
@@ -151,40 +153,42 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
       <div className={styles.imgWrapper}>
         <img className={styles.popupImg} src={photo.url} alt={photo.name} />
         <div className={styles.imgBtns}>
-          <Button variant="icon-sm" onClick={() => editing ? cancelEdit() : startEdit()} title={editing ? 'Cancel' : 'Edit'}>
-            {editing ? <Xmark width={20} height={20} /> : <EditPencil width={20} height={20} />}
-          </Button>
+          {isOwn && (
+            <Button variant="icon-sm" onClick={() => editing ? cancelEdit() : startEdit()} title={editing ? 'Cancel' : 'Edit'}>
+              {editing ? <Xmark width={20} height={20} /> : <EditPencil width={20} height={20} />}
+            </Button>
+          )}
           {!editing && (
             <Button variant="icon-sm" onClick={onClose} title="Close">
               <Xmark width={20} height={20} />
             </Button>
           )}
         </div>
-        {(editing || orderedGroup.length > 1) && (
+        {((isOwn && editing) || orderedGroup.length > 1) && (
           <div className={styles.stripRow}>
             {orderedGroup.map((p, i) => (
               <div
                 key={p.name}
-                className={`${editing ? styles.editThumb : styles.viewThumb} ${i === current ? styles.thumbActive : ''}`}
-                draggable={editing}
-                onDragStart={editing ? e => onThumbDragStart(e, i) : undefined}
-                onDragOver={editing ? e => { e.preventDefault(); e.currentTarget.classList.add(styles.dragOver) } : undefined}
-                onDragLeave={editing ? e => e.currentTarget.classList.remove(styles.dragOver) : undefined}
-                onDragEnd={editing ? () => {
+                className={`${isOwn && editing ? styles.editThumb : styles.viewThumb} ${i === current ? styles.thumbActive : ''}`}
+                draggable={isOwn && editing}
+                onDragStart={isOwn && editing ? e => onThumbDragStart(e, i) : undefined}
+                onDragOver={isOwn && editing ? e => { e.preventDefault(); e.currentTarget.classList.add(styles.dragOver) } : undefined}
+                onDragLeave={isOwn && editing ? e => e.currentTarget.classList.remove(styles.dragOver) : undefined}
+                onDragEnd={isOwn && editing ? () => {
                   document.querySelectorAll(`.${styles.editThumb}`).forEach(t => t.classList.remove(styles.dragging, styles.dragOver))
                   dragSrcRef.current = null
                   if (dragGhostRef.current) { document.body.removeChild(dragGhostRef.current); dragGhostRef.current = null }
                 } : undefined}
-                onDrop={editing ? e => onThumbDrop(e, i) : undefined}
+                onDrop={isOwn && editing ? e => onThumbDrop(e, i) : undefined}
                 onClick={() => setCurrent(i)}
               >
                 <img src={p.url} alt="" />
-                {editing && (
+                {isOwn && editing && (
                   <button className={styles.thumbRemoveBtn} onClick={e => handleRemoveFromGroup(e, p)} title="Remove photo">×</button>
                 )}
               </div>
             ))}
-            {editing && (
+            {isOwn && editing && (
               <div
                 className={styles.thumbAdd}
                 onClick={(e) => { e.stopPropagation(); if (!addingPhoto) fileInputRef.current?.click() }}
@@ -206,7 +210,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
         />
       </div>
 
-      {editing ? (
+      {isOwn && editing ? (
         <div className={styles.editForm}>
           <label>Species</label>
           <Input value={species} onChange={e => setSpecies(e.target.value)} placeholder="e.g. Brown Trout" />
@@ -222,14 +226,25 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
         </div>
       ) : (
         <div className={styles.popupBody}>
+          {!isOwn && ownerProfile && (
+            <div className={styles.popupAttribution}>
+              {ownerProfile.avatar_url
+                ? <img src={ownerProfile.avatar_url} alt={ownerProfile.display_name || ownerProfile.username} className={styles.popupAttributionAvatar} />
+                : <div className={styles.popupAttributionAvatarFallback}>
+                    {(ownerProfile.display_name || ownerProfile.username || '?')[0].toUpperCase()}
+                  </div>
+              }
+              <span className={styles.popupAttributionName}>
+                {ownerProfile.display_name || ownerProfile.username}
+              </span>
+            </div>
+          )}
           <div className={styles.popupSpecies}>
             {cleanSpecies(lead.species) ?? '—'}
           </div>
           <div className={styles.popupDetail}>
             {d ? formatDateFull(photo.time) : 'Unknown date'}
-            {lead.meta?.location?.city && lead.meta?.location?.state
-              ? ` · ${lead.meta.location.city}, ${lead.meta.location.state}`
-              : ''}
+            {formatLocation(lead.meta?.location) ? ` · ${formatLocation(lead.meta.location)}` : ''}
           </div>
           {photo.meta?.weather?.temp != null && photo.meta?.weather?.condition && (
             <div className={styles.popupDetail}>

@@ -1,0 +1,209 @@
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { EditPencil, User } from 'iconoir-react'
+import { Button } from '../components/ui/index.js'
+import { supabase } from '../lib/supabase.js'
+import { useAuthStore } from '../store/useAuthStore.js'
+import { createImageDataUrl } from '../lib/imageUtils.js'
+import { initPhotos } from '../lib/fileLoader.js'
+import { animateMesh, DEFAULT_BLOBS } from '../lib/mesh.js'
+import styles from './OnboardingPage.module.css'
+
+const USERNAME_RE = /^[a-z0-9_-]{3,20}$/
+
+export function OnboardingPage() {
+  const navigate = useNavigate()
+  const user = useAuthStore(s => s.user)
+  const setUser = useAuthStore(s => s.setUser)
+  const setStoreUsername = useAuthStore(s => s.setUsername)
+
+  const [username, setUsername] = useState('')
+  const [displayName, setDisplayName] = useState(
+    user?.user_metadata?.display_name || user?.user_metadata?.full_name || ''
+  )
+  const [bio, setBio] = useState(user?.user_metadata?.bio || '')
+  const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '')
+  const [usernameError, setUsernameError] = useState('')
+  const [usernameOk, setUsernameOk] = useState(false)
+  const [checking, setChecking] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const fileInputRef = useRef(null)
+  const checkCountRef = useRef(0)
+  const meshRef = useRef(null)
+
+  useEffect(() => {
+    if (!meshRef.current) return
+    return animateMesh(meshRef.current, DEFAULT_BLOBS)
+  }, [])
+
+  async function checkUsername(val) {
+    if (!USERNAME_RE.test(val)) {
+      setUsernameError('3–20 chars: lowercase letters, numbers, - or _')
+      setUsernameOk(false)
+      return false
+    }
+    setChecking(true)
+    const thisCheck = ++checkCountRef.current
+    const { data } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', val)
+      .maybeSingle()
+    if (thisCheck !== checkCountRef.current) return false // stale response, a newer check is in flight
+    setChecking(false)
+    if (data) {
+      setUsernameError('That username is taken')
+      setUsernameOk(false)
+      return false
+    } else {
+      setUsernameError('')
+      setUsernameOk(true)
+      return true
+    }
+  }
+
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const dataUrl = await createImageDataUrl(file)
+      setAvatarUrl(dataUrl)
+    } catch (err) {
+      console.error('[onboarding] avatar read failed', err)
+    }
+    e.target.value = ''
+  }
+
+  async function handleSave(e) {
+    e.preventDefault()
+    if (saving) return
+    // Re-validate at submit time to guard against stale usernameOk state
+    const valid = await checkUsername(username)
+    if (!valid) return
+    setSaving(true)
+    setSaveError('')
+    try {
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: user.id,
+        username,
+        display_name: displayName.trim() || null,
+        avatar_url: avatarUrl || null,
+        bio: bio.trim() || null,
+      })
+      if (profileError) throw profileError
+
+      const updateData = {}
+      if (displayName.trim()) updateData.display_name = displayName.trim()
+      if (bio.trim()) updateData.bio = bio.trim()
+      if (avatarUrl) updateData.avatar_url = avatarUrl
+
+      const { data, error: authError } = await supabase.auth.updateUser({ data: updateData })
+      if (authError) throw authError
+      setUser(data.user)
+      setStoreUsername(username)
+      initPhotos()
+      navigate('/', { replace: true })
+    } catch (err) {
+      console.error('[onboarding] save failed', err)
+      setSaveError(err.message || 'Failed to save. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.bgMesh}>
+        <div className={styles.meshNoise} ref={meshRef} />
+        <div className={styles.meshOverlay} aria-hidden="true" />
+      </div>
+      <div className={styles.wordmark}>Hook Spot</div>
+      <form className={styles.card} onSubmit={handleSave}>
+        <h1 className={styles.title}>Let's setup your profile.</h1>
+        <div className={styles.avatarField}>
+          <label className={styles.label}>Profile photo <span className={styles.required}>*</span></label>
+          <div className={styles.avatarRow}>
+            <div className={styles.avatarWrap}>
+              <button type="button" className={styles.avatarBtn} onClick={() => fileInputRef.current?.click()}>
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="avatar" className={styles.avatarImg} />
+                  : <User width={36} height={36} className={styles.avatarPlaceholder} />
+                }
+              </button>
+              {avatarUrl && (
+                <Button type="button" variant="icon-sm" className={styles.avatarEditBadge} onClick={() => fileInputRef.current?.click()} aria-label="Change profile photo">
+                  <EditPencil width={12} height={12} />
+                </Button>
+              )}
+            </div>
+            <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+              Upload photo
+            </Button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleAvatarChange}
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>
+            Username <span className={styles.required}>*</span>
+          </label>
+          <input
+            className={`${styles.input} ${usernameError ? styles.inputError : usernameOk ? styles.inputOk : ''}`}
+            value={username}
+            onChange={e => {
+              const v = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')
+              setUsername(v)
+              setUsernameOk(false)
+              setUsernameError('')
+            }}
+            onBlur={() => username && checkUsername(username)}
+            placeholder="your-handle"
+            maxLength={20}
+            autoFocus
+          />
+          {usernameError && <div className={styles.fieldError}>{usernameError}</div>}
+          {checking && <div className={styles.fieldHint}>Checking availability…</div>}
+          {!usernameError && !checking && usernameOk && (
+            <div className={styles.fieldOk}>@{username} is available</div>
+          )}
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Full name</label>
+          <input
+            className={styles.input}
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+            placeholder="Your name"
+            maxLength={60}
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Bio</label>
+          <textarea
+            className={styles.textarea}
+            value={bio}
+            onChange={e => setBio(e.target.value)}
+            placeholder="Tell us about yourself"
+            maxLength={200}
+            rows={3}
+          />
+        </div>
+
+        {saveError && <div className={styles.saveError}>{saveError}</div>}
+
+        <button className={styles.saveBtn} disabled={saving || !usernameOk || !avatarUrl} type="submit">
+          {saving ? 'Saving…' : 'Get started'}
+        </button>
+      </form>
+    </div>
+  )
+}

@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { groupByTime } from '../lib/groupByTime.js'
 
+const pk = p => `${p.userId}/${p.name}`
+
 export const usePhotoStore = create((set, get) => ({
   photos: [],
   groups: [],
@@ -15,15 +17,23 @@ export const usePhotoStore = create((set, get) => ({
   },
 
   updatePhoto(updatedPhoto) {
-    const photos = get().photos.map(p => p.name === updatedPhoto.name ? updatedPhoto : p)
+    const key = pk(updatedPhoto)
+    const photos = get().photos.map(p => pk(p) === key ? updatedPhoto : p)
     set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)) })
   },
 
   removePhotos(toDelete) {
-    const nameSet = new Set((Array.isArray(toDelete) ? toDelete : [toDelete]).map(p => p.name))
-    const removed = get().photos.filter(p => nameSet.has(p.name))
+    const keySet = new Set((Array.isArray(toDelete) ? toDelete : [toDelete]).map(pk))
+    const removed = get().photos.filter(p => keySet.has(pk(p)))
     removed.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
-    const photos = get().photos.filter(p => !nameSet.has(p.name))
+    const photos = get().photos.filter(p => !keySet.has(pk(p)))
+    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: null })
+  },
+
+  removeUserPhotos(userId) {
+    const toRemove = get().photos.filter(p => p.userId === userId)
+    toRemove.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
+    const photos = get().photos.filter(p => p.userId !== userId)
     set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: null })
   },
 
@@ -42,10 +52,10 @@ export const usePhotoStore = create((set, get) => ({
 
   reorderGroup(newOrderedPhotos) {
     const updated = newOrderedPhotos.map((p, i) => ({ ...p, meta: { ...p.meta, order: i } }))
-    const nameMap = new Map(updated.map(p => [p.name, p]))
-    const photos = get().photos.map(p => nameMap.has(p.name) ? nameMap.get(p.name) : p)
+    const keyMap = new Map(updated.map(p => [pk(p), p]))
+    const photos = get().photos.map(p => keyMap.get(pk(p)) ?? p)
     const activeGroup = get().activeGroup
-    const updatedActive = activeGroup?.some(p => nameMap.has(p.name)) ? updated : activeGroup
+    const updatedActive = activeGroup?.some(p => keyMap.has(pk(p))) ? updated : activeGroup
     set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: updatedActive })
   },
 
