@@ -70,30 +70,35 @@ let _initInProgress = false
 export async function initPhotos() {
   if (_initInProgress) return
   _initInProgress = true
+  let fetchAttempted = false
   try {
     const user = getUser()
     if (!user) return
 
+    fetchAttempted = true
     const res = await fetch(`/api/photos?userId=${user.id}`)
     const { rows, profiles: profileRows, error } = await res.json()
 
     if (error || !rows?.length) return
 
     const profileMap = Object.fromEntries((profileRows ?? []).map(p => [p.id, p]))
+    const existing = new Set(usePhotoStore.getState().photos.map(p => `${p.userId}/${p.name}`))
 
-    await Promise.all(rows.map(row =>
-      loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
-        .catch(e => console.error('[hookspot] failed to load', row.filename, e))
-    ))
+    await Promise.all(rows
+      .filter(row => !existing.has(`${row.user_id}/${row.filename}`))
+      .map(row =>
+        loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
+          .catch(e => console.error('[hookspot] failed to load', row.filename, e))
+      )
+    )
   } finally {
     _initInProgress = false
+    if (fetchAttempted) usePhotoStore.getState().setPhotosInitialized()
   }
 }
 
 async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
-  const { photos, addPhoto } = usePhotoStore.getState()
-  if (photos.find(p => p.name === row.filename && p.userId === row.user_id)) return
-
+  const { addPhoto } = usePhotoStore.getState()
   const cacheKey = `${row.user_id}/${row.filename}`
   const cached = await getCached(cacheKey)
   if (cached) {

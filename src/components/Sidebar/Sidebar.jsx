@@ -9,6 +9,7 @@ import styles from './Sidebar.module.css'
 export function Sidebar() {
   const groups = usePhotoStore(s => s.groups)
   const hasPhotos = usePhotoStore(s => s.photos.length > 0)
+  const photosInitialized = usePhotoStore(s => s.photosInitialized)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const bulkUploading = usePhotoStore(s => s.bulkUploading)
   const setBulkUploading = usePhotoStore(s => s.setBulkUploading)
@@ -64,9 +65,9 @@ export function Sidebar() {
 
   return (
     <aside id="sidebar" className={styles.sidebar}>
-      {hasOthers && (
-        <div className={styles.filterRow}>
-          <span className={styles.filterTitle}>Latest Catches</span>
+      <div className={styles.filterRow}>
+        <span className={styles.filterTitle}>Latest Catches</span>
+        {hasOthers && (
           <div className={styles.filterTabs}>
             <button
               className={`${styles.filterTab} ${!ownOnly ? styles.filterTabActive : ''}`}
@@ -77,17 +78,19 @@ export function Sidebar() {
               onClick={() => setOwnOnly(true)}
             >Mine</button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       <ScrollArea.Root className={styles.scrollRoot}>
         <ScrollArea.Viewport className={styles.scrollViewport}>
           <div className={styles.list}>
-            {!hasPhotos && (
+            {!photosInitialized ? (
+              <div className={styles.loadingState} />
+            ) : !hasPhotos ? (
               <div className={styles.empty}>
                 <p className={styles.emptyTitle}>Welcome to Hook Spot!</p>
                 <p className={styles.emptySubtitle}>Add photos of your catches to pin them to the map. Follow other anglers to see their catches here too.</p>
               </div>
-            )}
+            ) : null}
             {items.map(item =>
               item.type === 'header'
                 ? <div key={item.key} className={styles.monthHeader}>{item.label}</div>

@@ -35,33 +35,29 @@
 }
 
 /* ── List ── */
-.scrollRoot {
+.scrollContainer {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
   min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
 }
 
-.scrollViewport {
-  width: 100%;
-  height: 100%;
-}
-
-.scrollbar {
-  display: flex;
-  user-select: none;
-  touch-action: none;
-  padding: 2px;
+.scrollContainer::-webkit-scrollbar {
   width: 8px;
 }
 
-.scrollThumb {
-  flex: 1;
-  background: rgba(255,255,255,0.2);
-  border-radius: 999px;
-  position: relative;
+.scrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+  padding: 2px;
 }
 
-.scrollThumb:hover {
+.scrollContainer::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 999px;
+}
+
+.scrollContainer::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.35);
 }
 

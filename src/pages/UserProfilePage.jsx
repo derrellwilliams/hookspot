@@ -33,14 +33,12 @@ export function UserProfilePage() {
   const removeUserPhotos = usePhotoStore(s => s.removeUserPhotos)
   const showToast = usePhotoStore(s => s.showToast)
   const photos = usePhotoStore(s => s.photos)
-  const groups = usePhotoStore(s => s.groups)
 
   const isOwnProfile = urlUsername === myUsername
 
   // Other-profile state
   const [fetchedProfile, setFetchedProfile] = useState(null)
   const [otherPhotos, setOtherPhotos] = useState([])
-  const [catchCount, setCatchCount] = useState(null)
   const [isFollowing, setIsFollowing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [followLoading, setFollowLoading] = useState(false)
@@ -78,7 +76,9 @@ export function UserProfilePage() {
   }, [isOwnProfile, myUser, myUsername])
 
   const profile = isOwnProfile ? ownProfile : fetchedProfile
-  const isLoading = isOwnProfile ? !myUser : loading
+  const isAuthResolving = !!myUser && myUsername === null
+  const isProfileLoading = isOwnProfile ? !myUser : loading
+  const isLoading = isAuthResolving || isProfileLoading
 
   // Fetch other user's profile
   useEffect(() => {
@@ -95,11 +95,10 @@ export function UserProfilePage() {
         setFetchedProfile(profileData)
         const [followResult, photosRes] = await Promise.all([
           supabase.from('follows').select('follower_id').eq('follower_id', myUser.id).eq('following_id', profileData.id).maybeSingle(),
-          fetch(`/api/photos?userId=${profileData.id}`),
+          fetch(`/api/photos?userId=${profileData.id}&ownOnly=true`),
         ])
         setIsFollowing(!!followResult.data)
         const { rows = [] } = await photosRes.json()
-        setCatchCount(rows.length)
         setOtherPhotos(rows.map(row => ({
           name: row.filename,
           userId: row.user_id,
@@ -131,11 +130,6 @@ export function UserProfilePage() {
   const photoMap = useMemo(
     () => Object.fromEntries(effectivePhotos.map(p => [p.name, p])),
     [effectivePhotos]
-  )
-
-  const ownCatchCount = useMemo(
-    () => groups.filter(g => g[0].isOwn).length,
-    [groups]
   )
 
   const favoritesPhotos = useMemo(() => {
@@ -270,7 +264,6 @@ export function UserProfilePage() {
   const displayName = profile.display_name || profile.username
   const avatarUrl = profile.avatar_url
   const bio = profile.bio
-  const effectiveCatchCount = isOwnProfile ? ownCatchCount : catchCount
 
   return (
     <div className={styles.page}>
@@ -312,9 +305,9 @@ export function UserProfilePage() {
                   <span className={displayName ? styles.profileName : styles.profileNameEmpty}>
                     {displayName || "What's your name?"}
                   </span>
-                  <button className={styles.editIconBtn} onClick={openDialog} aria-label="Edit profile">
-                    <EditPencil width={15} height={15} />
-                  </button>
+                  <Button variant="icon-sm" onClick={openDialog} aria-label="Edit profile">
+                    <EditPencil width={16} height={16} />
+                  </Button>
                 </div>
                 <div className={styles.usernameLabel}>@{profile.username}</div>
                 <button
@@ -332,12 +325,6 @@ export function UserProfilePage() {
                 {bio && <p className={styles.bio}>{bio}</p>}
               </>
             )}
-            <div className={styles.stats}>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>{effectiveCatchCount ?? '—'}</span>
-                <span className={styles.statLabel}>Catches</span>
-              </div>
-            </div>
             {!isOwnProfile && (
               <button
                 className={isFollowing ? styles.unfollowBtn : styles.followBtn}

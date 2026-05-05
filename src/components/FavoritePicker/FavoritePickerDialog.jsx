@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import * as ScrollArea from '@radix-ui/react-scroll-area'
 import { Check } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { formatDateFull, cleanSpecies } from '../../lib/formatters.js'
 import styles from './FavoritePickerDialog.module.css'
 
 export function FavoritePickerDialog({ open, current, onSelect, onRemove, onClose }) {
-  const photos = usePhotoStore(s => s.photos)
+  const allPhotos = usePhotoStore(s => s.photos)
+  const photos = useMemo(() => allPhotos.filter(p => p.isOwn ?? false), [allPhotos])
   const [selected, setSelected] = useState(current)
 
   function handleOpenChange(o) {
@@ -48,39 +48,34 @@ export function FavoritePickerDialog({ open, current, onSelect, onRemove, onClos
           {photos.length === 0 ? (
             <div className={styles.empty}>No catches yet — add some first.</div>
           ) : (
-            <ScrollArea.Root className={styles.scrollRoot}>
-              <ScrollArea.Viewport className={styles.scrollViewport}>
-                <div className={styles.list}>
-                  {items.map(item => {
-                    if (item.type === 'header') {
-                      return <div key={item.key} className={styles.monthHeader}>{item.label}</div>
-                    }
-                    const { photo } = item
-                    const species = cleanSpecies(photo.species)
-                    const isSelected = photo.name === selected
-                    return (
-                      <button
-                        key={photo.name}
-                        className={`${styles.item} ${isSelected ? styles.active : ''}`}
-                        onClick={() => setSelected(photo.name)}
-                      >
-                        <img src={photo.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={styles.thumb} />
-                        <div className={styles.meta}>
-                          {species && <div className={styles.species}>{species}</div>}
-                          <div className={styles.date}>
-                            {photo.time ? formatDateFull(photo.time) : 'No date'}
-                          </div>
+            <div className={styles.scrollContainer}>
+              <div className={styles.list}>
+                {items.map(item => {
+                  if (item.type === 'header') {
+                    return <div key={item.key} className={styles.monthHeader}>{item.label}</div>
+                  }
+                  const { photo } = item
+                  const species = cleanSpecies(photo.species)
+                  const isSelected = photo.name === selected
+                  return (
+                    <button
+                      key={photo.name}
+                      className={`${styles.item} ${isSelected ? styles.active : ''}`}
+                      onClick={() => setSelected(photo.name)}
+                    >
+                      <img src={photo.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={styles.thumb} />
+                      <div className={styles.meta}>
+                        {species && <div className={styles.species}>{species}</div>}
+                        <div className={styles.date}>
+                          {photo.time ? formatDateFull(photo.time) : 'No date'}
                         </div>
-                        {isSelected && <Check width={16} height={16} className={styles.check} />}
-                      </button>
-                    )
-                  })}
-                </div>
-              </ScrollArea.Viewport>
-              <ScrollArea.Scrollbar className={styles.scrollbar} orientation="vertical">
-                <ScrollArea.Thumb className={styles.scrollThumb} />
-              </ScrollArea.Scrollbar>
-            </ScrollArea.Root>
+                      </div>
+                      {isSelected && <Check width={16} height={16} className={styles.check} />}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           )}
 
           <div className={styles.footer}>

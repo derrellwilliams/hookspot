@@ -13,6 +13,7 @@ export const usePhotoStore = create((set, get) => ({
   bulkUploading: false,
   pendingUploadFiles: [],
   ownOnly: false,
+  photosInitialized: false,
 
   addPhoto(photo) {
     const photos = [...get().photos, photo]
@@ -78,8 +79,12 @@ export const usePhotoStore = create((set, get) => ({
     set({ ownOnly: v })
   },
 
+  setPhotosInitialized() {
+    set({ photosInitialized: true })
+  },
+
   clearPhotos() {
     get().photos.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
-    set({ photos: [], groups: [], activeGroup: null, uploadOpen: false, toast: null, flyToPhoto: null })
+    set({ photos: [], groups: [], activeGroup: null, uploadOpen: false, toast: null, flyToPhoto: null, photosInitialized: false })
   },
 }))
