@@ -78,6 +78,7 @@ export async function initPhotos() {
     fetchAttempted = true
     const res = await fetch(`/api/photos?userId=${user.id}`)
     const { rows, profiles: profileRows, error } = await res.json()
+    usePhotoStore.getState().setPhotosInitialized()
 
     if (error || !rows?.length) return
 
@@ -93,7 +94,6 @@ export async function initPhotos() {
     )
   } finally {
     _initInProgress = false
-    if (fetchAttempted) usePhotoStore.getState().setPhotosInitialized()
   }
 }
 
