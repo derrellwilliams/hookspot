@@ -7,6 +7,7 @@ import { DropOverlay } from './components/DropOverlay/DropOverlay.jsx'
 import { UploadDialog } from './components/UploadDialog/UploadDialog.jsx'
 import { MapPage } from './pages/MapPage.jsx'
 import { DesignPage } from './pages/DesignPage.jsx'
+import { NotFoundPage } from './pages/NotFoundPage.jsx'
 import { LoginPage } from './pages/LoginPage.jsx'
 import { OnboardingPage } from './pages/OnboardingPage.jsx'
 import { UserProfilePage } from './pages/UserProfilePage.jsx'
@@ -30,7 +31,9 @@ function AppInner() {
   const setSession = useAuthStore(s => s.setSession)
   const setUsername = useAuthStore(s => s.setUsername)
 
-  const isPublicPage = ['/login', '/onboarding'].includes(location.pathname)
+  const knownRoutes = ['/', '/login', '/onboarding', '/profile', '/design']
+  const isKnownRoute = knownRoutes.includes(location.pathname) || location.pathname.startsWith('/user/')
+  const isPublicPage = ['/login', '/onboarding'].includes(location.pathname) || !isKnownRoute
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -78,6 +81,7 @@ function AppInner() {
         <Route path="/profile" element={<RequireAuth><ProfileRedirect /></RequireAuth>} />
         <Route path="/user/:username" element={<RequireAuth><UserProfilePage /></RequireAuth>} />
         <Route path="/design" element={<DesignPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!isPublicPage && <DropOverlay />}
       {!isPublicPage && <UploadDialog />}
