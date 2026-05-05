@@ -8,12 +8,12 @@ export function createProfileHandler(env) {
     if (!userId) { sendJson(res, { error: 'userId required' }, 400); return }
     try {
       const response = await fetch(
-        `${env.VITE_SUPABASE_URL}/rest/v1/profiles?select=username&id=eq.${encodeURIComponent(userId)}&limit=1`,
+        `${env.VITE_SUPABASE_URL}/rest/v1/profiles?select=username,avatar_url&id=eq.${encodeURIComponent(userId)}&limit=1`,
         { headers: serviceHeaders(env) }
       )
       if (!response.ok) throw new Error(`Supabase error: ${response.status}`)
       const data = await response.json()
-      sendJson(res, { username: data[0]?.username ?? null })
+      sendJson(res, { username: data[0]?.username ?? null, avatar_url: data[0]?.avatar_url ?? null })
     } catch (err) {
       console.error('[profile] error:', err.message)
       sendJson(res, { error: err.message }, 500)

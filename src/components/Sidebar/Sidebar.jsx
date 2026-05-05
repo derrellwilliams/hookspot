@@ -102,7 +102,7 @@ export function Sidebar() {
                 <span className={styles.addLabel}>Uploading…</span>
               </div>
             ) : (
-              <button className={styles.addCard} onClick={() => fileInputRef.current?.click()}>
+              <button className={styles.addCard} onClick={() => setUploadOpen(true)}>
                 <Plus width={24} height={24} className={styles.addIcon} />
                 <span className={styles.addLabel}>Add catches</span>
               </button>

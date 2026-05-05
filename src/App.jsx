@@ -43,13 +43,16 @@ function AppInner() {
 
         try {
           const res = await fetch(`/api/profile?userId=${session.user.id}`)
-          const { username, error: profileError } = await res.json()
+          const { username, avatar_url, error: profileError } = await res.json()
           if (profileError) {
             console.error('[auth] profile check failed', profileError)
           } else if (!username) {
             navigate('/onboarding', { replace: true })
           } else {
             setUsername(username)
+            if (avatar_url && !session.user.user_metadata?.avatar_url) {
+              setUser({ ...session.user, user_metadata: { ...session.user.user_metadata, avatar_url } })
+            }
             initPhotos()
           }
         } catch (err) {
@@ -80,6 +83,7 @@ function AppInner() {
         <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><ProfileRedirect /></RequireAuth>} />
         <Route path="/user/:username" element={<RequireAuth><UserProfilePage /></RequireAuth>} />
+        <Route path="/" element={null} />
         <Route path="/design" element={<DesignPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

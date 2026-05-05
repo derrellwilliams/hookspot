@@ -9,6 +9,7 @@ export function LoginPage() {
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
   const loading = useAuthStore(s => s.loading)
+  const username = useAuthStore(s => s.username)
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
@@ -23,8 +24,8 @@ export function LoginPage() {
   }, [])
 
   useEffect(() => {
-    if (!loading && user) navigate('/', { replace: true })
-  }, [loading, user, navigate])
+    if (!loading && user && username) navigate('/', { replace: true })
+  }, [loading, user, username, navigate])
 
   async function handleSubmit(e) {
     e.preventDefault()
