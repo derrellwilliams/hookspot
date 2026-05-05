@@ -234,9 +234,9 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
                     {(ownerProfile.display_name || ownerProfile.username || '?')[0].toUpperCase()}
                   </div>
               }
-              <span className={styles.popupAttributionName}>
+              <a href={`/user/${ownerProfile.username}`} className={styles.popupAttributionName}>
                 {ownerProfile.display_name || ownerProfile.username}
-              </span>
+              </a>
             </div>
           )}
           <div className={styles.popupSpecies}>

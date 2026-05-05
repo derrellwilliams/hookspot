@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { IconoirProvider } from 'iconoir-react'
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Nav } from './components/Nav/Nav.jsx'
 import { Toast } from './components/Toast/Toast.jsx'
 import { DropOverlay } from './components/DropOverlay/DropOverlay.jsx'
@@ -9,7 +9,6 @@ import { MapPage } from './pages/MapPage.jsx'
 import { DesignPage } from './pages/DesignPage.jsx'
 import { LoginPage } from './pages/LoginPage.jsx'
 import { OnboardingPage } from './pages/OnboardingPage.jsx'
-import { ProfilePage } from './pages/ProfilePage.jsx'
 import { UserProfilePage } from './pages/UserProfilePage.jsx'
 import { RequireAuth } from './components/RequireAuth.jsx'
 import { supabase } from './lib/supabase.js'
@@ -17,6 +16,12 @@ import { useAuthStore } from './store/useAuthStore.js'
 import { usePhotoStore } from './store/usePhotoStore.js'
 import { initPhotos } from './lib/fileLoader.js'
 import styles from './App.module.css'
+
+function ProfileRedirect() {
+  const username = useAuthStore(s => s.username)
+  if (!username) return null
+  return <Navigate to={`/user/${username}`} replace />
+}
 
 function AppInner() {
   const location = useLocation()
@@ -70,7 +75,7 @@ function AppInner() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
-        <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><ProfileRedirect /></RequireAuth>} />
         <Route path="/user/:username" element={<RequireAuth><UserProfilePage /></RequireAuth>} />
         <Route path="/design" element={<DesignPage />} />
       </Routes>

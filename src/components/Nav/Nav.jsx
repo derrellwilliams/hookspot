@@ -18,7 +18,7 @@ export function Nav() {
     <nav className={styles.navBar}>
       <div className={styles.pill}>
         {NAV_ITEMS.map(({ path: itemPath, label }) => {
-          const isActive = path === itemPath
+          const isActive = path === itemPath || (itemPath === '/profile' && path.startsWith('/user/'))
           return (
             <button
               key={itemPath}

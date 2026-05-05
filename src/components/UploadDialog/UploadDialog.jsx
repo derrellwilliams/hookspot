@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Xmark, MediaImage } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
@@ -13,6 +13,7 @@ export function UploadDialog() {
   const uploadOpen = usePhotoStore(s => s.uploadOpen)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const showToast = usePhotoStore(s => s.showToast)
+  const setPendingUploadFiles = usePhotoStore(s => s.setPendingUploadFiles)
   const photos = usePhotoStore(s => s.photos)
   const prevRods = [...new Set(photos.map(p => p.meta?.rod).filter(Boolean))]
   const prevFlys = [...new Set(photos.map(p => p.meta?.fly).filter(Boolean))]
@@ -28,6 +29,14 @@ export function UploadDialog() {
   const [loading, setLoading] = useState(false)
   const [dropOver, setDropOver] = useState(false)
   const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    if (!uploadOpen) return
+    const files = usePhotoStore.getState().pendingUploadFiles
+    if (!files.length) return
+    setPendingUploadFiles([])
+    goToStep2(files)
+  }, [uploadOpen])
 
   function revokeUrls(urls) { urls.forEach(u => URL.revokeObjectURL(u)) }
 

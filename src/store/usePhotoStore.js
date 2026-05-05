@@ -10,6 +10,9 @@ export const usePhotoStore = create((set, get) => ({
   activeGroup: null,
   toast: null,
   uploadOpen: false,
+  bulkUploading: false,
+  pendingUploadFiles: [],
+  ownOnly: false,
 
   addPhoto(photo) {
     const photos = [...get().photos, photo]
@@ -61,6 +64,18 @@ export const usePhotoStore = create((set, get) => ({
 
   setUploadOpen(open) {
     set({ uploadOpen: open })
+  },
+
+  setBulkUploading(v) {
+    set({ bulkUploading: v })
+  },
+
+  setPendingUploadFiles(files) {
+    set({ pendingUploadFiles: files })
+  },
+
+  setOwnOnly(v) {
+    set({ ownOnly: v })
   },
 
   clearPhotos() {

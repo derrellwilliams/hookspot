@@ -31,8 +31,11 @@ export function MapView({ active }) {
   const [fitted, setFitted] = useState(false)
 
   const groups = usePhotoStore(s => s.groups)
+  const ownOnly = usePhotoStore(s => s.ownOnly)
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
+
+  const visibleGroups = ownOnly ? groups.filter(g => g.some(p => p.isOwn)) : groups
 
   // Init map once. flyToPhotoFn is defined here so it only enters the store once,
   // reading current marker state via markerByNameRef on each call.
@@ -72,13 +75,13 @@ export function MapView({ active }) {
     return () => map.remove()
   }, [setFlyToPhoto])
 
-  // Rebuild markers when groups change
+  // Rebuild markers when groups or filter change
   useEffect(() => {
     if (!mapReady) return
     const map = mapRef.current
 
     const groupKey = (group) => group.map(p => p.name).sort().join('|')
-    const newKeySet = new Set(groups.map(groupKey))
+    const newKeySet = new Set(visibleGroups.map(groupKey))
 
     // If a group gained or lost photos, its key changes. Update the entry's key in place
     // so the marker and open popup are preserved rather than destroyed and recreated.
@@ -95,14 +98,14 @@ export function MapView({ active }) {
 
     const existingByKey = new Map(markersRef.current.map(m => [m.key, m]))
 
-    // Remove markers for deleted groups
+    // Remove markers for deleted/hidden groups
     markersRef.current.forEach(({ key, marker, popup, root }) => {
       if (!newKeySet.has(key)) { popup.remove(); root.unmount(); marker.remove() }
     })
     markersRef.current = markersRef.current.filter(m => newKeySet.has(m.key))
 
     // Add markers for new groups
-    for (const group of groups) {
+    for (const group of visibleGroups) {
       const key = groupKey(group)
       if (existingByKey.has(key)) continue
 
@@ -143,7 +146,7 @@ export function MapView({ active }) {
 
     // Rebuild name→entry lookup and refresh click handlers
     const markerByName = new Map()
-    for (const group of groups) {
+    for (const group of visibleGroups) {
       const key = groupKey(group)
       const entry = markersRef.current.find(m => m.key === key)
       if (!entry) continue
@@ -161,7 +164,7 @@ export function MapView({ active }) {
 
     // Publish updated lookup so flyToPhotoFn (in init effect) sees current markers
     markerByNameRef.current = markerByName
-  }, [groups, mapReady, setActiveGroup])
+  }, [visibleGroups, mapReady, setActiveGroup])
 
   // Resize map when it becomes visible (e.g. navigating from /profile to /)
   useEffect(() => {

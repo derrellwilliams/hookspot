@@ -6,7 +6,12 @@ const STORAGE_QUALITY = 0.85
 
 export async function extractExif(file) {
   try {
-    return await exifr.parse(file, { gps: true }) ?? null
+    const result = await exifr.parse(file, { gps: true, tiff: true, ifd0: true, exif: true }) ?? null
+    if (result?.latitude != null) return result
+    // Retry with full parse for HEIC files that need it
+    const isHeic = /\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif'
+    if (isHeic) return await exifr.parse(file) ?? null
+    return result
   } catch {
     return null
   }

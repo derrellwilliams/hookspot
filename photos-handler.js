@@ -8,8 +8,20 @@ export function createPhotosHandler(env) {
     if (!userId) { sendJson(res, { error: 'userId required' }, 400); return }
     const headers = serviceHeaders(env)
     try {
+      // Fetch the list of users this person follows
+      const followsRes = await fetch(
+        `${env.VITE_SUPABASE_URL}/rest/v1/follows?select=following_id&follower_id=eq.${encodeURIComponent(userId)}`,
+        { headers }
+      )
+      if (!followsRes.ok) throw new Error(`Supabase follows error: ${followsRes.status}`)
+      const follows = await followsRes.json()
+      const followingIds = Array.isArray(follows) ? follows.map(f => f.following_id) : []
+
+      // Fetch photos from self + followed users
+      const allUserIds = [userId, ...followingIds]
+      const idFilter = `user_id=in.(${allUserIds.map(encodeURIComponent).join(',')})`
       const photosRes = await fetch(
-        `${env.VITE_SUPABASE_URL}/rest/v1/photos?select=*&user_id=eq.${encodeURIComponent(userId)}&order=time.desc&limit=500`,
+        `${env.VITE_SUPABASE_URL}/rest/v1/photos?select=*&${idFilter}&order=time.desc&limit=500`,
         { headers }
       )
       if (!photosRes.ok) throw new Error(`Supabase error: ${photosRes.status}`)

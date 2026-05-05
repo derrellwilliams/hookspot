@@ -188,10 +188,16 @@
 }
 
 .popupAttributionName {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Roboto Condensed', sans-serif;
   font-size: 13px;
   font-weight: 500;
   color: var(--dark-muted);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+
+.popupAttributionName:hover {
+  color: #fff;
 }
 
 .popupSpecies {
