@@ -2,7 +2,7 @@
 
 A work in progress personal fishing log — drop GPS-tagged photos onto a map, track species, gear, and catch stats over time.
 
-<img width="2757" height="1816" alt="hookspot" src="https://github.com/user-attachments/assets/56fbcaec-2fad-43a9-8eba-c7873147b37a" />
+<img width="2757" height="1816" alt="hookspot" src="https://github.com/user-attachments/assets/5fe4ac85-da72-4042-8577-490097cb8195" />
 
 ## What it does
 
