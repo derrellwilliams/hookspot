@@ -12,9 +12,10 @@ function getUser() {
   return useAuthStore.getState().user
 }
 
-// Supabase Storage rejects spaces and special chars in object keys
+// Supabase Storage rejects spaces and special chars in object keys.
+// Also normalize HEIC/HEIF → jpg since we always store JPEG content.
 function storageKey(filename) {
-  return filename.replace(/[^\w.\-]/g, '_')
+  return filename.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
 }
 
 function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
@@ -27,6 +28,7 @@ function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
     : exif ?? null
   return {
     name: row.filename,
+    storagePath: row.storage_path ?? null,
     userId: row.user_id,
     isOwn: row.user_id === currentUserId,
     ownerProfile: ownerProfile ?? null,
@@ -256,7 +258,8 @@ export async function deletePhotos(toDelete) {
   if (!user) return
 
   const list = Array.isArray(toDelete) ? toDelete : [toDelete]
-  const paths = list.map(p => `${user.id}/${storageKey(p.name)}`)
+  // Prefer storagePath from DB (exact path); fall back to reconstructing for old photos
+  const paths = list.map(p => p.storagePath ?? `${user.id}/${storageKey(p.name)}`)
   const filenames = list.map(p => p.name)
 
   const [{ error: storageError }, { error: dbError }] = await Promise.all([

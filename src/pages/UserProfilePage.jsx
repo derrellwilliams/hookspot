@@ -376,7 +376,7 @@ export function UserProfilePage() {
                   onClick={isOwnProfile ? () => setPickerSlot(i) : undefined}
                   style={!isOwnProfile ? { cursor: 'default' } : undefined}
                 >
-                  <img src={photo.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={styles.favoriteImg} />
+                  <img src={photo.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={styles.favoriteImg} onError={e => { e.currentTarget.style.display = 'none' }} />
                   <div className={styles.favoriteMeta}>
                     {species && <div className={styles.favoriteSpecies}>{species}</div>}
                     {photo.time && <div className={styles.favoriteDatetime}>{formatDateFull(photo.time).split(' •')[0]}</div>}
