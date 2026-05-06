@@ -342,18 +342,18 @@ export function UserProfilePage() {
             ) : (
               <>
                 <h1 className={styles.displayName}>{displayName}</h1>
-                <div className={styles.usernameLabel}>@{profile.username}</div>
                 {bio && <p className={styles.bio}>{bio}</p>}
               </>
             )}
             {!isOwnProfile && (
-              <button
-                className={isFollowing ? styles.unfollowBtn : styles.followBtn}
+              <Button
+                variant="secondary"
                 onClick={isFollowing ? handleUnfollow : handleFollow}
                 disabled={followLoading}
+                className={styles.editProfileBtn}
               >
                 {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
-              </button>
+              </Button>
             )}
           </div>
         </div>

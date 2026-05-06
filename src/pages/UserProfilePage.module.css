@@ -17,7 +17,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 16px;
   position: relative;
 }
@@ -203,6 +203,7 @@
   line-height: 1.5;
   margin: 0;
   text-align: center;
+  max-width: 46ch;
 }
 
 .profileBioEmpty {
@@ -213,6 +214,7 @@
   margin: 0;
   text-align: center;
   font-style: italic;
+  max-width: 46ch;
 }
 
 /* Own profile: shareable link row */
@@ -312,55 +314,6 @@
 }
 
 /* Follow / Unfollow buttons */
-.followBtn {
-  background: var(--accent);
-  border: none;
-  border-radius: 20px;
-  padding: 10px 28px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: inherit;
-  color: #fff;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: opacity 0.15s;
-  min-width: 100px;
-}
-
-.followBtn:not(:disabled):hover {
-  opacity: 0.88;
-}
-
-.followBtn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.unfollowBtn {
-  background: none;
-  border: 1px solid var(--dark-border);
-  border-radius: 20px;
-  padding: 10px 28px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: inherit;
-  color: var(--dark-muted);
-  cursor: pointer;
-  margin-top: 8px;
-  transition: border-color 0.15s, color 0.15s;
-  min-width: 100px;
-}
-
-.unfollowBtn:not(:disabled):hover {
-  border-color: var(--dark-text);
-  color: var(--dark-text);
-}
-
-.unfollowBtn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 /* ── Edit dialog ── */
 .dialogBackdrop {
   position: fixed;
@@ -618,6 +571,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .card {
