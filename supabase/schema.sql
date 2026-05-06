@@ -7,7 +7,10 @@
 create table profiles (
   id uuid references auth.users on delete cascade primary key,
   username text unique not null,
+  display_name text,
   bio text,
+  avatar_url text,
+  favorites jsonb default '[]',
   created_at timestamptz default now()
 );
 alter table profiles enable row level security;

@@ -15,11 +15,15 @@ import { createImageDataUrl } from '../lib/imageUtils.js'
 import styles from './UserProfilePage.module.css'
 
 const FAVORITES_KEY = 'hookspot:favorites'
-function loadFavorites() {
+function loadFavoritesCache() {
   try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) ?? [null, null, null, null] }
   catch { return [null, null, null, null] }
 }
-function saveFavorites(favs) {
+function normalizeFavorites(raw) {
+  const arr = Array.isArray(raw) ? raw : []
+  return [...arr, null, null, null, null].slice(0, 4)
+}
+function cacheFavorites(favs) {
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs))
 }
 
@@ -50,7 +54,7 @@ export function UserProfilePage() {
   const [editName, setEditName] = useState('')
   const [editBio, setEditBio] = useState('')
   const [saving, setSaving] = useState(false)
-  const [favorites, setFavorites] = useState(loadFavorites)
+  const [favorites, setFavorites] = useState(loadFavoritesCache)
   const [pickerSlot, setPickerSlot] = useState(null)
   const fileInputRef = useRef(null)
 
@@ -117,6 +121,23 @@ export function UserProfilePage() {
       }
     })()
   }, [urlUsername, myUser?.id, isOwnProfile])
+
+  // Load own favorites from DB (authoritative) — localStorage is only a fast-render cache
+  useEffect(() => {
+    if (!isOwnProfile || !myUser) return
+    supabase
+      .from('profiles')
+      .select('favorites')
+      .eq('id', myUser.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.favorites) {
+          const favs = normalizeFavorites(data.favorites)
+          setFavorites(favs)
+          cacheFavorites(favs)
+        }
+      })
+  }, [isOwnProfile, myUser?.id])
 
   const effectivePhotos = isOwnProfile
     ? photos.filter(p => p.userId === profile?.id)
@@ -233,16 +254,18 @@ export function UserProfilePage() {
   function handleSelectFavorite(photo) {
     const next = favorites.map((f, i) => i === pickerSlot ? photo.name : f)
     setFavorites(next)
-    saveFavorites(next)
+    cacheFavorites(next)
     supabase.from('profiles').update({ favorites: next }).eq('id', myUser.id)
+      .then(({ error }) => { if (error) console.error('[favorites] save failed', error) })
     setPickerSlot(null)
   }
 
   function handleRemoveFavorite() {
     const next = favorites.map((f, i) => i === pickerSlot ? null : f)
     setFavorites(next)
-    saveFavorites(next)
+    cacheFavorites(next)
     supabase.from('profiles').update({ favorites: next }).eq('id', myUser.id)
+      .then(({ error }) => { if (error) console.error('[favorites] save failed', error) })
     setPickerSlot(null)
   }
 
