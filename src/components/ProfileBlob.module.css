@@ -1,0 +1,16 @@
+.blob {
+  width: 160px;
+  height: 160px;
+  border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
+  animation: morph 10s linear infinite alternate;
+  flex-shrink: 0;
+}
+
+@keyframes morph {
+  0% {
+    border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
+  }
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 70% 30% 40%;
+  }
+}

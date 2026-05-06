@@ -12,6 +12,7 @@ import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
 import { createImageDataUrl } from '../lib/imageUtils.js'
+import { ProfileBlob } from '../components/ProfileBlob.jsx'
 import styles from './UserProfilePage.module.css'
 
 const FAVORITES_KEY = 'hookspot:favorites'
@@ -295,6 +296,7 @@ export function UserProfilePage() {
         {/* Profile header */}
         <div className={styles.profileHeader}>
           <div className={styles.avatarWrap}>
+            <ProfileBlob />
             {isOwnProfile ? (
               <>
                 <button

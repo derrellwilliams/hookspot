@@ -23,8 +23,21 @@
 .avatarWrap {
   position: relative;
   flex-shrink: 0;
-  width: 96px;
-  height: 96px;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Blob behind avatar */
+.avatarWrap > div:first-child {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 /* Clickable avatar button (own profile) */
@@ -33,15 +46,15 @@
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background: var(--dark-surface);
-  border: 1px solid var(--dark-border);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   cursor: pointer;
   padding: 0;
-  transition: border-color 0.15s;
+  background: none;
+  border: none;
+  z-index: 1;
 }
 
 .avatarOverlay {
@@ -91,7 +104,6 @@
   width: 26px;
   height: 26px;
   background: #3a3a3a;
-  border: 2px solid #111113;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -114,7 +126,8 @@
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  border: 1px solid var(--dark-border);
+  position: relative;
+  z-index: 1;
 }
 
 /* Fallback div when no avatar (other profile) */
@@ -122,8 +135,6 @@
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background: var(--dark-surface);
-  border: 1px solid var(--dark-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,6 +142,8 @@
   font-size: 32px;
   font-weight: 700;
   color: var(--dark-muted);
+  position: relative;
+  z-index: 1;
 }
 
 .profileInfo {
