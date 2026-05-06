@@ -67,9 +67,15 @@ function maybeFetchWeather(photo) {
 }
 
 let _initInProgress = false
+let _initQueued = false
+
 export async function initPhotos() {
-  if (_initInProgress) return
+  if (_initInProgress) {
+    _initQueued = true
+    return
+  }
   _initInProgress = true
+  _initQueued = false
   let fetchAttempted = false
   try {
     const user = getUser()
@@ -94,6 +100,10 @@ export async function initPhotos() {
     )
   } finally {
     _initInProgress = false
+    if (_initQueued) {
+      _initQueued = false
+      initPhotos()
+    }
   }
 }
 

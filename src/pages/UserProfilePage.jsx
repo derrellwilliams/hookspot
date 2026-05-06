@@ -177,7 +177,7 @@ export function UserProfilePage() {
       const { error } = await supabase.from('follows').insert({ follower_id: myUser.id, following_id: profile.id })
       if (error) throw error
       setIsFollowing(true)
-      await initPhotos()
+      initPhotos()
     } catch (err) {
       console.error('[user-profile] follow failed', err)
       showToast('Failed to follow. Please try again.')
