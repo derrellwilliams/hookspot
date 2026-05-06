@@ -1,3 +1,10 @@
+# Profile Page CSS
+
+**File**: `src/pages/UserProfilePage.jsx` / `UserProfilePage.module.css`
+
+## Layout
+
+```css
 .page {
   position: absolute;
   inset: 0;
@@ -11,17 +18,15 @@
   padding: 96px 24px 40px;
   position: relative;
 }
+```
 
-/* ── Profile header ── */
-.profileHeader {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  position: relative;
-}
+---
 
+## Profile Header
+
+### Avatar
+
+```css
 .avatarWrap {
   position: relative;
   flex-shrink: 0;
@@ -30,7 +35,6 @@
   z-index: 1;
 }
 
-/* Clickable avatar button (own profile) */
 .avatarBtn {
   position: relative;
   width: 112px;
@@ -47,38 +51,35 @@
   z-index: 1;
 }
 
-.avatarOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-}
-
-.avatarSpinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.hiddenInput {
-  display: none;
-}
-
-/* Image inside clickable avatar button */
 .avatarImg {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.avatarStatic {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.avatarFallback {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--dark-muted);
+  position: relative;
+  z-index: 1;
 }
 
 .avatarPlaceholder {
@@ -109,31 +110,44 @@
   color: var(--dark-muted);
 }
 
-/* Static avatar image (other profile, no button wrapper) */
-.avatarStatic {
-  width: 112px;
-  height: 112px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-  position: relative;
-  z-index: 1;
-}
-
-/* Fallback div when no avatar (other profile) */
-.avatarFallback {
-  width: 112px;
-  height: 112px;
-  border-radius: 50%;
+.avatarOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Roboto', sans-serif;
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--dark-muted);
+  border-radius: 50%;
+}
+
+.avatarSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.hiddenInput {
+  display: none;
+}
+```
+
+### Profile Info
+
+```css
+.profileHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
   position: relative;
-  z-index: 1;
 }
 
 .profileInfo {
@@ -146,7 +160,6 @@
   z-index: 1;
 }
 
-/* Own profile: name + edit icon row */
 .profileNameRow {
   display: flex;
   align-items: center;
@@ -166,6 +179,46 @@
   font-weight: 700;
   color: #ffffff;
   font-style: italic;
+}
+
+.displayName {
+  font-family: 'Space Mono', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  text-align: center;
+}
+
+.profileBio {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  color: #ffffff;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+  max-width: 46ch;
+}
+
+.profileBioEmpty {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  color: #ffffff;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+  font-style: italic;
+  max-width: 46ch;
+}
+
+.bio {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  color: #ffffff;
+  text-align: center;
+  margin: 4px 0 0;
+  line-height: 1.5;
+  max-width: 320px;
 }
 
 .editIconBtn {
@@ -194,127 +247,13 @@
   gap: 6px;
   background-color: rgba(0, 0, 0, 0.5) !important;
 }
+```
 
-/* Own profile: bio */
-.profileBio {
-  font-family: 'Roboto', sans-serif;
-  font-size: 16px;
-  color: #ffffff;
-  line-height: 1.5;
-  margin: 0;
-  text-align: center;
-  max-width: 46ch;
-}
+---
 
-.profileBioEmpty {
-  font-family: 'Roboto', sans-serif;
-  font-size: 16px;
-  color: #ffffff;
-  line-height: 1.5;
-  margin: 0;
-  text-align: center;
-  font-style: italic;
-  max-width: 46ch;
-}
+## Edit Profile Dialog
 
-/* Own profile: shareable link row */
-.profileLinkRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  background: var(--dark-surface);
-  border: 1px solid var(--dark-border);
-  border-radius: 8px;
-  padding: 6px 10px;
-}
-
-.profileLinkUrl {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 12px;
-  color: var(--dark-muted);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.profileLinkCopy {
-  background: none;
-  border: none;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--accent);
-  cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
-  transition: opacity 0.15s;
-}
-
-.profileLinkCopy:hover {
-  opacity: 0.75;
-}
-
-/* Other profile: display name h1 */
-.displayName {
-  font-family: 'Space Mono', monospace;
-  font-size: 32px;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0;
-  text-align: center;
-}
-
-.usernameLabel {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 14px;
-  color: #ffffff;
-}
-
-/* Other profile: static bio */
-.bio {
-  font-family: 'Roboto', sans-serif;
-  font-size: 16px;
-  color: #ffffff;
-  text-align: center;
-  margin: 4px 0 0;
-  line-height: 1.5;
-  max-width: 320px;
-}
-
-/* Catch count stats row */
-.stats {
-  display: flex;
-  gap: 32px;
-  margin: 12px 0 4px;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.statValue {
-  font-family: 'Space Mono', monospace;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--dark-text);
-}
-
-.statLabel {
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--dark-muted);
-}
-
-/* Follow / Unfollow buttons */
-/* ── Edit dialog ── */
+```css
 .dialogBackdrop {
   position: fixed;
   inset: 0;
@@ -444,8 +383,13 @@
 .saveBtn:not(:disabled):hover {
   opacity: 0.88;
 }
+```
 
-/* ── Favorites ── */
+---
+
+## Favorites Section
+
+```css
 .favoritesLabel {
   font-size: 11px;
   font-weight: 500;
@@ -458,7 +402,7 @@
 .favoritesGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 10px;
   margin-bottom: 32px;
   position: relative;
   z-index: 1;
@@ -546,8 +490,13 @@
 .favoriteSlot:hover .favoriteHint {
   color: var(--dark-muted);
 }
+```
 
-/* ── Stats ── */
+---
+
+## Stats Section
+
+```css
 .header {
   display: flex;
   align-items: baseline;
@@ -600,8 +549,13 @@
 .footer {
   margin-top: 32px;
 }
+```
 
-/* ── States ── */
+---
+
+## States
+
+```css
 .loading {
   padding: 60px;
   font-size: 14px;
@@ -630,3 +584,8 @@
   color: var(--dark-text);
   cursor: pointer;
 }
+
+.backBtn:hover {
+  background: var(--dark-border);
+}
+```

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Xmark, Plus } from 'iconoir-react'
+import { Xmark, EditPencil } from 'iconoir-react'
 import { tokens } from '../tokens.js'
-import { Button, Input, Card, AutocompleteInput, Select, SelectWithCustom, Tooltip } from '../components/ui/index.js'
+import { Button, Input, Card } from '../components/ui/index.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import styles from './DesignPage.module.css'
 import d from '../components/UploadDialog/UploadDialog.module.css'
@@ -14,16 +14,19 @@ function DemoDialog({ open, onClose }) {
         <Dialog.Overlay className={d.backdrop} />
         <Dialog.Content className={d.content} aria-describedby={undefined}>
           <div className={d.header}>
-            <Dialog.Title className={d.title}>Dialog title</Dialog.Title>
+            <Dialog.Title className={d.title}>Edit profile</Dialog.Title>
             <Dialog.Close asChild><Button variant="icon-sm" aria-label="Close"><Xmark width={20} height={20} /></Button></Dialog.Close>
           </div>
           <div className={d.body}>
-            Dialog body content goes here.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input placeholder="Display name" style={{ padding: '8px 10px', background: 'var(--dark-surface)', border: '1px solid var(--dark-border)', borderRadius: 8, color: 'var(--dark-text)' }} />
+              <textarea placeholder="Bio" rows={3} style={{ padding: '8px 10px', background: 'var(--dark-surface)', border: '1px solid var(--dark-border)', borderRadius: 8, color: 'var(--dark-text)', fontFamily: 'inherit', resize: 'none' }} />
+            </div>
           </div>
           <div className={d.form}>
             <div className={d.actions}>
               <Button variant="secondary" onClick={onClose}>Cancel</Button>
-              <Button variant="primary">Confirm</Button>
+              <Button variant="primary">Save</Button>
             </div>
           </div>
         </Dialog.Content>
@@ -85,17 +88,13 @@ export function DesignPage() {
           <div className={styles.buttonRow}>
             <Button variant="primary">Primary</Button>
             <Button variant="secondary">Secondary</Button>
-            <Button variant="ghost">Ghost</Button>
-            <Button variant="danger">Danger</Button>
             <Button variant="primary" disabled>Disabled</Button>
           </div>
           <div className={styles.buttonRow} style={{ marginTop: 12 }}>
-            <Button variant="primary" icon={<Plus width={18} height={18} />}>Add catch</Button>
-            <Button variant="secondary" icon={<Plus width={18} height={18} />}>Secondary</Button>
-            <Button variant="ghost" icon={<Plus width={18} height={18} />}>Ghost</Button>
+            <Button variant="primary" icon={<EditPencil width={18} height={18} />}>Edit profile</Button>
+            <Button variant="secondary" icon={<EditPencil width={18} height={18} />}>Edit</Button>
           </div>
           <div className={styles.buttonRow} style={{ marginTop: 12 }}>
-            <Button variant="icon"><Xmark width={24} height={24} /></Button>
             <Button variant="icon-sm"><Xmark width={20} height={20} /></Button>
           </div>
         </Section>
@@ -104,46 +103,6 @@ export function DesignPage() {
           <div className={styles.inputRow}>
             <Input placeholder="Default input" />
             <Input placeholder="Disabled input" disabled />
-          </div>
-        </Section>
-
-        <Section label="Autocomplete Input">
-          <div className={styles.inputRow}>
-            <AutocompleteInput
-              placeholder="e.g. 9ft 5wt"
-              suggestions={['9ft 5wt', '8ft 4wt', '10ft 3wt', '7ft 3wt']}
-            />
-          </div>
-        </Section>
-
-        <Section label="Select">
-          <div className={styles.inputRow}>
-            <Select defaultValue="">
-              <option value="">Select…</option>
-              <option value="a">Option A</option>
-              <option value="b">Option B</option>
-              <option value="c">Option C</option>
-            </Select>
-          </div>
-        </Section>
-
-        <Section label="Select with Custom">
-          <div className={styles.inputRow}>
-            <SelectWithCustom
-              placeholder="e.g. 9ft 5wt"
-              suggestions={['9ft 5wt', '8ft 4wt', '10ft 3wt']}
-            />
-          </div>
-        </Section>
-
-        <Section label="Tooltip">
-          <div className={styles.buttonRow}>
-            <Tooltip label="Tooltip label" side="top">
-              <Button variant="secondary">Hover me (top)</Button>
-            </Tooltip>
-            <Tooltip label="Tooltip label" side="bottom">
-              <Button variant="secondary">Hover me (bottom)</Button>
-            </Tooltip>
           </div>
         </Section>
 

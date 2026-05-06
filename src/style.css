@@ -6,14 +6,9 @@
 
 :root {
   --accent: #2563eb;
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --border: #e2e8f0;
-  --text: #1e293b;
-  --muted: #64748b;
   --radius: 8px;
 
-  /* Dark UI (sidebar + popups) */
+  /* Dark UI */
   --ui-bg: #202020;
   --dark-surface: #2c2c2e;
   --dark-border: #3a3a3c;
@@ -24,8 +19,8 @@
 body {
   font-family: "Roboto", sans-serif;
   font-size: 14px;
-  color: var(--text);
-  background: var(--bg);
+  color: var(--dark-text);
+  background: #111113;
   height: 100dvh;
   overflow: hidden;
 }
