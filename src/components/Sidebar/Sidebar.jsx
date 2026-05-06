@@ -80,39 +80,43 @@ export function Sidebar() {
           </div>
         )}
       </div>
-      <ScrollArea.Root className={styles.scrollRoot}>
-        <ScrollArea.Viewport className={styles.scrollViewport}>
-          <div className={styles.list}>
-            {!photosInitialized ? (
-              <div className={styles.loadingState} />
-            ) : !hasPhotos ? (
-              <div className={styles.empty}>
-                <p className={styles.emptyTitle}>Welcome to Hook Spot!</p>
-                <p className={styles.emptySubtitle}>Add photos of your catches to pin them to the map. Follow other anglers to see their catches here too.</p>
-              </div>
-            ) : null}
-            {items.map(item =>
-              item.type === 'header'
-                ? <div key={item.key} className={styles.monthHeader}>{item.label}</div>
-                : <SidebarItem key={item.group[0].name} group={item.group} />
-            )}
-            {bulkUploading ? (
-              <div className={styles.bulkProgress}>
-                <div className={styles.spinner} />
-                <span className={styles.addLabel}>Uploading…</span>
-              </div>
-            ) : (
-              <button className={styles.addCard} onClick={() => setUploadOpen(true)}>
-                <Plus width={24} height={24} className={styles.addIcon} />
-                <span className={styles.addLabel}>Add catches</span>
-              </button>
-            )}
-          </div>
-        </ScrollArea.Viewport>
-        <ScrollArea.Scrollbar className={styles.scrollbar} orientation="vertical">
-          <ScrollArea.Thumb className={styles.scrollThumb} />
-        </ScrollArea.Scrollbar>
-      </ScrollArea.Root>
+      {!photosInitialized ? (
+        <div className={styles.loadingCentered}>
+          <div className={styles.spinner} />
+        </div>
+      ) : (
+        <ScrollArea.Root className={styles.scrollRoot}>
+          <ScrollArea.Viewport className={styles.scrollViewport}>
+            <div className={styles.list}>
+              {items.map(item =>
+                item.type === 'header'
+                  ? <div key={item.key} className={styles.monthHeader}>{item.label}</div>
+                  : <SidebarItem key={item.group[0].name} group={item.group} />
+              )}
+              {!hasPhotos && (
+                <div className={styles.empty}>
+                  <p className={styles.emptyTitle}>Welcome to Hook Spot!</p>
+                  <p className={styles.emptySubtitle}>Add photos of your catches to pin them to the map. Follow other anglers to see their catches here too.</p>
+                </div>
+              )}
+              {bulkUploading ? (
+                <div className={styles.bulkProgress}>
+                  <div className={styles.spinner} />
+                  <span className={styles.addLabel}>Uploading…</span>
+                </div>
+              ) : (
+                <button className={styles.addCard} onClick={() => setUploadOpen(true)}>
+                  <Plus width={24} height={24} className={styles.addIcon} />
+                  <span className={styles.addLabel}>Add catches</span>
+                </button>
+              )}
+            </div>
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar className={styles.scrollbar} orientation="vertical">
+            <ScrollArea.Thumb className={styles.scrollThumb} />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>
+      )}
       <input
         ref={fileInputRef}
         type="file"
