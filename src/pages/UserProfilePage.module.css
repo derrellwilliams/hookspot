@@ -9,6 +9,7 @@
   max-width: 860px;
   margin: 0 auto;
   padding: 96px 24px 40px;
+  position: relative;
 }
 
 /* ── Profile header ── */
@@ -17,34 +18,23 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
+  position: relative;
 }
 
 .avatarWrap {
   position: relative;
   flex-shrink: 0;
-  width: 160px;
-  height: 160px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Blob behind avatar */
-.avatarWrap > div:first-child {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+  width: 112px;
+  height: 112px;
+  z-index: 1;
 }
 
 /* Clickable avatar button (own profile) */
 .avatarBtn {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -121,8 +111,8 @@
 
 /* Static avatar image (other profile, no button wrapper) */
 .avatarStatic {
-  width: 96px;
-  height: 96px;
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
   object-fit: cover;
   display: block;
@@ -132,8 +122,8 @@
 
 /* Fallback div when no avatar (other profile) */
 .avatarFallback {
-  width: 96px;
-  height: 96px;
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -152,6 +142,8 @@
   align-items: center;
   gap: 4px;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 /* Own profile: name + edit icon row */
@@ -165,14 +157,14 @@
   font-family: 'Space Mono', monospace;
   font-size: 32px;
   font-weight: 700;
-  color: var(--dark-text);
+  color: #ffffff;
 }
 
 .profileNameEmpty {
   font-family: 'Space Mono', monospace;
   font-size: 32px;
   font-weight: 700;
-  color: var(--dark-muted);
+  color: #ffffff;
   font-style: italic;
 }
 
@@ -195,31 +187,31 @@
   background: var(--dark-surface);
 }
 
-/* Own profile: clickable bio */
+.editProfileBtn {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Own profile: bio */
 .profileBio {
   font-family: 'Roboto', sans-serif;
-  font-size: 14px;
-  color: var(--dark-muted);
+  font-size: 16px;
+  color: #ffffff;
   line-height: 1.5;
   margin: 0;
   text-align: center;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
 }
 
 .profileBioEmpty {
   font-family: 'Roboto', sans-serif;
-  font-size: 14px;
-  color: var(--dark-border);
+  font-size: 16px;
+  color: #ffffff;
   line-height: 1.5;
   margin: 0;
   text-align: center;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
   font-style: italic;
 }
 
@@ -268,22 +260,22 @@
   font-family: 'Space Mono', monospace;
   font-size: 32px;
   font-weight: 700;
-  color: var(--dark-text);
+  color: #ffffff;
   margin: 0;
   text-align: center;
 }
 
 .usernameLabel {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Roboto Condensed', sans-serif;
   font-size: 14px;
-  color: var(--dark-muted);
+  color: #ffffff;
 }
 
 /* Other profile: static bio */
 .bio {
   font-family: 'Roboto', sans-serif;
-  font-size: 14px;
-  color: var(--dark-muted);
+  font-size: 16px;
+  color: #ffffff;
   text-align: center;
   margin: 4px 0 0;
   line-height: 1.5;
@@ -515,6 +507,8 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-bottom: 32px;
+  position: relative;
+  z-index: 1;
 }
 
 .favoriteSlot {

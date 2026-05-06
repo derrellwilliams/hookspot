@@ -1,9 +1,14 @@
 .blob {
-  width: 160px;
-  height: 160px;
+  width: 500px;
+  height: 425px;
   border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
   animation: morph 10s linear infinite alternate;
-  flex-shrink: 0;
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 @keyframes morph {

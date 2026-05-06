@@ -292,11 +292,11 @@ export function UserProfilePage() {
   return (
     <div className={styles.page}>
       <div className={styles.scroll}>
+        <ProfileBlob />
 
         {/* Profile header */}
         <div className={styles.profileHeader}>
           <div className={styles.avatarWrap}>
-            <ProfileBlob />
             {isOwnProfile ? (
               <>
                 <button
@@ -330,18 +330,14 @@ export function UserProfilePage() {
                   <span className={displayName ? styles.profileName : styles.profileNameEmpty}>
                     {displayName || "What's your name?"}
                   </span>
-                  <Button variant="icon-sm" onClick={openDialog} aria-label="Edit profile">
-                    <EditPencil width={16} height={16} />
-                  </Button>
                 </div>
-                <div className={styles.usernameLabel}>@{profile.username}</div>
-                <button
-                  className={bio ? styles.profileBio : styles.profileBioEmpty}
-                  onClick={openDialog}
-                  aria-label={bio ? 'Edit bio' : 'Add bio'}
-                >
+                <div className={bio ? styles.profileBio : styles.profileBioEmpty}>
                   {bio || 'Tell us about yourself'}
-                </button>
+                </div>
+                <Button variant="secondary" onClick={openDialog} aria-label="Edit profile" className={styles.editProfileBtn}>
+                  <EditPencil width={14} height={14} />
+                  Edit Profile
+                </Button>
               </>
             ) : (
               <>
