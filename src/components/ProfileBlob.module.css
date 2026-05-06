@@ -1,5 +1,5 @@
 .blob {
-  width: 500px;
+  width: 600px;
   height: 425px;
   border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
   animation: morph 10s linear infinite alternate;
