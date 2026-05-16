@@ -5,11 +5,12 @@ import { EditPencil, UserCircle } from 'iconoir-react'
 import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
-import { initPhotos } from '../lib/fileLoader.js'
+import { initPhotos, deletePhotos } from '../lib/fileLoader.js'
 import { groupByTime } from '../lib/groupByTime.js'
 import { renderStats } from '../stats.js'
 import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
+import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
 import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
 import { createImageDataUrl } from '../lib/imageUtils.js'
 import { ProfileBlob } from '../components/ProfileBlob.jsx'
@@ -57,6 +58,7 @@ export function UserProfilePage() {
   const [saving, setSaving] = useState(false)
   const [favorites, setFavorites] = useState(loadFavoritesCache)
   const [pickerSlot, setPickerSlot] = useState(null)
+  const [catchPopupGroup, setCatchPopupGroup] = useState(null)
   const fileInputRef = useRef(null)
 
   // Stats refs
@@ -113,6 +115,7 @@ export function UserProfilePage() {
           exif: row.lat && row.lng ? { latitude: row.lat, longitude: row.lng } : null,
           species: row.species || undefined,
           meta: row.meta || {},
+          isOwn: false,
         })))
       } catch (err) {
         setError('Failed to load profile')
@@ -158,6 +161,11 @@ export function UserProfilePage() {
     const favs = isOwnProfile ? favorites : (profile?.favorites ?? [])
     return favs.map(name => (name ? photoMap[name] ?? null : null))
   }, [isOwnProfile, favorites, profile?.favorites, photoMap])
+
+  const last12 = useMemo(
+    () => groupByTime(effectivePhotos).sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)).slice(0, 12),
+    [effectivePhotos]
+  )
 
   useEffect(() => {
     renderStats(userGroups, {
@@ -269,6 +277,11 @@ export function UserProfilePage() {
     supabase.from('profiles').update({ favorites: next }).eq('id', myUser.id)
       .then(({ error }) => { if (error) console.error('[favorites] save failed', error) })
     setPickerSlot(null)
+  }
+
+  async function handleCatchDelete(group) {
+    await deletePhotos(group)
+    setCatchPopupGroup(null)
   }
 
   if (isLoading) return <div className={styles.page}><div className={styles.loading}>Loading…</div></div>
@@ -398,6 +411,20 @@ export function UserProfilePage() {
         </div>
         )}
 
+        {/* Last 12 catches */}
+        {last12.length > 0 && (
+          <>
+            <div className={styles.catchesLabel}>Last 12 catches</div>
+            <div className={styles.catchesGrid}>
+              {last12.map(group => (
+                <button key={group[0].name} className={styles.catchThumb} onClick={() => setCatchPopupGroup(group)}>
+                  <img src={group[0].url} alt="" className={styles.catchThumbImg} />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
         {/* Stats */}
         {userGroups.length > 0 && (
           <>
@@ -426,6 +453,22 @@ export function UserProfilePage() {
           </div>
         )}
       </div>
+
+      {catchPopupGroup && (
+        <Dialog.Root open onOpenChange={o => { if (!o) setCatchPopupGroup(null) }}>
+          <Dialog.Portal>
+            <Dialog.Overlay className={styles.catchDialogBackdrop} />
+            <Dialog.Content className={styles.catchDialogContent} aria-describedby={undefined}>
+              <Dialog.Title className={styles.srOnly}>Catch details</Dialog.Title>
+              <PopupCarousel
+                initialGroup={catchPopupGroup}
+                onClose={() => setCatchPopupGroup(null)}
+                onDelete={handleCatchDelete}
+              />
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      )}
 
       {isOwnProfile && (
         <>

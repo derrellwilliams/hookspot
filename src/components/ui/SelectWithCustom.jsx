@@ -40,7 +40,7 @@ export function SelectWithCustom({ value = '', onChange = () => {}, suggestions 
 
   return (
     <Select value={value} onChange={handleSelectChange}>
-      <option value="">{placeholder}</option>
+      <option value="" disabled>{placeholder}</option>
       {allOptions.map(s => <option key={s} value={s}>{s}</option>)}
       {hasCustomValue && <option value={value}>{value}</option>}
       <option value="__custom__">Add new…</option>

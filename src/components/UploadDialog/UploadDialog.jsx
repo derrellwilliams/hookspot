@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Xmark, MediaImage } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
@@ -15,8 +15,8 @@ export function UploadDialog() {
   const showToast = usePhotoStore(s => s.showToast)
   const setPendingUploadFiles = usePhotoStore(s => s.setPendingUploadFiles)
   const photos = usePhotoStore(s => s.photos)
-  const prevRods = [...new Set(photos.map(p => p.meta?.rod).filter(Boolean))]
-  const prevFlys = [...new Set(photos.map(p => p.meta?.fly).filter(Boolean))]
+  const prevRods = useMemo(() => [...new Set(photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))], [photos])
+  const prevFlys = useMemo(() => [...new Set(photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))], [photos])
 
   const [step, setStep] = useState(1)
   const [pendingFiles, setPendingFiles] = useState([])
@@ -188,9 +188,9 @@ export function UploadDialog() {
                   {identifying && <div className={styles.inputSpinner} />}
                 </div>
                 <label>Rod</label>
-                <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" suggestions={prevRods} />
+                <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="Select your rod" suggestions={prevRods} />
                 <label>Fly</label>
-                <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" suggestions={prevFlys} />
+                <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="Select your fly" suggestions={prevFlys} />
                 <div className={styles.actions}>
                   <Button variant="secondary" onClick={close}>Cancel</Button>
                   <Button variant="primary" onClick={submit}>Add Catch</Button>

@@ -17,8 +17,8 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const reorderGroup = usePhotoStore(s => s.reorderGroup)
   const photos = usePhotoStore(s => s.photos)
   const showToast = usePhotoStore(s => s.showToast)
-  const prevRods = useMemo(() => [...new Set(photos.map(p => p.meta?.rod).filter(Boolean))], [photos])
-  const prevFlys = useMemo(() => [...new Set(photos.map(p => p.meta?.fly).filter(Boolean))], [photos])
+  const prevRods = useMemo(() => [...new Set(photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))], [photos])
+  const prevFlys = useMemo(() => [...new Set(photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))], [photos])
 
   const group = groups.find(g => g.some(p => p.name === leadName)) ?? initialGroup
 
@@ -215,9 +215,9 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
           <label>Species</label>
           <Input value={species} onChange={e => setSpecies(e.target.value)} placeholder="e.g. Brown Trout" />
           <label>Rod</label>
-          <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="e.g. 9ft 5wt" suggestions={prevRods} />
+          <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="Select your rod" suggestions={prevRods} />
           <label>Fly</label>
-          <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="e.g. Elk Hair Caddis #14" suggestions={prevFlys} />
+          <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="Select your fly" suggestions={prevFlys} />
           <div className={styles.editActions}>
             <Button variant="danger" onClick={handleDelete}>Delete entry</Button>
             <Button variant="secondary" onClick={cancelEdit}>Cancel</Button>

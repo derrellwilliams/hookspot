@@ -71,12 +71,12 @@ export function renderStats(groups, refs = {}) {
 
   if (!groups.length) return
 
-  const withTime = photos.filter(p => p.time)
+  const leadsWithTime = leads.filter(p => p.time)
   const { labels: mLabels, now } = monthWindow(12)
 
   // ── Catches per month ──────────────────────────────────────────────────────
   const mCounts = Array(12).fill(0)
-  withTime.forEach(p => {
+  leadsWithTime.forEach(p => {
     const d = new Date(p.time)
     const diff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
     if (diff >= 0 && diff < 12) mCounts[11 - diff]++
@@ -93,7 +93,7 @@ export function renderStats(groups, refs = {}) {
 
   // ── Time of day ────────────────────────────────────────────────────────────
   const hCounts = Array(24).fill(0)
-  withTime.forEach(p => hCounts[new Date(p.time).getHours()]++)
+  leadsWithTime.forEach(p => hCounts[new Date(p.time).getHours()]++)
   const hLabels = Array.from({ length: 24 }, (_, i) =>
     i === 0 ? '12a' : i < 12 ? `${i}a` : i === 12 ? '12p' : `${i - 12}p`
   )
@@ -143,7 +143,6 @@ export function renderStats(groups, refs = {}) {
   })
 
   // ── Species by month (stacked bar) ────────────────────────────────────────
-  const leadsWithTime = leads.filter(p => p.time)
   const topSp = spEntries.slice(0, 5).map(([k]) => k)
   const spMonthly = topSp.map(sp => ({
     name: sp,
