@@ -121,7 +121,10 @@ async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
     return
   }
 
-  const res = await fetch(row.url)
+  let res = await fetch(row.url)
+  if (!res.ok && /\.(heic|heif)$/i.test(row.url)) {
+    res = await fetch(row.url.replace(/\.(heic|heif)$/i, '.jpg'))
+  }
   if (!res.ok) return
   const rawBlob = await res.blob()
   const file = new File([rawBlob], row.filename, { type: rawBlob.type || 'image/heic' })
@@ -152,7 +155,8 @@ export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
     if (existingNames.has(file.name)) continue
     uploads.push(uploadPhoto(file, user, meta, displayBlobs[i]))
   }
-  await Promise.all(uploads)
+  const results = await Promise.all(uploads)
+  return results.filter(Boolean).length
 }
 
 async function uploadPhoto(file, user, uploadMeta, displayBlob) {
@@ -209,6 +213,7 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
       usePhotoStore.getState().updatePhoto({ ...photo, species, meta: { ...photo.meta, species } })
     }
   }
+  return true
 }
 
 export async function uploadPhotoToGroup(file, groupLead) {
