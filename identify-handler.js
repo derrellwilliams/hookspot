@@ -1,6 +1,7 @@
 // Shared /identify request handler used by both the Vite dev proxy and the production server.
 import Anthropic from '@anthropic-ai/sdk'
 import { IDENTIFY_MODEL, IDENTIFY_PROMPT } from './identify-config.js'
+import { readBody } from './handler-utils.js'
 
 const MAX_BODY_SIZE = 4 * 1024 * 1024 // 4 MB
 
@@ -23,24 +24,8 @@ export function createIdentifyHandler(anthropic, env) {
     }
 
     // Read body with a hard size cap to prevent memory exhaustion
-    const chunks = []
-    let totalSize = 0
-    try {
-      await new Promise((resolve, reject) => {
-        req.on('data', c => {
-          totalSize += c.length
-          if (totalSize > MAX_BODY_SIZE) {
-            res.statusCode = 413; res.end(JSON.stringify({ error: 'Payload too large' }))
-            req.destroy(); reject(new Error('too large')); return
-          }
-          chunks.push(c)
-        })
-        req.on('end', resolve)
-        req.on('error', reject)
-      })
-    } catch { return }
-
-    const buf = Buffer.concat(chunks)
+    const buf = await readBody(req, res, MAX_BODY_SIZE)
+    if (buf === null) return
     const mediaType = (req.headers['content-type'] || 'image/jpeg').split(';')[0]
     try {
       const response = await anthropic.messages.create({

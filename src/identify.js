@@ -3,8 +3,10 @@ import { supabase } from './lib/supabase.js'
 
 export async function identifySpecies(blob) {
   try {
-    const small = await resizeBlob(blob, 1024, 0.85)
-    const { data: { session } } = await supabase.auth.getSession()
+    const [small, { data: { session } }] = await Promise.all([
+      resizeBlob(blob, 1024, 0.85),
+      supabase.auth.getSession(),
+    ])
     const headers = session?.access_token
       ? { Authorization: `Bearer ${session.access_token}` }
       : {}

@@ -1,4 +1,4 @@
-import { serviceHeaders, sendJson } from './handler-utils.js'
+import { serviceHeaders, sendJson, readBody } from './handler-utils.js'
 import { USERNAME_RE } from './src/lib/validation.js'
 
 const MAX_BODY_SIZE = 2 * 1024 * 1024 // 2 MB
@@ -8,21 +8,9 @@ export function createSaveProfileHandler(env) {
     if (req.method !== 'POST') { res.statusCode = 405; res.end(); return }
 
     try {
-      const chunks = []
-      let totalSize = 0
-      await new Promise((resolve, reject) => {
-        req.on('data', c => {
-          totalSize += c.length
-          if (totalSize > MAX_BODY_SIZE) {
-            res.statusCode = 413; res.end(JSON.stringify({ error: 'Payload too large' }))
-            req.destroy(); reject(new Error('too large')); return
-          }
-          chunks.push(c)
-        })
-        req.on('end', resolve)
-        req.on('error', reject)
-      })
-      const { token, username, displayName, bio, avatarUrl } = JSON.parse(Buffer.concat(chunks).toString())
+      const buf = await readBody(req, res, MAX_BODY_SIZE)
+      if (buf === null) return
+      const { token, username, displayName, bio, avatarUrl } = JSON.parse(buf.toString())
 
       if (!token) { sendJson(res, { error: 'Unauthorized' }, 401); return }
       if (!USERNAME_RE.test(username)) { sendJson(res, { error: 'Invalid username' }, 400); return }

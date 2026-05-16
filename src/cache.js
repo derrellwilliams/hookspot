@@ -52,7 +52,7 @@ export async function getCached(key) {
   const entry = await get(PHOTOS_STORE, key)
   if (!entry) return null
   if (!entry.ts || Date.now() - entry.ts > CACHE_TTL_MS) {
-    await set(PHOTOS_STORE, key, undefined)
+    await setCached(key, undefined)
     return null
   }
   return entry

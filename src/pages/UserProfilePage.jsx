@@ -243,8 +243,7 @@ export function UserProfilePage() {
         avatar_url: myUser?.user_metadata?.avatar_url || null,
       })
       // Preserve client-side avatar_url; it lives in profiles table, not user_metadata on the auth server
-      const existingAvatarUrl = myUser?.user_metadata?.avatar_url
-      setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, ...(existingAvatarUrl && { avatar_url: existingAvatarUrl }) } })
+      setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, avatar_url: myUser?.user_metadata?.avatar_url ?? data.user.user_metadata?.avatar_url } })
       setDialogOpen(false)
     } catch (err) {
       console.error('[hookspot] profile save failed', err)
