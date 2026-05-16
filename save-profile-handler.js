@@ -24,7 +24,8 @@ export function createSaveProfileHandler(env) {
       const updateData = {}
       if (displayName) updateData.display_name = displayName
       if (bio) updateData.bio = bio
-      if (avatarUrl) updateData.avatar_url = avatarUrl
+      // avatar_url is saved to the profiles table only — never to user_metadata,
+      // because large data URLs in user_metadata bloat the JWT and break storage uploads.
 
       // Upsert profile and update auth metadata in parallel
       const jsonHeaders = serviceHeaders(env, true)
