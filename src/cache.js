@@ -2,6 +2,7 @@ const DB_NAME = 'fishmap-cache'
 const DB_VERSION = 2
 const PHOTOS_STORE = 'photos'
 const META_STORE = 'metadata'
+const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 // Memoize the Promise (not the result) so concurrent callers share one open request
 let _dbPromise = null
@@ -47,7 +48,20 @@ async function set(store, key, value) {
   } catch (e) { console.warn('[cache] write failed:', e) }
 }
 
-export const getCached = (key) => get(PHOTOS_STORE, key)
-export const setCached = (key, value) => set(PHOTOS_STORE, key, value)
+export async function getCached(key) {
+  const entry = await get(PHOTOS_STORE, key)
+  if (!entry) return null
+  if (!entry.ts || Date.now() - entry.ts > CACHE_TTL_MS) {
+    await set(PHOTOS_STORE, key, undefined)
+    return null
+  }
+  return entry
+}
+
+export async function setCached(key, value) {
+  if (value === undefined) return set(PHOTOS_STORE, key, undefined)
+  return set(PHOTOS_STORE, key, { ...value, ts: Date.now() })
+}
+
 export const getMeta = (key) => get(META_STORE, key)
 export const setMeta = (key, value) => set(META_STORE, key, value)

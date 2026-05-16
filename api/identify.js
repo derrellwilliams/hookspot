@@ -5,7 +5,7 @@ import { createIdentifyHandler } from '../identify-handler.js'
 export const config = { api: { bodyParser: false } }
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-const handleIdentify = createIdentifyHandler(anthropic)
+const handleIdentify = createIdentifyHandler(anthropic, process.env)
 
 export default function handler(req, res) {
   handleIdentify(req, res)

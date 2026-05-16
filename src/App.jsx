@@ -50,7 +50,9 @@ function AppInner() {
             navigate('/onboarding', { replace: true })
           } else {
             setUsername(username)
-            if (avatar_url && !session.user.user_metadata?.avatar_url) {
+            // Always sync avatar from profiles table — it's the source of truth,
+            // not user_metadata (which can carry a stale or missing value).
+            if (avatar_url) {
               setUser({ ...session.user, user_metadata: { ...session.user.user_metadata, avatar_url } })
             }
             initPhotos()

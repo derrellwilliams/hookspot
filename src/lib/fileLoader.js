@@ -104,7 +104,7 @@ export async function initPhotos() {
     _initInProgress = false
     if (_initQueued) {
       _initQueued = false
-      initPhotos()
+      await initPhotos()
     }
   }
 }

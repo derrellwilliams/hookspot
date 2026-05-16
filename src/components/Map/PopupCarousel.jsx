@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { IconoirProvider, EditPencil, Xmark, Plus } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
@@ -17,8 +17,8 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const reorderGroup = usePhotoStore(s => s.reorderGroup)
   const photos = usePhotoStore(s => s.photos)
   const showToast = usePhotoStore(s => s.showToast)
-  const prevRods = [...new Set(photos.map(p => p.meta?.rod).filter(Boolean))]
-  const prevFlys = [...new Set(photos.map(p => p.meta?.fly).filter(Boolean))]
+  const prevRods = useMemo(() => [...new Set(photos.map(p => p.meta?.rod).filter(Boolean))], [photos])
+  const prevFlys = useMemo(() => [...new Set(photos.map(p => p.meta?.fly).filter(Boolean))], [photos])
 
   const group = groups.find(g => g.some(p => p.name === leadName)) ?? initialGroup
 

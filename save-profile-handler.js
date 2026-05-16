@@ -1,13 +1,27 @@
 import { serviceHeaders, sendJson } from './handler-utils.js'
 import { USERNAME_RE } from './src/lib/validation.js'
 
+const MAX_BODY_SIZE = 2 * 1024 * 1024 // 2 MB
+
 export function createSaveProfileHandler(env) {
   return async function handleSaveProfile(req, res) {
     if (req.method !== 'POST') { res.statusCode = 405; res.end(); return }
 
     try {
       const chunks = []
-      await new Promise(resolve => { req.on('data', c => chunks.push(c)); req.on('end', resolve) })
+      let totalSize = 0
+      await new Promise((resolve, reject) => {
+        req.on('data', c => {
+          totalSize += c.length
+          if (totalSize > MAX_BODY_SIZE) {
+            res.statusCode = 413; res.end(JSON.stringify({ error: 'Payload too large' }))
+            req.destroy(); reject(new Error('too large')); return
+          }
+          chunks.push(c)
+        })
+        req.on('end', resolve)
+        req.on('error', reject)
+      })
       const { token, username, displayName, bio, avatarUrl } = JSON.parse(Buffer.concat(chunks).toString())
 
       if (!token) { sendJson(res, { error: 'Unauthorized' }, 401); return }
@@ -54,8 +68,13 @@ export function createSaveProfileHandler(env) {
         throw new Error(err.message || 'Metadata update failed')
       }
 
-      sendJson(res, { user: { id: userId, user_metadata: updateData } })
+      // Return avatar_url so the client can maintain it in local user state
+      // (it lives in the profiles table, not user_metadata on the auth server)
+      const responseMeta = { ...updateData }
+      if (avatarUrl) responseMeta.avatar_url = avatarUrl
+      sendJson(res, { user: { id: userId, user_metadata: responseMeta } })
     } catch (err) {
+      if (res.writableEnded) return
       console.error('[save-profile] error:', err.message)
       sendJson(res, { error: err.message }, 500)
     }

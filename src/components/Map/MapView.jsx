@@ -145,10 +145,11 @@ export function MapView({ active }) {
     }
 
     // Rebuild name→entry lookup and refresh click handlers
+    const finalByKey = new Map(markersRef.current.map(m => [m.key, m]))
     const markerByName = new Map()
     for (const group of visibleGroups) {
       const key = groupKey(group)
-      const entry = markersRef.current.find(m => m.key === key)
+      const entry = finalByKey.get(key)
       if (!entry) continue
       for (const photo of group) markerByName.set(photo.name, entry)
 

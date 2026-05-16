@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
         name: 'api-handlers',
         configureServer(server) {
           const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
-          server.middlewares.use('/identify', createIdentifyHandler(anthropic))
+          server.middlewares.use('/identify', createIdentifyHandler(anthropic, env))
           server.middlewares.use('/api/check-username', createCheckUsernameHandler(env))
           server.middlewares.use('/api/save-profile', createSaveProfileHandler(env))
           server.middlewares.use('/api/profile', createProfileHandler(env))

@@ -1,10 +1,10 @@
 /**
  * Production server for Hook Spot.
- * Handles the /identify API endpoint and serves the Vite build from dist/.
+ * Handles API endpoints and serves the Vite build from dist/.
  *
  * Usage:
  *   npm run build
- *   node server.js          (uses ANTHROPIC_API_KEY from environment)
+ *   node server.js          (uses env vars from environment)
  */
 
 import http from 'http'
@@ -13,6 +13,10 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import Anthropic from '@anthropic-ai/sdk'
 import { createIdentifyHandler } from './identify-handler.js'
+import { createSaveProfileHandler } from './save-profile-handler.js'
+import { createProfileHandler } from './profile-handler.js'
+import { createPhotosHandler } from './photos-handler.js'
+import { createCheckUsernameHandler } from './check-username-handler.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.join(__dirname, 'dist')
@@ -24,8 +28,13 @@ if (!fs.existsSync(DIST)) {
   process.exit(1)
 }
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-const handleIdentify = createIdentifyHandler(anthropic)
+const env = process.env
+const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
+const handleIdentify = createIdentifyHandler(anthropic, env)
+const handleSaveProfile = createSaveProfileHandler(env)
+const handleProfile = createProfileHandler(env)
+const handlePhotos = createPhotosHandler(env)
+const handleCheckUsername = createCheckUsernameHandler(env)
 
 const MIME = {
   '.html':        'text/html; charset=utf-8',
@@ -46,14 +55,16 @@ const MIME = {
 }
 
 const server = http.createServer(async (req, res) => {
-  // POST /identify — species identification via Anthropic API
-  if (req.method === 'POST' && req.url === '/identify') {
-    handleIdentify(req, res)
-    return
-  }
+  const urlPath = req.url.split('?')[0]
+
+  // API routes
+  if (urlPath === '/identify') { handleIdentify(req, res); return }
+  if (urlPath === '/api/save-profile') { handleSaveProfile(req, res); return }
+  if (urlPath === '/api/profile') { handleProfile(req, res); return }
+  if (urlPath === '/api/photos') { handlePhotos(req, res); return }
+  if (urlPath === '/api/check-username') { handleCheckUsername(req, res); return }
 
   // Static file serving with SPA history fallback
-  const urlPath = req.url.split('?')[0]
   let filePath = path.resolve(DIST, '.' + urlPath)
 
   // Prevent path traversal

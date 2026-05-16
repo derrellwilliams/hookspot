@@ -26,8 +26,8 @@ export function DropOverlay() {
       const total = e.dataTransfer.files.length
       setProcessing({ total })
       try {
-        await handleFiles(e.dataTransfer.files)
-        showToast(`${total} photo${total > 1 ? 's' : ''} added`)
+        const added = await handleFiles(e.dataTransfer.files) ?? 0
+        showToast(added > 0 ? `${added} photo${added > 1 ? 's' : ''} added` : 'No new photos added')
       } catch {
         showToast('Failed to upload photos.')
       } finally {

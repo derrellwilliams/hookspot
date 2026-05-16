@@ -209,10 +209,10 @@ export function UserProfilePage() {
     setUploading(true)
     try {
       const dataUrl = await createImageDataUrl(file)
-      const { data, error } = await supabase.auth.updateUser({ data: { avatar_url: dataUrl } })
+      // Only update the profiles table — never user_metadata — to keep the JWT small.
+      const { error } = await supabase.from('profiles').upsert({ id: myUser.id, avatar_url: dataUrl })
       if (error) throw new Error(`Profile update failed: ${error.message}`)
-      setUser(data.user)
-      await supabase.from('profiles').upsert({ id: myUser.id, avatar_url: dataUrl })
+      setUser({ ...myUser, user_metadata: { ...myUser.user_metadata, avatar_url: dataUrl } })
       showToast('Profile photo updated!')
     } catch (err) {
       console.error('[hookspot] avatar upload failed', err)
@@ -242,7 +242,9 @@ export function UserProfilePage() {
         bio: editBio.trim() || null,
         avatar_url: myUser?.user_metadata?.avatar_url || null,
       })
-      setUser(data.user)
+      // Preserve client-side avatar_url; it lives in profiles table, not user_metadata on the auth server
+      const existingAvatarUrl = myUser?.user_metadata?.avatar_url
+      setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, ...(existingAvatarUrl && { avatar_url: existingAvatarUrl }) } })
       setDialogOpen(false)
     } catch (err) {
       console.error('[hookspot] profile save failed', err)

@@ -19,7 +19,7 @@ export function createPhotosHandler(env) {
         if (!followsRes.ok) throw new Error(`Supabase follows error: ${followsRes.status}`)
         const follows = await followsRes.json()
         const followingIds = Array.isArray(follows) ? follows.map(f => f.following_id) : []
-        allUserIds = [userId, ...followingIds]
+        allUserIds = [userId, ...followingIds].slice(0, 100)
       }
 
       const idFilter = `user_id=in.(${allUserIds.map(encodeURIComponent).join(',')})`
