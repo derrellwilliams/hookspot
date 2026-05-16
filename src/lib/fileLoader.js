@@ -122,7 +122,7 @@ async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
   }
 
   let res = await fetch(row.url)
-  if (!res.ok && /\.(heic|heif)$/i.test(row.url)) {
+  if (!res.ok && res.status < 500 && /\.(heic|heif)$/i.test(row.url)) {
     res = await fetch(row.url.replace(/\.(heic|heif)$/i, '.jpg'))
   }
   if (!res.ok) return
