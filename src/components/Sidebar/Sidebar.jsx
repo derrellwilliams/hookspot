@@ -43,11 +43,11 @@ export function Sidebar() {
             <button
               className={`${styles.filterTab} ${!ownOnly ? styles.filterTabActive : ''}`}
               onClick={() => setOwnOnly(false)}
-            >All</button>
+            >Everyone</button>
             <button
               className={`${styles.filterTab} ${ownOnly ? styles.filterTabActive : ''}`}
               onClick={() => setOwnOnly(true)}
-            >Mine</button>
+            >Me</button>
           </div>
         )}
       </div>
