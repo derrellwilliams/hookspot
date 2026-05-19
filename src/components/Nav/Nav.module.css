@@ -42,7 +42,7 @@
   padding: 0 14px;
   border: none;
   background: none;
-  color: #555;
+  color: rgba(255, 255, 255, 0.4);
   border-radius: 10px;
   cursor: pointer;
   font-size: 15px;
