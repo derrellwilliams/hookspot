@@ -10,7 +10,6 @@ export const usePhotoStore = create((set, get) => ({
   activeGroup: null,
   toast: null,
   uploadOpen: false,
-  bulkUploading: false,
   pendingUploadFiles: [],
   ownOnly: false,
   photosInitialized: false,
@@ -20,10 +19,20 @@ export const usePhotoStore = create((set, get) => ({
     set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)) })
   },
 
+  batchAddPhotos(newPhotos) {
+    if (!newPhotos.length) return
+    const photos = [...get().photos, ...newPhotos]
+    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)) })
+  },
+
   updatePhoto(updatedPhoto) {
     const key = pk(updatedPhoto)
     const photos = get().photos.map(p => pk(p) === key ? updatedPhoto : p)
-    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)) })
+    const activeGroup = get().activeGroup
+    const updatedActive = activeGroup
+      ? activeGroup.map(p => pk(p) === key ? updatedPhoto : p)
+      : activeGroup
+    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: updatedActive })
   },
 
   removePhotos(toDelete) {
@@ -65,10 +74,6 @@ export const usePhotoStore = create((set, get) => ({
 
   setUploadOpen(open) {
     set({ uploadOpen: open })
-  },
-
-  setBulkUploading(v) {
-    set({ bulkUploading: v })
   },
 
   setPendingUploadFiles(files) {

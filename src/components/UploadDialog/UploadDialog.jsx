@@ -109,8 +109,8 @@ export function UploadDialog() {
     const blobs = pendingBlobs.slice()
     close()
     try {
-      const count = await handleFiles(files, { species, rod, fly, identified: true }, blobs)
-      showToast(count > 0 ? 'Catch added!' : 'Failed to add catch.')
+      const { added = 0 } = await handleFiles(files, { species, rod, fly, identified: true }, blobs) ?? {}
+      showToast(added > 0 ? 'Catch added!' : 'Failed to add catch.')
     } catch {
       showToast('Failed to add catch.')
     }

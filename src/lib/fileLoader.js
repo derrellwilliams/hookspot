@@ -89,6 +89,7 @@ function maybeFetchWeather(photo) {
 let _initInProgress = false
 let _initQueued = false
 const _failedKeys = new Set()
+const _uploadingNames = new Set()
 
 export async function initPhotos() {
   if (_initInProgress) {
@@ -112,13 +113,19 @@ export async function initPhotos() {
     const existing = new Set(usePhotoStore.getState().photos.map(p => `${p.userId}/${p.name}`))
 
     const toLoad = rows.filter(row => !existing.has(`${row.user_id}/${row.filename}`))
+    const loaded = []
     await withConcurrency(
       toLoad.map(row => () =>
         loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
+          .then(photo => { if (photo) loaded.push(photo) })
           .catch(e => console.error('[hookspot] failed to load', row.filename, e))
       ),
       8
     )
+    if (loaded.length) {
+      usePhotoStore.getState().batchAddPhotos(loaded)
+      loaded.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo) })
+    }
   } finally {
     if (fetchAttempted) usePhotoStore.getState().setPhotosInitialized()
     _initInProgress = false
@@ -130,54 +137,52 @@ export async function initPhotos() {
 }
 
 async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
-  const { addPhoto } = usePhotoStore.getState()
   const cacheKey = `${row.user_id}/${row.filename}`
-  if (_failedKeys.has(cacheKey)) return
+  if (_failedKeys.has(cacheKey)) return null
   const cached = await getCached(cacheKey)
-  if (cached) {
-    const photo = buildPhoto(cached.blob, cached.exif, row, ownerProfile, currentUserId)
-    addPhoto(photo)
-    maybeFetchWeather(photo)
-    maybeFetchLocation(photo)
-    return
-  }
+  if (cached) return buildPhoto(cached.blob, cached.exif, row, ownerProfile, currentUserId)
 
   let res = await fetch(row.url)
   if (!res.ok && res.status < 500 && /\.(heic|heif)$/i.test(row.url)) {
     res = await fetch(row.url.replace(/\.(heic|heif)$/i, '.jpg'))
   }
-  if (!res.ok) { _failedKeys.add(cacheKey); return }
+  if (!res.ok) { _failedKeys.add(cacheKey); return null }
   const rawBlob = await res.blob()
   const file = new File([rawBlob], row.filename, { type: rawBlob.type || 'image/heic' })
 
   const [blob, exif] = await Promise.all([toDisplayBlob(file), extractExif(file)])
   await setCached(cacheKey, { blob, exif })
 
-  const photo = buildPhoto(blob, exif, row, ownerProfile, currentUserId)
-  addPhoto(photo)
-  maybeFetchWeather(photo)
-  maybeFetchLocation(photo)
+  return buildPhoto(blob, exif, row, ownerProfile, currentUserId)
 }
 
 export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
   const user = getUser()
-  if (!user) return
+  if (!user) return { added: 0, failed: 0 }
 
   const existingNames = new Set(
     usePhotoStore.getState().photos.filter(p => p.isOwn).map(p => p.name)
   )
   const files = Array.from(fileList)
-  if (!files.length) return
+  if (!files.length) return { added: 0, failed: 0 }
 
   const uploads = []
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) continue
-    if (existingNames.has(file.name)) continue
-    uploads.push(uploadPhoto(file, user, meta, displayBlobs[i]))
+    if (existingNames.has(file.name) || _uploadingNames.has(file.name)) continue
+    _uploadingNames.add(file.name)
+    uploads.push(
+      uploadPhoto(file, user, meta, displayBlobs[i])
+        .catch(() => false)
+        .finally(() => _uploadingNames.delete(file.name))
+    )
   }
   const results = await Promise.all(uploads)
-  return results.filter(Boolean).length
+  return {
+    added: results.filter(r => r === true).length,
+    failed: results.filter(r => r === false).length,
+  }
 }
 
 async function uploadPhoto(file, user, uploadMeta, displayBlob) {
@@ -192,7 +197,7 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
   const { error: uploadError } = await supabase.storage
     .from('catches')
     .upload(storagePath, storageBlob, { upsert: false, contentType: 'image/jpeg' })
-  if (uploadError) { console.error('[hookspot] storage upload failed', uploadError); return }
+  if (uploadError) { console.error('[hookspot] storage upload failed', uploadError); return false }
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
 
@@ -216,7 +221,7 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
   if (dbError) {
     await supabase.storage.from('catches').remove([storagePath])
     console.error('[hookspot] db insert failed', dbError)
-    return
+    return false
   }
 
   await setCached(`${user.id}/${file.name}`, { blob, exif })
@@ -231,7 +236,8 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     const species = await identifySpecies(blob)
     if (species && species !== 'none') {
       await supabase.from('photos').update({ species }).eq('filename', file.name).eq('user_id', user.id)
-      usePhotoStore.getState().updatePhoto({ ...photo, species, meta: { ...photo.meta, species } })
+      const current = usePhotoStore.getState().photos.find(p => p.name === file.name && p.userId === user.id)
+      if (current) usePhotoStore.getState().updatePhoto({ ...current, species, meta: { ...current.meta, species } })
     }
   }
   return true
@@ -288,13 +294,11 @@ export async function deletePhotos(toDelete) {
   const paths = list.map(p => p.storagePath ?? `${user.id}/${storageKey(p.name)}`)
   const filenames = list.map(p => p.name)
 
-  const [{ error: storageError }, { error: dbError }] = await Promise.all([
-    supabase.storage.from('catches').remove(paths),
-    supabase.from('photos').delete().in('filename', filenames).eq('user_id', user.id),
-  ])
-
-  if (storageError) console.error('[hookspot] storage delete failed', storageError)
+  const { error: dbError } = await supabase.from('photos').delete().in('filename', filenames).eq('user_id', user.id)
   if (dbError) { console.error('[hookspot] db delete failed', dbError); return }
+
+  const { error: storageError } = await supabase.storage.from('catches').remove(paths)
+  if (storageError) console.error('[hookspot] storage delete failed', storageError)
 
   await Promise.all(list.map(p => setCached(`${user.id}/${p.name}`, undefined)))
   usePhotoStore.getState().removePhotos(list)
