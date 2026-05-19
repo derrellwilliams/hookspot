@@ -166,9 +166,14 @@ export function UserProfilePage() {
     return favs.map(name => (name ? photoMap[name] ?? null : null))
   }, [isOwnProfile, favorites, profile?.favorites, photoMap])
 
+  const catchCount = useMemo(
+    () => groupByTime(effectivePhotos).length,
+    [effectivePhotos]
+  )
+
   const thisYearCount = useMemo(() => {
     const year = new Date().getFullYear()
-    return effectivePhotos.filter(p => p.time && new Date(p.time).getFullYear() === year).length
+    return groupByTime(effectivePhotos.filter(p => p.time && new Date(p.time).getFullYear() === year)).length
   }, [effectivePhotos])
 
   const recentCatches = useMemo(
@@ -351,7 +356,7 @@ export function UserProfilePage() {
             {bio && <p className={styles.headerBio}>{bio}</p>}
             <div className={styles.headerStats}>
               <div className={styles.statItem}>
-                <span className={styles.statValue}>{effectivePhotos.length}</span>
+                <span className={styles.statValue}>{catchCount}</span>
                 <span className={styles.statLabel}>Catches</span>
               </div>
               <div className={styles.statItem}>
