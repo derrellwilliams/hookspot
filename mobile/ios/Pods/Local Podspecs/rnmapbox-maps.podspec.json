@@ -1,0 +1,72 @@
+{
+  "name": "rnmapbox-maps",
+  "summary": "React Native Component for Mapbox",
+  "version": "10.3.1",
+  "authors": {
+    "Miklós Fazekas": "mfazekas@szemafor.com (https://github.com/mfazekas/)"
+  },
+  "homepage": "https://github.com/rnmapbox/maps#readme",
+  "source": {
+    "git": "https://github.com/rnmapbox/maps.git"
+  },
+  "license": "MIT",
+  "platforms": {
+    "ios": "12.4"
+  },
+  "header_dir": "rnmapbox_maps",
+  "dependencies": {
+    "MapboxMaps": [
+      "~> 11.20.1"
+    ],
+    "Turf": [],
+    "React-Core": [],
+    "React": []
+  },
+  "swift_versions": "5.0",
+  "default_subspecs": [
+    "DynamicLibrary"
+  ],
+  "subspecs": [
+    {
+      "name": "DynamicLibrary",
+      "source_files": "ios/RNMBX/**/*.{h,m,mm,swift}",
+      "private_header_files": [
+        "ios/RNMBX/RNMBXFabricHelpers.h",
+        "ios/RNMBX/RNMBXFabricPropConvert.h",
+        "ios/RNMBX/rnmapbox_maps-Swift.pre.h",
+        "ios/RNMBX/Utils/RNMBXFollyConvert.h"
+      ],
+      "pod_target_xcconfig": {
+        "DEFINES_MODULE": "YES",
+        "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/Headers/Private/Yoga\"",
+        "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+        "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 ",
+        "OTHER_SWIFT_FLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED"
+      },
+      "compiler_flags": "-DRCT_NEW_ARCH_ENABLED=1",
+      "dependencies": {
+        "MapboxMaps": [],
+        "Turf": [],
+        "React-Core": [],
+        "React": [],
+        "React-RCTFabric": [],
+        "ReactCodegen": [],
+        "RCTRequired": [],
+        "RCTTypeSafety": [],
+        "ReactCommon/turbomodule/bridging": [],
+        "ReactCommon/turbomodule/core": [],
+        "React-NativeModulesApple": [],
+        "Yoga": [],
+        "React-featureflags": [],
+        "React-ImageManager": [],
+        "React-rendererdebug": [],
+        "React-jsi": [],
+        "React-renderercss": [],
+        "hermes-engine": [],
+        "ReactNativeDependencies": [],
+        "React-Core-prebuilt": []
+      }
+    }
+  ],
+  "swift_version": "5.0"
+}
