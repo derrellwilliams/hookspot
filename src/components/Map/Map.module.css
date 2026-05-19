@@ -212,6 +212,7 @@
   font-family: "Roboto Mono", monospace;
   color: var(--dark-muted);
   margin-top: 4px;
+  line-height: 1.3;
 }
 
 .editForm {

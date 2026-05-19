@@ -361,7 +361,7 @@ export function UserProfilePage() {
                   </div>
                   <div className={styles.catchMeta}>
                     {species && <div className={styles.catchSpecies}>{species}</div>}
-                    {photo.time && <div className={styles.catchDatetime}>{formatDateFull(photo.time).split(' •')[0]}</div>}
+                    {photo.time && <div className={styles.catchDatetime}>{formatDateFull(photo.time).split(' ·')[0]}</div>}
                   </div>
                 </button>
               )

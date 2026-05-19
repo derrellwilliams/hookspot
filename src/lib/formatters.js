@@ -27,7 +27,7 @@ export function formatDateFull(ts) {
   const m = String(d.getMinutes()).padStart(2, '0')
   const ampm = h >= 12 ? 'pm' : 'am'
   const h12 = h % 12 || 12
-  return `${month} ${day}, ${year} • ${h12}:${m}${ampm}`
+  return `${month} ${day}, ${year} · ${h12}:${m}${ampm}`
 }
 
 export function parseExifDate(dt) {
