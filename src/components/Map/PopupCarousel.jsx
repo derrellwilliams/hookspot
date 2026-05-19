@@ -1,4 +1,5 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { IconoirProvider, EditPencil, Xmark, Plus } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
@@ -15,10 +16,9 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const groups = usePhotoStore(s => s.groups)
   const updatePhoto = usePhotoStore(s => s.updatePhoto)
   const reorderGroup = usePhotoStore(s => s.reorderGroup)
-  const photos = usePhotoStore(s => s.photos)
   const showToast = usePhotoStore(s => s.showToast)
-  const prevRods = useMemo(() => [...new Set(photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))], [photos])
-  const prevFlys = useMemo(() => [...new Set(photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))], [photos])
+  const prevRods = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))]))
+  const prevFlys = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))]))
 
   const group = groups.find(g => g.some(p => p.name === leadName)) ?? initialGroup
 

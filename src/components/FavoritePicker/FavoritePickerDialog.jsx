@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Check } from 'iconoir-react'
+import { useShallow } from 'zustand/react/shallow'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { formatDateFull, cleanSpecies } from '../../lib/formatters.js'
 import styles from './FavoritePickerDialog.module.css'
 
 export function FavoritePickerDialog({ open, current, onSelect, onRemove, onClose }) {
-  const allPhotos = usePhotoStore(s => s.photos)
-  const photos = useMemo(() => allPhotos.filter(p => p.isOwn ?? false), [allPhotos])
+  const photos = usePhotoStore(useShallow(s => s.photos.filter(p => p.isOwn ?? false)))
   const [selected, setSelected] = useState(current)
 
   function handleOpenChange(o) {

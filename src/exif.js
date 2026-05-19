@@ -18,10 +18,10 @@ export async function extractExif(file) {
 }
 
 export async function toDisplayBlob(file) {
-  const isHeic = file.type === 'image/heic'
-    || file.type === 'image/heif'
-    || /\.heic$/i.test(file.name)
-    || /\.heif$/i.test(file.name)
+  const knownType = file.type && file.type !== ''
+  const isHeic = knownType
+    ? (file.type === 'image/heic' || file.type === 'image/heif')
+    : (/\.heic$/i.test(file.name) || /\.heif$/i.test(file.name))
 
   if (isHeic) {
     try {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -35,7 +35,10 @@ export function MapView({ active }) {
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
 
-  const visibleGroups = ownOnly ? groups.filter(g => g.some(p => p.isOwn)) : groups
+  const visibleGroups = useMemo(
+    () => ownOnly ? groups.filter(g => g.some(p => p.isOwn)) : groups,
+    [groups, ownOnly]
+  )
 
   // Init map once. flyToPhotoFn is defined here so it only enters the store once,
   // reading current marker state via markerByNameRef on each call.
@@ -100,7 +103,7 @@ export function MapView({ active }) {
 
     // Remove markers for deleted/hidden groups
     markersRef.current.forEach(({ key, marker, popup, root }) => {
-      if (!newKeySet.has(key)) { popup.remove(); root.unmount(); marker.remove() }
+      if (!newKeySet.has(key)) { popup.remove(); setTimeout(() => root.unmount()); marker.remove() }
     })
     markersRef.current = markersRef.current.filter(m => newKeySet.has(m.key))
 

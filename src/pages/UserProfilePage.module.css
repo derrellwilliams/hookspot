@@ -676,6 +676,13 @@
   margin-top: 32px;
 }
 
+@media (max-width: 600px) {
+  .favoritesGrid,
+  .catchesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* ── States ── */
 .loading {
   padding: 60px;

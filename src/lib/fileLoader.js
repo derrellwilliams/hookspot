@@ -42,6 +42,24 @@ function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
   }
 }
 
+async function withConcurrency(fns, limit) {
+  const queue = [...fns]
+  await Promise.all(Array.from({ length: Math.min(limit, fns.length) }, async () => {
+    while (queue.length) await queue.shift()()
+  }))
+}
+
+function makeSemaphore(limit) {
+  let active = 0
+  const pending = []
+  function run(fn) {
+    active++
+    Promise.resolve().then(fn).finally(() => { active--; if (pending.length) run(pending.shift()) })
+  }
+  return fn => { if (active < limit) run(fn); else pending.push(fn) }
+}
+const runGeoTask = makeSemaphore(3)
+
 async function saveMeta(photoName, key, value, userId) {
   const current = usePhotoStore.getState().photos.find(p => p.name === photoName && p.userId === userId)
   if (!current) return
@@ -54,22 +72,23 @@ function maybeFetchLocation(photo) {
   if (!photo.isOwn) return
   const user = getUser()
   if (!photo.hasGps || !photo.exif?.latitude || !photo.exif?.longitude || photo.meta?.location || !user) return
-  reverseGeocode(photo.exif.latitude, photo.exif.longitude)
+  runGeoTask(() => reverseGeocode(photo.exif.latitude, photo.exif.longitude)
     .then(loc => loc && saveMeta(photo.name, 'location', loc, user.id))
-    .catch(() => {})
+    .catch(() => {}))
 }
 
 function maybeFetchWeather(photo) {
   if (!photo.isOwn) return
   const user = getUser()
   if (!photo.hasGps || !photo.time || !photo.exif?.latitude || !photo.exif?.longitude || photo.meta?.weather || !user) return
-  fetchWeather(photo.exif.latitude, photo.exif.longitude, photo.time)
+  runGeoTask(() => fetchWeather(photo.exif.latitude, photo.exif.longitude, photo.time)
     .then(weather => weather && saveMeta(photo.name, 'weather', weather, user.id))
-    .catch(() => {})
+    .catch(() => {}))
 }
 
 let _initInProgress = false
 let _initQueued = false
+const _failedKeys = new Set()
 
 export async function initPhotos() {
   if (_initInProgress) {
@@ -92,12 +111,13 @@ export async function initPhotos() {
     const profileMap = Object.fromEntries((profileRows ?? []).map(p => [p.id, p]))
     const existing = new Set(usePhotoStore.getState().photos.map(p => `${p.userId}/${p.name}`))
 
-    await Promise.all(rows
-      .filter(row => !existing.has(`${row.user_id}/${row.filename}`))
-      .map(row =>
+    const toLoad = rows.filter(row => !existing.has(`${row.user_id}/${row.filename}`))
+    await withConcurrency(
+      toLoad.map(row => () =>
         loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
           .catch(e => console.error('[hookspot] failed to load', row.filename, e))
-      )
+      ),
+      8
     )
   } finally {
     if (fetchAttempted) usePhotoStore.getState().setPhotosInitialized()
@@ -112,6 +132,7 @@ export async function initPhotos() {
 async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
   const { addPhoto } = usePhotoStore.getState()
   const cacheKey = `${row.user_id}/${row.filename}`
+  if (_failedKeys.has(cacheKey)) return
   const cached = await getCached(cacheKey)
   if (cached) {
     const photo = buildPhoto(cached.blob, cached.exif, row, ownerProfile, currentUserId)
@@ -125,7 +146,7 @@ async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
   if (!res.ok && res.status < 500 && /\.(heic|heif)$/i.test(row.url)) {
     res = await fetch(row.url.replace(/\.(heic|heif)$/i, '.jpg'))
   }
-  if (!res.ok) return
+  if (!res.ok) { _failedKeys.add(cacheKey); return }
   const rawBlob = await res.blob()
   const file = new File([rawBlob], row.filename, { type: rawBlob.type || 'image/heic' })
 

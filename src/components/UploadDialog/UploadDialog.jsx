@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Xmark, MediaImage } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
@@ -14,9 +15,8 @@ export function UploadDialog() {
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const showToast = usePhotoStore(s => s.showToast)
   const setPendingUploadFiles = usePhotoStore(s => s.setPendingUploadFiles)
-  const photos = usePhotoStore(s => s.photos)
-  const prevRods = useMemo(() => [...new Set(photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))], [photos])
-  const prevFlys = useMemo(() => [...new Set(photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))], [photos])
+  const prevRods = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))]))
+  const prevFlys = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))]))
 
   const [step, setStep] = useState(1)
   const [pendingFiles, setPendingFiles] = useState([])

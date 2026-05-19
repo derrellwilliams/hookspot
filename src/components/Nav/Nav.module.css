@@ -11,6 +11,15 @@
   z-index: 1000;
 }
 
+@media (max-width: 600px) {
+  .navBar {
+    top: auto;
+    bottom: 24px;
+    justify-content: center;
+    align-items: flex-end;
+  }
+}
+
 
 
 .pill {
