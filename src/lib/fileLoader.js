@@ -158,13 +158,13 @@ async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
 
 export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
   const user = getUser()
-  if (!user) return
+  if (!user) return { added: 0, failed: 0 }
 
   const existingNames = new Set(
     usePhotoStore.getState().photos.filter(p => p.isOwn).map(p => p.name)
   )
   const files = Array.from(fileList)
-  if (!files.length) return
+  if (!files.length) return { added: 0, failed: 0 }
 
   const uploads = []
   for (let i = 0; i < files.length; i++) {

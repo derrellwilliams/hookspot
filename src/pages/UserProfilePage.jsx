@@ -59,8 +59,6 @@ export function UserProfilePage() {
   const fileInputRef = useRef(null)
 
   const [activeTab, setActiveTab] = useState('profile')
-  const [followingCount, setFollowingCount] = useState(null)
-  const [followersCount, setFollowersCount] = useState(null)
 
   const totalRef = useRef(null)
   const monthlyRef = useRef(null)
@@ -136,45 +134,15 @@ export function UserProfilePage() {
       })
   }, [isOwnProfile, myUser?.id])
 
-  useEffect(() => {
-    if (!profile?.id) return
-    Promise.all([
-      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profile.id),
-      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
-    ]).then(([following, followers]) => {
-      setFollowingCount(following.count ?? 0)
-      setFollowersCount(followers.count ?? 0)
-    })
-  }, [profile?.id])
-
-  const effectivePhotos = isOwnProfile
-    ? photos.filter(p => p.userId === profile?.id)
-    : otherPhotos
+  const effectivePhotos = useMemo(
+    () => isOwnProfile ? photos.filter(p => p.userId === profile?.id) : otherPhotos,
+    [isOwnProfile, photos, profile?.id, otherPhotos]
+  )
 
   const userGroups = useMemo(
     () => groupByTime(effectivePhotos.filter(p => p.hasGps)),
     [effectivePhotos]
   )
-
-  const photoMap = useMemo(
-    () => Object.fromEntries(effectivePhotos.map(p => [p.name, p])),
-    [effectivePhotos]
-  )
-
-  const favoritesPhotos = useMemo(() => {
-    const favs = isOwnProfile ? favorites : (profile?.favorites ?? [])
-    return favs.map(name => (name ? photoMap[name] ?? null : null))
-  }, [isOwnProfile, favorites, profile?.favorites, photoMap])
-
-  const catchCount = useMemo(
-    () => groupByTime(effectivePhotos).length,
-    [effectivePhotos]
-  )
-
-  const thisYearCount = useMemo(() => {
-    const year = new Date().getFullYear()
-    return groupByTime(effectivePhotos.filter(p => p.time && new Date(p.time).getFullYear() === year)).length
-  }, [effectivePhotos])
 
   const recentCatches = useMemo(
     () => groupByTime(effectivePhotos).sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)).slice(0, 24),
@@ -201,7 +169,6 @@ export function UserProfilePage() {
       const { error } = await supabase.from('follows').insert({ follower_id: myUser.id, following_id: profile.id })
       if (error) throw error
       setIsFollowing(true)
-      setFollowersCount(c => (c ?? 0) + 1)
       initPhotos()
     } catch (err) {
       console.error('[user-profile] follow failed', err)
@@ -218,7 +185,6 @@ export function UserProfilePage() {
       const { error } = await supabase.from('follows').delete().eq('follower_id', myUser.id).eq('following_id', profile.id)
       if (error) throw error
       setIsFollowing(false)
-      setFollowersCount(c => Math.max(0, (c ?? 1) - 1))
       removeUserPhotos(profile.id)
     } catch (err) {
       console.error('[user-profile] unfollow failed', err)
@@ -321,135 +287,86 @@ export function UserProfilePage() {
   return (
     <div className={styles.page}>
       <div className={styles.scroll}>
+        <div className={styles.content}>
 
         {/* Profile header */}
         <div className={styles.profileHeader}>
-          <div className={styles.avatarWrap}>
-            {isOwnProfile ? (
-              <>
-                <button
-                  className={styles.avatarBtn}
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  aria-label="Change profile photo"
+          <div className={styles.headerLeft}>
+            <div className={styles.avatarWrap}>
+              {isOwnProfile ? (
+                <>
+                  <button
+                    className={styles.avatarBtn}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    aria-label="Change profile photo"
+                  >
+                    {avatarUrl
+                      ? <img src={avatarUrl} alt={displayName || 'Profile'} className={styles.avatarImg} />
+                      : displayName
+                        ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
+                        : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
+                    }
+                    {uploading && <div className={styles.avatarOverlay}><span className={styles.avatarSpinner} /></div>}
+                  </button>
+                  {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={10} height={10} /></div>}
+                  <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
+                </>
+              ) : (
+                avatarUrl
+                  ? <img src={avatarUrl} alt={displayName} className={styles.avatarImg} />
+                  : <div className={styles.avatarFallback}>{displayName?.[0]?.toUpperCase() ?? '?'}</div>
+              )}
+            </div>
+
+            <div className={styles.headerMid}>
+              <span className={styles.headerUsername}>{displayName}</span>
+              {bio && <p className={styles.headerBio}>{bio}</p>}
+              {isOwnProfile ? (
+                <Button variant="secondary" onClick={openDialog} className={styles.editProfileBtn}>
+                  <EditPencil width={14} height={14} />
+                  Edit Profile
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={isFollowing ? handleUnfollow : handleFollow}
+                  disabled={followLoading}
+                  className={styles.editProfileBtn}
                 >
-                  {avatarUrl
-                    ? <img src={avatarUrl} alt={displayName || 'Profile'} className={styles.avatarImg} />
-                    : displayName
-                      ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
-                      : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
-                  }
-                  {uploading && <div className={styles.avatarOverlay}><span className={styles.avatarSpinner} /></div>}
-                </button>
-                {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={10} height={10} /></div>}
-                <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
-              </>
-            ) : (
-              avatarUrl
-                ? <img src={avatarUrl} alt={displayName} className={styles.avatarImg} />
-                : <div className={styles.avatarFallback}>{displayName?.[0]?.toUpperCase() ?? '?'}</div>
-            )}
+                  {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
+                </Button>
+              )}
+            </div>
           </div>
 
-          <div className={styles.headerMid}>
-            <span className={styles.headerUsername}>{displayName}</span>
-            {bio && <p className={styles.headerBio}>{bio}</p>}
-            <div className={styles.headerStats}>
-              <div className={styles.statItem}>
-                <span className={styles.statValue}>{catchCount}</span>
-                <span className={styles.statLabel}>Catches</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statValue}>{thisYearCount}</span>
-                <span className={styles.statLabel}>This Year</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statValue}>{followingCount ?? '–'}</span>
-                <span className={styles.statLabel}>Following</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statValue}>{followersCount ?? '–'}</span>
-                <span className={styles.statLabel}>Followers</span>
-              </div>
-            </div>
-            {isOwnProfile ? (
-              <Button variant="secondary" onClick={openDialog} className={styles.editProfileBtn}>
-                <EditPencil width={14} height={14} />
-                Edit Profile
-              </Button>
-            ) : (
-              <Button
-                variant="secondary"
-                onClick={isFollowing ? handleUnfollow : handleFollow}
-                disabled={followLoading}
-                className={styles.editProfileBtn}
-              >
-                {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
-              </Button>
-            )}
-          </div>
         </div>
 
         {/* Tab bar */}
         <div className={styles.tabBar}>
-          <button className={activeTab === 'profile' ? styles.tabActive : styles.tab} onClick={() => setActiveTab('profile')}>Profile</button>
+          <button className={activeTab === 'profile' ? styles.tabActive : styles.tab} onClick={() => setActiveTab('profile')}>Recent Activity</button>
           <button className={activeTab === 'stats' ? styles.tabActive : styles.tab} onClick={() => setActiveTab('stats')}>Stats</button>
         </div>
 
         {/* Profile tab */}
-        {activeTab === 'profile' && (
-          <>
-            {(isOwnProfile || favoritesPhotos.some(Boolean)) && (
-              <>
-                <div className={styles.sectionLabel}>Favorites</div>
-                <div className={styles.favoritesGrid}>
-                  {favoritesPhotos.map((photo, i) => {
-                    if (photo) {
-                      const species = cleanSpecies(photo.species)
-                      return (
-                        <button
-                          key={i}
-                          className={`${styles.favoriteSlot} ${styles.favoriteSlotFilled}`}
-                          onClick={isOwnProfile ? () => setPickerSlot(i) : undefined}
-                          style={!isOwnProfile ? { cursor: 'default' } : undefined}
-                        >
-                          <img src={photo.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={styles.favoriteImg} onError={e => { e.currentTarget.style.display = 'none' }} />
-                          <div className={styles.favoriteMeta}>
-                            {species && <div className={styles.favoriteSpecies}>{species}</div>}
-                            {photo.time && <div className={styles.favoriteDatetime}>{formatDateFull(photo.time).split(' •')[0]}</div>}
-                            {photo.meta?.location?.city && photo.meta?.location?.state && (
-                              <div className={styles.favoriteLocation}>{photo.meta.location.city}, {photo.meta.location.state}</div>
-                            )}
-                          </div>
-                        </button>
-                      )
-                    }
-                    if (isOwnProfile) {
-                      return (
-                        <button key={i} className={styles.favoriteSlot} onClick={() => setPickerSlot(i)}>
-                          <span className={styles.favoriteHint}>+</span>
-                        </button>
-                      )
-                    }
-                    return null
-                  })}
-                </div>
-              </>
-            )}
-
-            {recentCatches.length > 0 && (
-              <>
-                <div className={styles.sectionLabel}>Catches</div>
-                <div className={styles.catchesGrid}>
-                  {recentCatches.map(group => (
-                    <button key={group[0].name} className={styles.catchThumb} onClick={() => setCatchPopupGroup(group)}>
-                      <img src={group[0].url} alt="" className={styles.catchThumbImg} />
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
+        {activeTab === 'profile' && recentCatches.length > 0 && (
+          <div className={styles.catchesGrid}>
+            {recentCatches.map(group => {
+              const photo = group[0]
+              const species = cleanSpecies(photo.species)
+              return (
+                <button key={photo.name} className={styles.catchThumb} onClick={() => setCatchPopupGroup(group)}>
+                  <div className={styles.catchThumbImgWrap}>
+                    <img src={photo.url} alt="" className={styles.catchThumbImg} />
+                  </div>
+                  <div className={styles.catchMeta}>
+                    {species && <div className={styles.catchSpecies}>{species}</div>}
+                    {photo.time && <div className={styles.catchDatetime}>{formatDateFull(photo.time).split(' •')[0]}</div>}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         )}
 
         {/* Stats tab */}
@@ -483,6 +400,7 @@ export function UserProfilePage() {
             <Button variant="secondary" onClick={signOut}>Sign out</Button>
           </div>
         )}
+        </div>
       </div>
 
       {catchPopupGroup && (
