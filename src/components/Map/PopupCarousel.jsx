@@ -244,13 +244,15 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
           </div>
           <div className={styles.popupDetail}>
             {d ? formatDateFull(photo.time) : 'Unknown date'}
-            {photo.meta?.weather?.temp != null && photo.meta?.weather?.condition
-              ? ` · ${photo.meta.weather.temp}°F · ${photo.meta.weather.condition}`
-              : ''}
           </div>
-          {formatLocation(lead.meta?.location) && (
+          {(photo.meta?.weather?.temp != null && photo.meta?.weather?.condition || formatLocation(lead.meta?.location)) && (
             <div className={styles.popupDetail}>
-              {formatLocation(lead.meta?.location)}
+              {photo.meta?.weather?.temp != null && photo.meta?.weather?.condition
+                ? `${photo.meta.weather.temp}°F · ${photo.meta.weather.condition}`
+                : ''}
+              {photo.meta?.weather?.temp != null && photo.meta?.weather?.condition && formatLocation(lead.meta?.location)
+                ? ` · ${formatLocation(lead.meta?.location)}`
+                : formatLocation(lead.meta?.location) ?? ''}
             </div>
           )}
           {/* rod/fly are stored on the group lead; stable across photo carousel navigation */}
