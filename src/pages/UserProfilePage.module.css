@@ -494,6 +494,11 @@
   object-fit: cover;
   display: block;
   min-height: 0;
+  transition: transform 0.2s;
+}
+
+.favoriteSlotFilled:hover .favoriteImg {
+  transform: scale(1.05);
 }
 
 .favoriteMeta {

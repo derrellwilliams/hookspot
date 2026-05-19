@@ -374,9 +374,8 @@ export function UserProfilePage() {
 
         {/* Favorites */}
         {(isOwnProfile || favoritesPhotos.some(Boolean)) && (
+        <>
         <div className={styles.favoritesLabel}>Favorites</div>
-        )}
-        {(isOwnProfile || favoritesPhotos.some(Boolean)) && (
         <div className={styles.favoritesGrid}>
           {favoritesPhotos.map((photo, i) => {
             if (photo) {
@@ -409,6 +408,7 @@ export function UserProfilePage() {
             return null
           })}
         </div>
+        </>
         )}
 
         {/* Last 12 catches */}

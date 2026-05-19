@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Hook Spot",
+    "slug": "hookspot",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.hookspot.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.hookspot.app"
+    },
+    "scheme": "hookspot",
+    "plugins": [
+      "@rnmapbox/maps",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Hook Spot uses your photos to let you add fishing spots.",
+          "cameraPermission": "Hook Spot uses your camera to capture new fishing spots."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Hook Spot uses your location to show nearby fishing spots."
+        }
+      ]
+    ]
+  }
+}
