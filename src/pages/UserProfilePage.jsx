@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
-import { EditPencil, UserCircle } from 'iconoir-react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { EditPencil, Settings, UserCircle } from 'iconoir-react'
 import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
@@ -333,9 +334,23 @@ export function UserProfilePage() {
           <div ref={headerMeshRef} className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
           {isOwnProfile ? (
-            <Button variant="icon-sm" onClick={openDialog} className={styles.editProfileBtn} aria-label="Edit profile">
-              <EditPencil width={16} height={16} />
-            </Button>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <Button variant="icon-sm" className={styles.editProfileBtn} aria-label="Profile settings">
+                  <Settings width={16} height={16} />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content className={styles.dropdownContent} sideOffset={6} align="start">
+                  <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>
+                    Edit profile
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>
+                    Log out
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           ) : (
             <Button
               variant="secondary"
