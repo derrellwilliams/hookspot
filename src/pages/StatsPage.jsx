@@ -6,7 +6,6 @@ import styles from './StatsPage.module.css'
 export function StatsPage() {
   const groups = usePhotoStore(s => s.groups)
 
-  const totalRef = useRef(null)
   const monthlyRef = useRef(null)
   const hourlyRef = useRef(null)
   const speciesRef = useRef(null)
@@ -16,7 +15,6 @@ export function StatsPage() {
 
   useEffect(() => {
     renderStats(groups, {
-      total: totalRef.current,
       monthly: monthlyRef.current,
       hourly: hourlyRef.current,
       species: speciesRef.current,
@@ -29,10 +27,6 @@ export function StatsPage() {
   return (
     <div className={styles.page}>
       <div className={styles.scroll}>
-        <div className={styles.header}>
-          <span className={styles.title}>Stats</span>
-          <span ref={totalRef} className={styles.total} />
-        </div>
         <div className={styles.grid}>
           <div className={styles.card}>
             <div className={styles.cardLabel}>Catches per Month</div>
