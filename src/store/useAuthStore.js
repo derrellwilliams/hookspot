@@ -6,7 +6,13 @@ export const useAuthStore = create((set) => ({
   session: null,
   username: null,
   loading: true,
-  setUser: (user) => set({ user, loading: false }),
+  setUser: (user) => set(state => {
+    const prevAvatar = state.user?.user_metadata?.avatar_url
+    const merged = user && prevAvatar && !user.user_metadata?.avatar_url
+      ? { ...user, user_metadata: { ...user.user_metadata, avatar_url: prevAvatar } }
+      : user
+    return { user: merged, loading: false }
+  }),
   setSession: (session) => set({ session }),
   setUsername: (username) => set({ username }),
   setUserAndUsername: (user, username) => set({ user, username }),
