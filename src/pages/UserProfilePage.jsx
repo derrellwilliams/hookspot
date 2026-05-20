@@ -60,7 +60,6 @@ export function UserProfilePage() {
 
   const [activeTab, setActiveTab] = useState('profile')
 
-  const totalRef = useRef(null)
   const monthlyRef = useRef(null)
   const hourlyRef = useRef(null)
   const speciesRef = useRef(null)
@@ -152,7 +151,6 @@ export function UserProfilePage() {
   useEffect(() => {
     if (activeTab !== 'stats') return
     renderStats(userGroups, {
-      total: totalRef.current,
       monthly: monthlyRef.current,
       hourly: hourlyRef.current,
       species: speciesRef.current,
@@ -373,10 +371,6 @@ export function UserProfilePage() {
         {activeTab === 'stats' && (
           userGroups.length > 0 ? (
             <>
-              <div className={styles.statsHeader}>
-                <span className={styles.statsTitle}>Stats</span>
-                <span ref={totalRef} className={styles.statsTotal} />
-              </div>
               <div className={styles.grid}>
                 <div className={styles.card}><div className={styles.cardLabel}>Catches per Month</div><div ref={monthlyRef} /></div>
                 <div className={styles.card}><div className={styles.cardLabel}>Time of Day</div><div ref={hourlyRef} /></div>
