@@ -8,6 +8,16 @@ import { usePhotoStore } from '../store/usePhotoStore.js'
 import { initPhotos, deletePhotos } from '../lib/fileLoader.js'
 import { groupByTime } from '../lib/groupByTime.js'
 import { renderStats } from '../stats.js'
+import { animateMesh } from '../lib/mesh.js'
+
+const PROFILE_BLOBS = [
+  { x: 58, y: 33, color: '#2563eb', dx: 0.8,  dy: 0.6  }, // accent
+  { x: 27, y: 45, color: '#64748b', dx: 0.7,  dy: -0.8 }, // muted
+  { x: 74, y: 66, color: '#1A1953', dx: -0.6, dy: 0.5  }, // darkBg
+  { x: 35, y: 67, color: '#a1a1aa', dx: 0.9,  dy: -0.7 }, // darkMuted
+  { x: 31, y: 18, color: '#2c2c2e', dx: 0.6,  dy: 0.8  }, // darkSurface
+  { x: 15, y: 55, color: '#060a1a', dx: -0.5, dy: 0.6  }, // deepNavy
+]
 import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
@@ -38,6 +48,7 @@ export function UserProfilePage() {
   const removeUserPhotos = usePhotoStore(s => s.removeUserPhotos)
   const showToast = usePhotoStore(s => s.showToast)
   const photos = usePhotoStore(s => s.photos)
+  const photosInitialized = usePhotoStore(s => s.photosInitialized)
 
   const isOwnProfile = urlUsername === myUsername
 
@@ -57,6 +68,12 @@ export function UserProfilePage() {
   const [pickerSlot, setPickerSlot] = useState(null)
   const [catchPopupGroup, setCatchPopupGroup] = useState(null)
   const fileInputRef = useRef(null)
+  const headerMeshRef = useRef(null)
+
+  useEffect(() => {
+    if (!headerMeshRef.current) return
+    return animateMesh(headerMeshRef.current, PROFILE_BLOBS, { speed: 0.005 })
+  }, [])
 
   const [activeTab, setActiveTab] = useState('profile')
 
@@ -137,6 +154,30 @@ export function UserProfilePage() {
     () => isOwnProfile ? photos.filter(p => p.userId === profile?.id) : otherPhotos,
     [isOwnProfile, photos, profile?.id, otherPhotos]
   )
+
+  const catchGroups = useMemo(() => groupByTime(effectivePhotos), [effectivePhotos])
+
+  const catchesThisYear = useMemo(() => {
+    const year = new Date().getFullYear()
+    return catchGroups.filter(g => g[0].time && new Date(g[0].time).getFullYear() === year).length
+  }, [catchGroups])
+
+  const uniqueSpecies = useMemo(() => {
+    const seen = new Set()
+    for (const p of effectivePhotos) {
+      if (p.species) seen.add(p.species.toLowerCase())
+    }
+    return seen.size
+  }, [effectivePhotos])
+
+  const catchesThisMonth = useMemo(() => {
+    const now = new Date()
+    return catchGroups.filter(g => {
+      if (!g[0].time) return false
+      const d = new Date(g[0].time)
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+    }).length
+  }, [catchGroups])
 
   const userGroups = useMemo(
     () => groupByTime(effectivePhotos.filter(p => p.hasGps)),
@@ -289,6 +330,13 @@ export function UserProfilePage() {
 
         {/* Profile header */}
         <div className={styles.profileHeader}>
+          <div ref={headerMeshRef} className={styles.headerMesh} aria-hidden="true" />
+          <div className={styles.headerGrain} aria-hidden="true" />
+          {isOwnProfile && (
+            <Button variant="icon-sm" onClick={openDialog} className={styles.editProfileBtn} aria-label="Edit profile">
+              <EditPencil width={16} height={16} />
+            </Button>
+          )}
           <div className={styles.headerLeft}>
             <div className={styles.avatarWrap}>
               {isOwnProfile ? (
@@ -320,12 +368,28 @@ export function UserProfilePage() {
             <div className={styles.headerMid}>
               <span className={styles.headerUsername}>{displayName}</span>
               {bio && <p className={styles.headerBio}>{bio}</p>}
-              {isOwnProfile ? (
-                <Button variant="secondary" onClick={openDialog} className={styles.editProfileBtn}>
-                  <EditPencil width={14} height={14} />
-                  Edit Profile
-                </Button>
-              ) : (
+              <div className={styles.headerStats}>
+                <div className={styles.headerStat}>
+                  <span className={styles.headerStatNum}>{catchGroups.length}</span>
+                  <span className={styles.headerStatLabel}>All</span>
+                </div>
+                <div className={styles.headerStatDivider} />
+                <div className={styles.headerStat}>
+                  <span className={styles.headerStatNum}>{catchesThisYear}</span>
+                  <span className={styles.headerStatLabel}>Year</span>
+                </div>
+                <div className={styles.headerStatDivider} />
+                <div className={styles.headerStat}>
+                  <span className={styles.headerStatNum}>{catchesThisMonth}</span>
+                  <span className={styles.headerStatLabel}>Month</span>
+                </div>
+                <div className={styles.headerStatDivider} />
+                <div className={styles.headerStat}>
+                  <span className={styles.headerStatNum}>{uniqueSpecies}</span>
+                  <span className={styles.headerStatLabel}>Species</span>
+                </div>
+              </div>
+              {!isOwnProfile && (
                 <Button
                   variant="secondary"
                   onClick={isFollowing ? handleUnfollow : handleFollow}
@@ -347,7 +411,19 @@ export function UserProfilePage() {
         </div>
 
         {/* Profile tab */}
-        {activeTab === 'profile' && recentCatches.length > 0 && (
+        {activeTab === 'profile' && (isOwnProfile && effectivePhotos.length === 0 && !photosInitialized ? (
+          <div className={styles.catchesGrid}>
+            {Array.from({ length: 8 }, (_, i) => (
+              <div key={i} className={styles.skeletonCard}>
+                <div className={styles.skeletonImg} />
+                <div className={styles.skeletonMeta}>
+                  <div className={styles.skeletonLine} />
+                  <div className={styles.skeletonLineShort} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : recentCatches.length > 0 ? (
           <div className={styles.catchesGrid}>
             {recentCatches.map(group => {
               const photo = group[0]
@@ -355,7 +431,7 @@ export function UserProfilePage() {
               return (
                 <button key={photo.name} className={styles.catchThumb} onClick={() => setCatchPopupGroup(group)}>
                   <div className={styles.catchThumbImgWrap}>
-                    <img src={photo.url} alt="" className={styles.catchThumbImg} />
+                    <img src={photo.url} alt="" className={styles.catchThumbImg} loading="lazy" />
                   </div>
                   <div className={styles.catchMeta}>
                     {species && <div className={styles.catchSpecies}>{species}</div>}
@@ -365,7 +441,7 @@ export function UserProfilePage() {
               )
             })}
           </div>
-        )}
+        ) : null)}
 
         {/* Stats tab */}
         {activeTab === 'stats' && (

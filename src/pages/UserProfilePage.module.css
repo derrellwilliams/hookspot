@@ -39,17 +39,35 @@
 
 /* ── Profile header ── */
 .profileHeader {
+  position: relative;
+  overflow: hidden;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding-bottom: 24px;
-  margin-top: 36px;
+  padding: 48px 24px 32px;
+  margin-top: 0;
+  border-radius: 16px;
+}
+
+.headerMesh {
+  position: absolute;
+  inset: 0;
+  background-color: var(--dark-bg);
+}
+
+.headerGrain {
+  position: absolute;
+  inset: 0;
+  background-image: url(/noise.svg);
+  opacity: 0.28;
+  pointer-events: none;
 }
 
 .headerLeft {
+  position: relative;
+  z-index: 1;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   gap: 20px;
 }
@@ -152,14 +170,18 @@
 
 /* Middle: name, bio, stats, button */
 .headerMid {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 10px;
 }
 
 .headerUsername {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 28px;
+  font-family: 'Space Mono', monospace;
+  font-size: 36px;
   font-weight: 700;
   color: var(--dark-text);
   line-height: 1.1;
@@ -167,24 +189,69 @@
 
 .headerBio {
   font-family: 'Roboto', sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--dark-text);
   margin: 0;
   line-height: 1.5;
 }
 
-.editProfileBtn {
+.headerStats {
   display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.headerStat {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  font-size: 13px !important;
-  align-self: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 0;
+  width: 72px;
+}
+
+.headerStatNum {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--dark-text);
+  line-height: 1;
+}
+
+.headerStatLabel {
+  font-family: 'Roboto', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.headerStatDivider {
+  width: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.editProfileBtn {
+  position: absolute !important;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
 }
 
 /* ── Tab bar ── */
 .tabBar {
   display: flex;
   border-bottom: 1px solid var(--dark-border);
+  margin-top: 32px;
   margin-bottom: 28px;
 }
 
@@ -226,7 +293,7 @@
 /* ── Catch thumb metadata ── */
 .catchMeta {
   flex-shrink: 0;
-  background: #111113;
+  background: #3a3a3c;
   padding: 18px 16px;
   display: flex;
   flex-direction: column;
@@ -274,8 +341,8 @@
 }
 
 .catchThumb:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .catchThumbImgWrap {
@@ -289,6 +356,54 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* ── Skeleton loading ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeletonCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--dark-surface);
+}
+
+.skeletonImg {
+  aspect-ratio: 1;
+  width: 100%;
+  background: linear-gradient(90deg, #1c1c20 25%, #222228 50%, #1c1c20 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
+}
+
+.skeletonMeta {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #3a3a3c;
+}
+
+.skeletonLine {
+  height: 13px;
+  border-radius: 4px;
+  width: 70%;
+  background: linear-gradient(90deg, #191919 25%, #1f1f23 50%, #191919 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
+}
+
+.skeletonLineShort {
+  height: 10px;
+  border-radius: 4px;
+  width: 45%;
+  background: linear-gradient(90deg, #191919 25%, #1f1f23 50%, #191919 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
 }
 
 /* ── Stats tab ── */
@@ -560,7 +675,11 @@
 
 @media (max-width: 600px) {
   .profileHeader {
-    align-items: flex-start;
+    align-items: center;
+  }
+
+  .scroll {
+    padding: 24px 16px 40px;
   }
 
   .catchesGrid {

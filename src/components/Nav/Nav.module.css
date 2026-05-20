@@ -14,7 +14,7 @@
 @media (max-width: 600px) {
   .navBar {
     top: auto;
-    bottom: 24px;
+    bottom: 12px;
     justify-content: center;
     align-items: flex-end;
   }

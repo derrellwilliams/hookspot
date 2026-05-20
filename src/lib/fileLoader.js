@@ -113,19 +113,22 @@ export async function initPhotos() {
     const existing = new Set(usePhotoStore.getState().photos.map(p => `${p.userId}/${p.name}`))
 
     const toLoad = rows.filter(row => !existing.has(`${row.user_id}/${row.filename}`))
-    const loaded = []
+    const pending = []
+    const flush = () => {
+      if (!pending.length) return
+      const batch = pending.splice(0)
+      usePhotoStore.getState().batchAddPhotos(batch)
+      batch.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo) })
+    }
     await withConcurrency(
       toLoad.map(row => () =>
         loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
-          .then(photo => { if (photo) loaded.push(photo) })
+          .then(photo => { if (photo) { pending.push(photo); if (pending.length >= 4) flush() } })
           .catch(e => console.error('[hookspot] failed to load', row.filename, e))
       ),
       8
     )
-    if (loaded.length) {
-      usePhotoStore.getState().batchAddPhotos(loaded)
-      loaded.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo) })
-    }
+    flush()
   } finally {
     if (fetchAttempted) usePhotoStore.getState().setPhotosInitialized()
     _initInProgress = false
