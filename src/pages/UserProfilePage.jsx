@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { EditPencil, UserCircle } from 'iconoir-react'
@@ -68,11 +68,10 @@ export function UserProfilePage() {
   const [pickerSlot, setPickerSlot] = useState(null)
   const [catchPopupGroup, setCatchPopupGroup] = useState(null)
   const fileInputRef = useRef(null)
-  const headerMeshRef = useRef(null)
-
-  useEffect(() => {
-    if (!headerMeshRef.current) return
-    return animateMesh(headerMeshRef.current, PROFILE_BLOBS, { speed: 0.005 })
+  const meshCleanupRef = useRef(null)
+  const headerMeshRef = useCallback((el) => {
+    if (meshCleanupRef.current) { meshCleanupRef.current(); meshCleanupRef.current = null }
+    if (el) meshCleanupRef.current = animateMesh(el, PROFILE_BLOBS, { speed: 0.005 })
   }, [])
 
   const [activeTab, setActiveTab] = useState('profile')
@@ -96,6 +95,7 @@ export function UserProfilePage() {
   }, [isOwnProfile, myUser, myUsername])
 
   const profile = isOwnProfile ? ownProfile : fetchedProfile
+
   const isAuthResolving = !!myUser && myUsername === null
   const isProfileLoading = isOwnProfile ? !myUser : loading
   const isLoading = isAuthResolving || isProfileLoading
@@ -332,9 +332,18 @@ export function UserProfilePage() {
         <div className={styles.profileHeader}>
           <div ref={headerMeshRef} className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
-          {isOwnProfile && (
+          {isOwnProfile ? (
             <Button variant="icon-sm" onClick={openDialog} className={styles.editProfileBtn} aria-label="Edit profile">
               <EditPencil width={16} height={16} />
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={isFollowing ? handleUnfollow : handleFollow}
+              disabled={followLoading}
+              className={styles.followBtn}
+            >
+              {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
             </Button>
           )}
           <div className={styles.headerLeft}>
@@ -389,16 +398,6 @@ export function UserProfilePage() {
                   <span className={styles.headerStatLabel}>Species</span>
                 </div>
               </div>
-              {!isOwnProfile && (
-                <Button
-                  variant="secondary"
-                  onClick={isFollowing ? handleUnfollow : handleFollow}
-                  disabled={followLoading}
-                  className={styles.editProfileBtn}
-                >
-                  {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
-                </Button>
-              )}
             </div>
           </div>
 
