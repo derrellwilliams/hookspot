@@ -30,6 +30,7 @@ function AppInner() {
   const setUser = useAuthStore(s => s.setUser)
   const setSession = useAuthStore(s => s.setSession)
   const setUsername = useAuthStore(s => s.setUsername)
+  const setUserAndUsername = useAuthStore(s => s.setUserAndUsername)
 
   const knownRoutes = ['/', '/login', '/onboarding', '/profile', '/design']
   const isKnownRoute = knownRoutes.includes(location.pathname) || location.pathname.startsWith('/user/')
@@ -49,12 +50,12 @@ function AppInner() {
           } else if (!username) {
             navigate('/onboarding', { replace: true })
           } else {
-            setUsername(username)
-            // Always sync avatar from profiles table — it's the source of truth,
-            // not user_metadata (which can carry a stale or missing value).
-            if (avatar_url) {
-              setUser({ ...session.user, user_metadata: { ...session.user.user_metadata, avatar_url } })
-            }
+            // Atomically set user (with synced avatar) + username to prevent
+            // an intermediate render where username is set but avatar is still stale.
+            const syncedUser = avatar_url
+              ? { ...session.user, user_metadata: { ...session.user.user_metadata, avatar_url } }
+              : session.user
+            setUserAndUsername(syncedUser, username)
             initPhotos()
           }
         } catch (err) {

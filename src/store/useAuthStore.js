@@ -9,6 +9,7 @@ export const useAuthStore = create((set) => ({
   setUser: (user) => set({ user, loading: false }),
   setSession: (session) => set({ session }),
   setUsername: (username) => set({ username }),
+  setUserAndUsername: (user, username) => set({ user, username }),
   signOut: async () => {
     await supabase.auth.signOut()
     set({ user: null, session: null, username: null })
