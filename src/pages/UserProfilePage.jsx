@@ -191,10 +191,32 @@ export function UserProfilePage() {
     [effectivePhotos]
   )
 
+  const PAGE_SIZE = 24
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const sentinelRef = useRef(null)
+
   const recentCatches = useMemo(
-    () => groupByTime(effectivePhotos).sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)).slice(0, 24),
+    () => groupByTime(effectivePhotos).sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
     [effectivePhotos]
   )
+
+  const visibleCatches = useMemo(
+    () => recentCatches.slice(0, visibleCount),
+    [recentCatches, visibleCount]
+  )
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [effectivePhotos])
+
+  useEffect(() => {
+    if (!sentinelRef.current) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setVisibleCount(n => Math.min(n + PAGE_SIZE, recentCatches.length))
+    }, { rootMargin: '200px' })
+    observer.observe(sentinelRef.current)
+    return () => observer.disconnect()
+  }, [recentCatches.length, activeTab])
 
   useEffect(() => {
     if (activeTab !== 'stats') return
@@ -499,7 +521,7 @@ export function UserProfilePage() {
           </div>
         ) : recentCatches.length > 0 ? (
           <div className={styles.catchesGrid}>
-            {recentCatches.map(group => {
+            {visibleCatches.map(group => {
               const photo = group[0]
               const species = cleanSpecies(photo.species)
               return (
@@ -514,6 +536,9 @@ export function UserProfilePage() {
                 </button>
               )
             })}
+            {visibleCount < recentCatches.length && (
+              <div ref={sentinelRef} className={styles.loadSentinel} />
+            )}
           </div>
         ) : null)}
 

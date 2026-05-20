@@ -359,6 +359,11 @@
   margin-bottom: 32px;
 }
 
+.loadSentinel {
+  grid-column: 1 / -1;
+  height: 1px;
+}
+
 .catchThumb {
   display: flex;
   flex-direction: column;
