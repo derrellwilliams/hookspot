@@ -201,7 +201,7 @@
   gap: 0;
   margin-top: 4px;
   margin-bottom: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -218,7 +218,7 @@
 
 .headerStatNum {
   font-family: 'Roboto Mono', monospace;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--dark-text);
   line-height: 1;
@@ -234,8 +234,7 @@
 }
 
 .headerStatDivider {
-  width: 2px;
-  background: rgba(255, 255, 255, 0.15);
+  width: 0;
   flex-shrink: 0;
 }
 
