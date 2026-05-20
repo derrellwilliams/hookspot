@@ -625,6 +625,145 @@
   opacity: 0.88;
 }
 
+/* ── Gear dialog ── */
+.gearDialogContent {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 2001;
+  outline: none;
+}
+
+.gearForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 20px 4px;
+}
+
+.gearSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gearSectionLabel {
+  font-family: 'Roboto', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.gearList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 28px;
+}
+
+.gearItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  border-radius: 7px;
+  padding: 6px 6px 6px 12px;
+}
+
+.gearItemLabel {
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  color: var(--dark-text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gearItemRemove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--dark-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.gearItemRemove:hover {
+  color: var(--dark-text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gearEmpty {
+  font-family: 'Roboto', sans-serif;
+  font-size: 13px;
+  color: var(--dark-muted);
+  font-style: italic;
+  padding: 2px 0;
+}
+
+.gearAddRow {
+  display: flex;
+  gap: 8px;
+}
+
+.gearAddInput {
+  flex: 1;
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-family: 'Roboto', sans-serif;
+  color: var(--dark-text);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.gearAddInput:focus {
+  border-color: var(--accent);
+}
+
+.gearAddInput::placeholder {
+  color: var(--dark-muted);
+}
+
+.gearAddBtn {
+  flex-shrink: 0;
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--dark-text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.gearAddBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* ── Catch dialog ── */
 .catchDialogBackdrop {
   position: fixed;

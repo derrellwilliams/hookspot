@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Xmark, MediaImage } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
+import { useAuthStore } from '../../store/useAuthStore.js'
 import { handleFiles } from '../../lib/fileLoader.js'
 import { toDisplayBlob } from '../../exif.js'
 import { identifySpecies } from '../../identify.js'
@@ -15,8 +16,12 @@ export function UploadDialog() {
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const showToast = usePhotoStore(s => s.showToast)
   const setPendingUploadFiles = usePhotoStore(s => s.setPendingUploadFiles)
-  const prevRods = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))]))
-  const prevFlys = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))]))
+  const photoRods = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))]))
+  const photoFlies = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))]))
+  const gearRods = useAuthStore(useShallow(s => s.user?.user_metadata?.gear_rods ?? []))
+  const gearFlies = useAuthStore(useShallow(s => s.user?.user_metadata?.gear_flies ?? []))
+  const prevRods = useMemo(() => [...new Set([...gearRods, ...photoRods])], [gearRods, photoRods])
+  const prevFlys = useMemo(() => [...new Set([...gearFlies, ...photoFlies])], [gearFlies, photoFlies])
 
   const [step, setStep] = useState(1)
   const [pendingFiles, setPendingFiles] = useState([])

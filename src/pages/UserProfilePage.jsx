@@ -65,6 +65,12 @@ export function UserProfilePage() {
   const [editName, setEditName] = useState('')
   const [editBio, setEditBio] = useState('')
   const [saving, setSaving] = useState(false)
+  const [gearDialogOpen, setGearDialogOpen] = useState(false)
+  const [editRods, setEditRods] = useState([])
+  const [editFlies, setEditFlies] = useState([])
+  const [newRod, setNewRod] = useState('')
+  const [newFly, setNewFly] = useState('')
+  const [gearSaving, setGearSaving] = useState(false)
   const [favorites, setFavorites] = useState(loadFavoritesCache)
   const [pickerSlot, setPickerSlot] = useState(null)
   const [catchPopupGroup, setCatchPopupGroup] = useState(null)
@@ -282,6 +288,57 @@ export function UserProfilePage() {
     }
   }
 
+  function openGearDialog() {
+    const savedRods = myUser?.user_metadata?.gear_rods
+    const savedFlies = myUser?.user_metadata?.gear_flies
+    if (savedRods != null) {
+      setEditRods(savedRods)
+    } else {
+      const ownPhotos = photos.filter(p => p.isOwn)
+      setEditRods([...new Set(ownPhotos.map(p => p.meta?.rod).filter(Boolean))])
+    }
+    if (savedFlies != null) {
+      setEditFlies(savedFlies)
+    } else {
+      const ownPhotos = photos.filter(p => p.isOwn)
+      setEditFlies([...new Set(ownPhotos.map(p => p.meta?.fly).filter(Boolean))])
+    }
+    setNewRod('')
+    setNewFly('')
+    setGearDialogOpen(true)
+  }
+
+  function addRod() {
+    const val = newRod.trim()
+    if (!val || editRods.includes(val)) { setNewRod(''); return }
+    setEditRods(prev => [...prev, val])
+    setNewRod('')
+  }
+
+  function addFly() {
+    const val = newFly.trim()
+    if (!val || editFlies.includes(val)) { setNewFly(''); return }
+    setEditFlies(prev => [...prev, val])
+    setNewFly('')
+  }
+
+  async function saveGear() {
+    setGearSaving(true)
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: { gear_rods: editRods, gear_flies: editFlies },
+      })
+      if (error) throw error
+      setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, avatar_url: myUser?.user_metadata?.avatar_url ?? data.user.user_metadata?.avatar_url } })
+      setGearDialogOpen(false)
+    } catch (err) {
+      console.error('[hookspot] gear save failed', err)
+      showToast('Failed to save gear. Please try again.')
+    } finally {
+      setGearSaving(false)
+    }
+  }
+
   function handleSelectFavorite(photo) {
     const next = favorites.map((f, i) => i === pickerSlot ? photo.name : f)
     setFavorites(next)
@@ -344,6 +401,9 @@ export function UserProfilePage() {
                 <DropdownMenu.Content className={styles.dropdownContent} sideOffset={6} align="start">
                   <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>
                     Edit profile
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>
+                    Edit gear
                   </DropdownMenu.Item>
                   <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>
                     Log out
@@ -479,11 +539,6 @@ export function UserProfilePage() {
           )
         )}
 
-        {isOwnProfile && (
-          <div className={styles.footer}>
-            <Button variant="secondary" onClick={signOut}>Sign out</Button>
-          </div>
-        )}
         </div>
       </div>
 
@@ -537,6 +592,65 @@ export function UserProfilePage() {
                 <div className={styles.dialogFooter}>
                   <button className={styles.cancelBtn} onClick={() => setDialogOpen(false)} disabled={saving}>Cancel</button>
                   <button className={styles.saveBtn} onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
+
+          <Dialog.Root open={gearDialogOpen} onOpenChange={o => { if (!o) setGearDialogOpen(false) }}>
+            <Dialog.Portal>
+              <Dialog.Overlay className={styles.dialogBackdrop} />
+              <Dialog.Content className={styles.gearDialogContent} aria-describedby={undefined}>
+                <Dialog.Title className={styles.dialogTitle}>Edit gear</Dialog.Title>
+                <div className={styles.gearForm}>
+                  <div className={styles.gearSection}>
+                    <div className={styles.gearSectionLabel}>Rods</div>
+                    <div className={styles.gearList}>
+                      {editRods.length === 0 && <div className={styles.gearEmpty}>No rods added yet</div>}
+                      {editRods.map((rod, i) => (
+                        <div key={i} className={styles.gearItem}>
+                          <span className={styles.gearItemLabel}>{rod}</span>
+                          <button className={styles.gearItemRemove} type="button" aria-label="Remove" onClick={() => setEditRods(prev => prev.filter((_, j) => j !== i))}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={styles.gearAddRow}>
+                      <input
+                        className={styles.gearAddInput}
+                        value={newRod}
+                        onChange={e => setNewRod(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addRod()}
+                        placeholder="Add a rod…"
+                      />
+                      <button className={styles.gearAddBtn} type="button" onClick={addRod}>Add</button>
+                    </div>
+                  </div>
+                  <div className={styles.gearSection}>
+                    <div className={styles.gearSectionLabel}>Flies</div>
+                    <div className={styles.gearList}>
+                      {editFlies.length === 0 && <div className={styles.gearEmpty}>No flies added yet</div>}
+                      {editFlies.map((fly, i) => (
+                        <div key={i} className={styles.gearItem}>
+                          <span className={styles.gearItemLabel}>{fly}</span>
+                          <button className={styles.gearItemRemove} type="button" aria-label="Remove" onClick={() => setEditFlies(prev => prev.filter((_, j) => j !== i))}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={styles.gearAddRow}>
+                      <input
+                        className={styles.gearAddInput}
+                        value={newFly}
+                        onChange={e => setNewFly(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addFly()}
+                        placeholder="Add a fly…"
+                      />
+                      <button className={styles.gearAddBtn} type="button" onClick={addFly}>Add</button>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.dialogFooter}>
+                  <button className={styles.cancelBtn} onClick={() => setGearDialogOpen(false)} disabled={gearSaving}>Cancel</button>
+                  <button className={styles.saveBtn} onClick={saveGear} disabled={gearSaving}>{gearSaving ? 'Saving…' : 'Save'}</button>
                 </div>
               </Dialog.Content>
             </Dialog.Portal>
