@@ -1,29 +1,34 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import * as Dialog from '@radix-ui/react-dialog'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { Xmark, MediaImage } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { handleFiles } from '../../lib/fileLoader.js'
-import { toDisplayBlob } from '../../exif.js'
+import { extractExif, toDisplayBlob } from '../../exif.js'
 import { identifySpecies } from '../../identify.js'
 import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
+const MAP_STYLE = 'mapbox://styles/derrellwilliams/cmoc96j0y000i01r90nqr62du'
 
 export function UploadDialog() {
   const uploadOpen = usePhotoStore(s => s.uploadOpen)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const showToast = usePhotoStore(s => s.showToast)
   const setPendingUploadFiles = usePhotoStore(s => s.setPendingUploadFiles)
-  const photoRods = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))]))
-  const photoFlies = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))]))
   const gearRods = useAuthStore(useShallow(s => s.user?.user_metadata?.gear_rods ?? []))
   const gearFlies = useAuthStore(useShallow(s => s.user?.user_metadata?.gear_flies ?? []))
-  const prevRods = useMemo(() => [...new Set([...gearRods, ...photoRods])], [gearRods, photoRods])
-  const prevFlys = useMemo(() => [...new Set([...gearFlies, ...photoFlies])], [gearFlies, photoFlies])
+  const prevRods = gearRods
+  const prevFlys = gearFlies
 
   const [step, setStep] = useState(1)
+  const [needsLocation, setNeedsLocation] = useState(false)
+  const [manualPin, setManualPin] = useState(null)
   const [pendingFiles, setPendingFiles] = useState([])
   const [pendingBlobs, setPendingBlobs] = useState([])
   const [pendingUrls, setPendingUrls] = useState([])
@@ -34,14 +39,55 @@ export function UploadDialog() {
   const [loading, setLoading] = useState(false)
   const [dropOver, setDropOver] = useState(false)
   const fileInputRef = useRef(null)
+  const locationMapRef = useRef(null)
+  const locationMapInstanceRef = useRef(null)
+  const locationMarkerRef = useRef(null)
 
   useEffect(() => {
     if (!uploadOpen) return
     const files = usePhotoStore.getState().pendingUploadFiles
     if (!files.length) return
     setPendingUploadFiles([])
-    goToStep2(files)
+    goToNextStep(files)
   }, [uploadOpen])
+
+  // Initialize / destroy the location-picker map when entering/leaving step 2
+  useEffect(() => {
+    if (step !== 2 || !locationMapRef.current) return
+
+    mapboxgl.accessToken = MAPBOX_TOKEN
+    const map = new mapboxgl.Map({
+      container: locationMapRef.current,
+      style: MAP_STYLE,
+      center: [-98, 39],
+      zoom: 3,
+    })
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right')
+    locationMapInstanceRef.current = map
+
+    map.on('click', e => {
+      const { lng, lat } = e.lngLat
+      setManualPin({ lat, lng })
+      if (locationMarkerRef.current) {
+        locationMarkerRef.current.setLngLat([lng, lat])
+      } else {
+        const marker = new mapboxgl.Marker({ color: '#000000', draggable: true })
+          .setLngLat([lng, lat])
+          .addTo(map)
+        marker.on('dragend', () => {
+          const pos = marker.getLngLat()
+          setManualPin({ lat: pos.lat, lng: pos.lng })
+        })
+        locationMarkerRef.current = marker
+      }
+    })
+
+    return () => {
+      if (locationMarkerRef.current) { locationMarkerRef.current.remove(); locationMarkerRef.current = null }
+      map.remove()
+      locationMapInstanceRef.current = null
+    }
+  }, [step])
 
   function revokeUrls(urls) { urls.forEach(u => URL.revokeObjectURL(u)) }
 
@@ -49,23 +95,31 @@ export function UploadDialog() {
     revokeUrls(pendingUrls)
     setPendingFiles([]); setPendingBlobs([]); setPendingUrls([])
     setSpecies(''); setRod(''); setFly('')
+    setManualPin(null); setNeedsLocation(false)
     setStep(1)
     setUploadOpen(false)
   }
 
-  async function goToStep2(files) {
+  async function goToNextStep(files) {
     revokeUrls(pendingUrls)
     const existing = new Set()
     const unique = files.filter(f => existing.has(f.name) ? false : (existing.add(f.name), true))
     setDropOver(false)
     setLoading(true)
-    const blobs = await Promise.all(unique.map(f => toDisplayBlob(f)))
+    const [blobs, firstExif] = await Promise.all([
+      Promise.all(unique.map(f => toDisplayBlob(f))),
+      extractExif(unique[0]),
+    ])
     setLoading(false)
     const urls = blobs.map(b => URL.createObjectURL(b))
     setPendingFiles(unique)
     setPendingBlobs(blobs)
     setPendingUrls(urls)
-    setStep(2)
+
+    const hasGps = !!(firstExif?.latitude && firstExif?.longitude)
+    setNeedsLocation(!hasGps)
+    setManualPin(null)
+    setStep(hasGps ? 3 : 2)
     identifyFirst(blobs[0])
   }
 
@@ -112,9 +166,11 @@ export function UploadDialog() {
   async function submit() {
     const files = pendingFiles.slice()
     const blobs = pendingBlobs.slice()
+    const meta = { species, rod, fly, identified: true }
+    if (manualPin) { meta.manualLat = manualPin.lat; meta.manualLng = manualPin.lng }
     close()
     try {
-      const { added = 0 } = await handleFiles(files, { species, rod, fly, identified: true }, blobs) ?? {}
+      const { added = 0 } = await handleFiles(files, meta, blobs) ?? {}
       showToast(added > 0 ? 'Catch added!' : 'Failed to add catch.')
     } catch {
       showToast('Failed to add catch.')
@@ -125,15 +181,15 @@ export function UploadDialog() {
     const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'))
     e.target.value = ''
     if (!files.length) return
-    if (step === 2) addMoreFiles(files)
-    else goToStep2(files)
+    if (step === 3) addMoreFiles(files)
+    else goToNextStep(files)
   }
 
   async function onZoneDrop(e) {
     e.preventDefault()
     setDropOver(false)
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
-    if (files.length) await goToStep2(files)
+    if (files.length) await goToNextStep(files)
   }
 
   return (
@@ -168,6 +224,24 @@ export function UploadDialog() {
           )}
 
           {step === 2 && (
+            <div className={styles.locationStep}>
+              <div className={styles.locationBanner}>No GPS data found — pin your catch location</div>
+              <div ref={locationMapRef} className={styles.locationMap} />
+              <div className={styles.locationFooter}>
+                <div className={styles.locationCoords}>
+                  {manualPin
+                    ? `${manualPin.lat.toFixed(4)}, ${manualPin.lng.toFixed(4)}`
+                    : 'Click the map to place a pin'}
+                </div>
+                <div className={styles.locationActions}>
+                  <Button variant="secondary" onClick={() => { setStep(1); setManualPin(null) }}>Back</Button>
+                  <Button variant="primary" onClick={() => setStep(3)} disabled={!manualPin}>Next</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
             <>
               <div className={styles.previewWrap}>
                 <img className={styles.previewImg} src={pendingUrls[0]} alt="preview" />

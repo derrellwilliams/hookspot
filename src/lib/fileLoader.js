@@ -204,9 +204,11 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
 
-  const time = exif?.DateTimeOriginal instanceof Date
+  const exifTime = exif?.DateTimeOriginal instanceof Date
     ? exif.DateTimeOriginal.getTime()
     : parseExifDate(exif?.DateTimeOriginal)
+  // Fall back to upload time so manually-pinned catches sort to the top of the sidebar
+  const time = exifTime ?? (uploadMeta.manualLat != null ? Date.now() : null)
 
   const row = {
     user_id: user.id,
@@ -214,8 +216,8 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     storage_path: storagePath,
     url: publicUrl,
     species: uploadMeta.species || null,
-    lat: exif?.latitude ?? null,
-    lng: exif?.longitude ?? null,
+    lat: exif?.latitude ?? uploadMeta.manualLat ?? null,
+    lng: exif?.longitude ?? uploadMeta.manualLng ?? null,
     time: time ? new Date(time).toISOString() : null,
     meta: uploadMeta,
   }
