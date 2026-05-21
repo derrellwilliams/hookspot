@@ -6,8 +6,8 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { deletePhotos } from '../../lib/fileLoader.js'
 import { PopupCarousel } from './PopupCarousel.jsx'
 import styles from './Map.module.css'
+import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 const MAP_CENTER = [-111.1, 39.5]
 const MAP_ZOOM = 7
 const MARKER_COLOR = '#000000'
@@ -46,7 +46,7 @@ export function MapView({ active }) {
     mapboxgl.accessToken = MAPBOX_TOKEN
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: 'mapbox://styles/derrellwilliams/cmoc96j0y000i01r90nqr62du',
+      style: MAP_STYLE,
       center: MAP_CENTER,
       zoom: MAP_ZOOM,
     })
