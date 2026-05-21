@@ -12,9 +12,14 @@ import { extractExif, toDisplayBlob } from '../../exif.js'
 import { identifySpecies } from '../../identify.js'
 import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
+import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
-const MAP_STYLE = 'mapbox://styles/derrellwilliams/cmoc96j0y000i01r90nqr62du'
+function computeHomeCenter(photos) {
+  const pts = photos.filter(p => p.isOwn && p.hasGps && p.exif?.latitude != null && p.exif?.longitude != null)
+  if (!pts.length) return null
+  const sum = pts.reduce((acc, p) => ({ lat: acc.lat + p.exif.latitude, lng: acc.lng + p.exif.longitude }), { lat: 0, lng: 0 })
+  return { center: [sum.lng / pts.length, sum.lat / pts.length], zoom: 5 }
+}
 
 export function UploadDialog() {
   const uploadOpen = usePhotoStore(s => s.uploadOpen)
@@ -27,7 +32,6 @@ export function UploadDialog() {
   const prevFlys = gearFlies
 
   const [step, setStep] = useState(1)
-  const [needsLocation, setNeedsLocation] = useState(false)
   const [manualPin, setManualPin] = useState(null)
   const [pendingFiles, setPendingFiles] = useState([])
   const [pendingBlobs, setPendingBlobs] = useState([])
@@ -42,6 +46,7 @@ export function UploadDialog() {
   const locationMapRef = useRef(null)
   const locationMapInstanceRef = useRef(null)
   const locationMarkerRef = useRef(null)
+  const mapCenterRef = useRef(null)
 
   useEffect(() => {
     if (!uploadOpen) return
@@ -56,11 +61,12 @@ export function UploadDialog() {
     if (step !== 2 || !locationMapRef.current) return
 
     mapboxgl.accessToken = MAPBOX_TOKEN
+    const { center = [-98, 39], zoom = 3 } = mapCenterRef.current ?? {}
     const map = new mapboxgl.Map({
       container: locationMapRef.current,
       style: MAP_STYLE,
-      center: [-98, 39],
-      zoom: 3,
+      center,
+      zoom,
     })
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right')
     locationMapInstanceRef.current = map
@@ -95,7 +101,7 @@ export function UploadDialog() {
     revokeUrls(pendingUrls)
     setPendingFiles([]); setPendingBlobs([]); setPendingUrls([])
     setSpecies(''); setRod(''); setFly('')
-    setManualPin(null); setNeedsLocation(false)
+    setManualPin(null)
     setStep(1)
     setUploadOpen(false)
   }
@@ -117,8 +123,8 @@ export function UploadDialog() {
     setPendingUrls(urls)
 
     const hasGps = !!(firstExif?.latitude && firstExif?.longitude)
-    setNeedsLocation(!hasGps)
     setManualPin(null)
+    if (!hasGps) mapCenterRef.current = computeHomeCenter(usePhotoStore.getState().photos)
     setStep(hasGps ? 3 : 2)
     identifyFirst(blobs[0])
   }
