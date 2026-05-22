@@ -47,6 +47,7 @@ function AppInner() {
           const { username, avatar_url, error: profileError } = await res.json()
           if (profileError) {
             console.error('[auth] profile check failed', profileError)
+            initPhotos()
           } else if (!username) {
             navigate('/onboarding', { replace: true })
           } else {
@@ -60,6 +61,7 @@ function AppInner() {
           }
         } catch (err) {
           console.error('[auth] profile fetch failed', err)
+          initPhotos()
         }
       } else {
         setUser(session?.user ?? null)
