@@ -120,14 +120,18 @@ export async function initPhotos() {
       usePhotoStore.getState().batchAddPhotos(batch)
       batch.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo) })
     }
-    await withConcurrency(
-      toLoad.map(row => () =>
-        loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
-          .then(photo => { if (photo) { pending.push(photo); if (pending.length >= 4) flush() } })
-          .catch(e => console.error('[hookspot] failed to load', row.filename, e))
-      ),
-      8
-    )
+    const makeLoader = row => () =>
+      loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
+        .then(photo => { if (photo) { pending.push(photo); if (pending.length >= 4) flush() } })
+        .catch(e => console.error('[hookspot] failed to load', row.filename, e))
+
+    // Load the 15 most recent first so the sidebar becomes interactive quickly,
+    // then continue with the rest in the background.
+    await withConcurrency(toLoad.slice(0, 15).map(makeLoader), 8)
+    flush()
+    usePhotoStore.getState().setPhotosInitialized()
+
+    await withConcurrency(toLoad.slice(15).map(makeLoader), 8)
     flush()
   } finally {
     if (fetchAttempted) usePhotoStore.getState().setPhotosInitialized()
