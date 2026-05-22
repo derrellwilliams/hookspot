@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native'
 import MapboxGL from '@rnmapbox/maps'
 import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
+import { EditPencil, Xmark } from 'iconoir-react-native'
 import Constants from 'expo-constants'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -27,9 +28,9 @@ function photoUrl(userId, filename) {
   return supabase.storage.from('catches').getPublicUrl(`${userId}/${storageKey(filename)}`).data.publicUrl
 }
 
-function AnglerRow({ user }) {
-  const avatarUrl = user?.user_metadata?.avatar_url
-  const displayName = getDisplayName(user?.user_metadata)
+function AnglerRow({ user, profile }) {
+  const avatarUrl = profile?.avatar_url
+  const displayName = getDisplayName(profile) || getDisplayName(user?.user_metadata)
   const initial = displayName ? displayName[0].toUpperCase() : '?'
 
   return (
@@ -45,6 +46,7 @@ function AnglerRow({ user }) {
 
 export default function MapScreen() {
   const user = useAuthStore(s => s.user)
+  const profile = useAuthStore(s => s.profile)
   const cameraRef = useRef(null)
   const sheetRef = useRef(null)
   const [catches, setCatches] = useState([])
@@ -99,7 +101,7 @@ export default function MapScreen() {
     const full = catches.find(c => c.filename === props.filename && c.user_id === props.userId)
     if (full) {
       setSelected(full)
-      sheetRef.current?.snapToIndex(1)
+      sheetRef.current?.snapToIndex(2)
     }
   }, [catches])
 
@@ -111,12 +113,12 @@ export default function MapScreen() {
   const selectFromList = useCallback((item) => {
     setSelected(item)
     cameraRef.current?.setCamera({ centerCoordinate: [item.lng, item.lat], animationDuration: 500 })
-    sheetRef.current?.snapToIndex(1)
+    sheetRef.current?.snapToIndex(2)
   }, [])
 
   const clearSelected = useCallback(() => {
     setSelected(null)
-    sheetRef.current?.snapToIndex(0)
+    sheetRef.current?.snapToIndex(1)
   }, [])
 
   const renderCatchItem = useCallback(({ item }) => {
@@ -126,7 +128,7 @@ export default function MapScreen() {
       <TouchableOpacity style={styles.item} onPress={() => selectFromList(item)} activeOpacity={0.7}>
         <Image source={{ uri: photoUrl(item.user_id, item.filename) }} style={styles.thumb} />
         <View style={styles.meta}>
-          <AnglerRow user={user} />
+          <AnglerRow user={user} profile={profile} />
           {species
             ? <Text style={styles.species} numberOfLines={1}>{species}</Text>
             : <Text style={styles.speciesEmpty} numberOfLines={1}>Unknown</Text>
@@ -142,6 +144,14 @@ export default function MapScreen() {
 
   const selectedSpecies = selected ? cleanSpecies(selected.species) : null
   const selectedLocation = selected ? formatLocation(selected.meta?.location) : null
+  const selectedWeatherLocation = selected ? (() => {
+    const w = selected.meta?.weather
+    const loc = formatLocation(selected.meta?.location)
+    const weatherStr = w?.temp != null && w?.condition ? `${w.temp}°F · ${w.condition}` : ''
+    if (weatherStr && loc) return `${weatherStr} · ${loc}`
+    return weatherStr || loc || null
+  })() : null
+  const selectedGear = selected ? [selected.meta?.rod, selected.meta?.fly].filter(Boolean).join(' · ') || null : null
 
   return (
     <View style={styles.container}>
@@ -185,26 +195,36 @@ export default function MapScreen() {
       >
         {selected ? (
           <BottomSheetScrollView contentContainerStyle={styles.detailContainer}>
-            <Image
-              source={{ uri: photoUrl(selected.user_id, selected.filename) }}
-              style={styles.detailImage}
-              resizeMode="cover"
-            />
-            <View style={styles.detailBody}>
-              <View style={styles.detailTitleRow}>
-                <Text style={styles.detailTitle} numberOfLines={1}>
-                  {selectedSpecies || 'Unknown'}
-                </Text>
-                <TouchableOpacity onPress={clearSelected} hitSlop={8}>
-                  <Text style={styles.detailClose}>✕</Text>
+            <View style={styles.detailImgWrap}>
+              <Image
+                source={{ uri: photoUrl(selected.user_id, selected.filename) }}
+                style={styles.detailImage}
+                resizeMode="cover"
+              />
+              <View style={styles.imgBtns}>
+                {selected.user_id === user?.id && (
+                  <TouchableOpacity style={styles.imgBtn} hitSlop={4}>
+                    <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity style={styles.imgBtn} onPress={clearSelected} hitSlop={4}>
+                  <Xmark width={16} height={16} color="#fff" strokeWidth={2} />
                 </TouchableOpacity>
               </View>
-              <AnglerRow user={user} />
+            </View>
+            <View style={styles.detailBody}>
+              <Text style={styles.detailTitle} numberOfLines={1}>
+                {selectedSpecies || '—'}
+              </Text>
+              <AnglerRow user={user} profile={profile} />
               {selected.time && (
                 <Text style={styles.detailMeta}>{formatDateFull(selected.time)}</Text>
               )}
-              {selectedLocation && (
-                <Text style={styles.detailMeta}>{selectedLocation}</Text>
+              {selectedWeatherLocation && (
+                <Text style={styles.detailMeta}>{selectedWeatherLocation}</Text>
+              )}
+              {selectedGear && (
+                <Text style={styles.detailMeta}>{selectedGear}</Text>
               )}
             </View>
           </BottomSheetScrollView>
@@ -276,15 +296,15 @@ const styles = StyleSheet.create({
 
   // Detail
   detailContainer: { paddingBottom: 40 },
-  detailImage: { width: '100%', height: 280 },
-  detailBody: { paddingHorizontal: 20, paddingTop: 14, gap: 6 },
-  detailTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: 2,
+  detailImgWrap: { marginHorizontal: 16, borderRadius: 10, overflow: 'hidden' },
+  detailImage: { height: 240 },
+  imgBtns: { position: 'absolute', top: 10, right: 10, flexDirection: 'row', gap: 6 },
+  imgBtn: {
+    width: 44, height: 44, borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center',
   },
-  detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 22, color: C.text, flex: 1, marginRight: 12 },
-  detailClose: { fontSize: 16, color: C.muted, paddingTop: 4 },
+  detailBody: { paddingHorizontal: 20, paddingTop: 14, gap: 6 },
+  detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 22, color: C.text },
   detailMeta: { fontFamily: 'RobotoMono_400Regular', fontSize: 12, color: C.muted },
 })
