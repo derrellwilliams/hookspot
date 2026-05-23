@@ -26,8 +26,9 @@ function storageKey(filename) {
   return filename.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
 }
 
-function photoUrl(userId, filename) {
-  return supabase.storage.from('catches').getPublicUrl(`${userId}/${storageKey(filename)}`).data.publicUrl
+function photoUrl(userId, filename, storagePath) {
+  const path = storagePath ?? `${userId}/${storageKey(filename)}`
+  return supabase.storage.from('catches').getPublicUrl(path).data.publicUrl
 }
 
 function AnglerRow({ user, profile }) {
@@ -64,13 +65,14 @@ export default function MapScreen() {
     if (!user) return
     supabase
       .from('photos')
-      .select('filename, user_id, lat, lng, species, time, meta')
+      .select('filename, user_id, lat, lng, species, time, meta, storage_path')
       .eq('user_id', user.id)
       .not('lat', 'is', null)
       .not('lng', 'is', null)
       .order('time', { ascending: false })
       .limit(500)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error('[map] photos fetch error:', error)
         if (data) setCatches(data)
         setLoading(false)
       })
@@ -130,7 +132,7 @@ export default function MapScreen() {
     const locationStr = formatLocation(item.meta?.location)
     return (
       <TouchableOpacity style={styles.item} onPress={() => selectFromList(item)} activeOpacity={0.7}>
-        <Image source={{ uri: photoUrl(item.user_id, item.filename) }} style={styles.thumb} />
+        <Image source={{ uri: photoUrl(item.user_id, item.filename, item.storage_path) }} style={styles.thumb} />
         <View style={styles.meta}>
           <AnglerRow user={user} profile={profile} />
           {species
@@ -175,7 +177,7 @@ export default function MapScreen() {
               id="catch-dots"
               style={{
                 circleRadius: 9,
-                circleColor: '#0891b2',
+                circleColor: '#000000',
                 circleStrokeWidth: 2.5,
                 circleStrokeColor: '#ffffff',
               }}
@@ -201,7 +203,7 @@ export default function MapScreen() {
           <BottomSheetScrollView contentContainerStyle={[styles.detailContainer, { paddingBottom: tabBarInset }]}>
             <View style={styles.detailImgWrap}>
               <Image
-                source={{ uri: photoUrl(selected.user_id, selected.filename) }}
+                source={{ uri: photoUrl(selected.user_id, selected.filename, selected.storage_path) }}
                 style={styles.detailImage}
                 resizeMode="cover"
               />
