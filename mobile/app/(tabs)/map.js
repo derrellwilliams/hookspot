@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import MapboxGL from '@rnmapbox/maps'
 import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
 import { EditPencil, Xmark } from 'iconoir-react-native'
 import Constants from 'expo-constants'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
+import { TAB_BAR_HEIGHT } from './_layout'
 import { formatDateFull, formatLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
@@ -47,6 +49,8 @@ function AnglerRow({ user, profile }) {
 export default function MapScreen() {
   const user = useAuthStore(s => s.user)
   const profile = useAuthStore(s => s.profile)
+  const insets = useSafeAreaInsets()
+  const tabBarInset = insets.bottom + TAB_BAR_HEIGHT + 20
   const cameraRef = useRef(null)
   const sheetRef = useRef(null)
   const [catches, setCatches] = useState([])
@@ -194,7 +198,7 @@ export default function MapScreen() {
         handleIndicatorStyle={styles.sheetHandle}
       >
         {selected ? (
-          <BottomSheetScrollView contentContainerStyle={styles.detailContainer}>
+          <BottomSheetScrollView contentContainerStyle={[styles.detailContainer, { paddingBottom: tabBarInset }]}>
             <View style={styles.detailImgWrap}>
               <Image
                 source={{ uri: photoUrl(selected.user_id, selected.filename) }}
@@ -240,7 +244,7 @@ export default function MapScreen() {
                 </Text>
               </View>
             }
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[styles.listContent, { paddingBottom: tabBarInset }]}
           />
         )}
       </BottomSheet>
