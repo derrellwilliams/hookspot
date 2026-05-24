@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import MapboxGL from '@rnmapbox/maps'
 import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
-import { EditPencil, Xmark } from 'iconoir-react-native'
+import { EditPencil, Xmark, Map as MapIcon } from 'iconoir-react-native'
 import Constants from 'expo-constants'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -13,6 +13,9 @@ import { formatDateFull, formatLocation, cleanSpecies, getDisplayName } from '..
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
 const MAP_STYLE = 'mapbox://styles/derrellwilliams/cmoc96j0y000i01r90nqr62du'
+
+const BOUNDS_PADDING_DEG = 0.008
+const BOUNDS_SUBSET_FRACTION = 0.8
 
 const C = {
   bg: '#202020',
@@ -57,9 +60,10 @@ export default function MapScreen() {
   const [catches, setCatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
+  const [sheetIndex, setSheetIndex] = useState(1)
   const fitted = useRef(false)
 
-  const snapPoints = useMemo(() => ['12%', '50%', '92%'], [])
+  const snapPoints = useMemo(() => ['8%', '50%', '92%'], [])
 
   useEffect(() => {
     if (!user) return
@@ -81,13 +85,22 @@ export default function MapScreen() {
   useEffect(() => {
     if (fitted.current || catches.length === 0 || !cameraRef.current) return
     fitted.current = true
-    const lngs = catches.map(c => c.lng)
-    const lats = catches.map(c => c.lat)
+
+    const cLng = catches.reduce((s, c) => s + c.lng, 0) / catches.length
+    const cLat = catches.reduce((s, c) => s + c.lat, 0) / catches.length
+    const count = Math.max(1, Math.ceil(catches.length * BOUNDS_SUBSET_FRACTION))
+    const subset = catches
+      .map(c => ({ lng: c.lng, lat: c.lat, d: (c.lng - cLng) ** 2 + (c.lat - cLat) ** 2 }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, count)
+
+    const lngs = subset.map(c => c.lng)
+    const lats = subset.map(c => c.lat)
     cameraRef.current.fitBounds(
-      [Math.max(...lngs), Math.max(...lats)],
-      [Math.min(...lngs), Math.min(...lats)],
-      [80, 40, 160, 40],
-      400,
+      [Math.max(...lngs) + BOUNDS_PADDING_DEG, Math.max(...lats) + BOUNDS_PADDING_DEG],
+      [Math.min(...lngs) - BOUNDS_PADDING_DEG, Math.min(...lats) - BOUNDS_PADDING_DEG],
+      [60, 40, 360, 40],
+      0,
     )
   }, [catches])
 
@@ -113,7 +126,7 @@ export default function MapScreen() {
 
   const handleMapPress = useCallback(() => {
     setSelected(null)
-    sheetRef.current?.snapToIndex(0)
+    sheetRef.current?.snapToIndex(1)
   }, [])
 
   const selectFromList = useCallback((item) => {
@@ -147,6 +160,7 @@ export default function MapScreen() {
   }, [user, selectFromList])
 
   const keyExtractor = useCallback((item) => `${item.user_id}/${item.filename}`, [])
+
 
   const selectedSpecies = selected ? cleanSpecies(selected.species) : null
   const selectedLocation = selected ? formatLocation(selected.meta?.location) : null
@@ -194,10 +208,12 @@ export default function MapScreen() {
 
       <BottomSheet
         ref={sheetRef}
-        index={0}
+        index={1}
         snapPoints={snapPoints}
         backgroundStyle={styles.sheetBg}
         handleIndicatorStyle={styles.sheetHandle}
+        onChange={(i) => { if (i >= 0) setSheetIndex(i) }}
+        enableOverDrag={false}
       >
         {selected ? (
           <BottomSheetScrollView contentContainerStyle={[styles.detailContainer, { paddingBottom: tabBarInset }]}>
@@ -246,10 +262,29 @@ export default function MapScreen() {
                 </Text>
               </View>
             }
-            contentContainerStyle={[styles.listContent, { paddingBottom: tabBarInset }]}
+            contentContainerStyle={[styles.listContent, {
+              paddingBottom: sheetIndex > 1 ? tabBarInset + 72 : tabBarInset,
+            }]}
           />
         )}
+
+        {sheetIndex > 1 && !selected && (
+          <View
+            pointerEvents="box-none"
+            style={[styles.mapFloatWrap, { bottom: insets.bottom + TAB_BAR_HEIGHT + 24 }]}
+          >
+            <TouchableOpacity
+              style={styles.mapFloatBtn}
+              onPress={() => sheetRef.current?.snapToIndex(0)}
+              activeOpacity={0.85}
+            >
+              <MapIcon width={14} height={14} color="#fff" strokeWidth={2} />
+              <Text style={styles.mapFloatBtnText}>Map</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </BottomSheet>
+
     </View>
   )
 }
@@ -313,4 +348,27 @@ const styles = StyleSheet.create({
   detailBody: { paddingHorizontal: 20, paddingTop: 14, gap: 6 },
   detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 22, color: C.text },
   detailMeta: { fontFamily: 'RobotoMono_400Regular', fontSize: 12, color: C.muted },
+
+  // Floating map button
+  mapFloatWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  mapFloatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#2563eb',
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+  },
+  mapFloatBtnText: { fontFamily: 'Roboto_700Bold', fontSize: 14, color: '#fff' },
 })
