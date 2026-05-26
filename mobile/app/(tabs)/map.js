@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
 import { TAB_BAR_HEIGHT } from './_layout'
 import { formatDateFull, formatLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
+import { groupPhotos } from '../../lib/groupPhotos'
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
@@ -57,7 +58,7 @@ export default function MapScreen() {
   const tabBarInset = insets.bottom + TAB_BAR_HEIGHT + 20
   const cameraRef = useRef(null)
   const sheetRef = useRef(null)
-  const [catches, setCatches] = useState([])
+  const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [sheetIndex, setSheetIndex] = useState(1)
@@ -69,7 +70,7 @@ export default function MapScreen() {
     if (!user) return
     supabase
       .from('photos')
-      .select('filename, user_id, catch_id, lat, lng, species, time, meta, storage_path')
+      .select('id, filename, user_id, catch_id, lat, lng, species, time, meta, storage_path')
       .eq('user_id', user.id)
       .not('lat', 'is', null)
       .not('lng', 'is', null)
@@ -77,19 +78,28 @@ export default function MapScreen() {
       .limit(500)
       .then(({ data, error }) => {
         if (error) console.error('[map] photos fetch error:', error)
-        if (data) setCatches(data)
+        if (data) {
+          // groupPhotos expects catchId (camelCase) and time as ms for arithmetic
+          const photos = data.map(p => ({
+            ...p,
+            catchId: p.catch_id,
+            time: p.time ? new Date(p.time).getTime() : null,
+          }))
+          setGroups(groupPhotos(photos))
+        }
         setLoading(false)
       })
   }, [user])
 
   useEffect(() => {
-    if (fitted.current || catches.length === 0 || !cameraRef.current) return
+    if (fitted.current || groups.length === 0 || !cameraRef.current) return
     fitted.current = true
 
-    const cLng = catches.reduce((s, c) => s + c.lng, 0) / catches.length
-    const cLat = catches.reduce((s, c) => s + c.lat, 0) / catches.length
-    const count = Math.max(1, Math.ceil(catches.length * BOUNDS_SUBSET_FRACTION))
-    const subset = catches
+    const leads = groups.map(g => g[0])
+    const cLng = leads.reduce((s, c) => s + c.lng, 0) / leads.length
+    const cLat = leads.reduce((s, c) => s + c.lat, 0) / leads.length
+    const count = Math.max(1, Math.ceil(leads.length * BOUNDS_SUBSET_FRACTION))
+    const subset = leads
       .map(c => ({ lng: c.lng, lat: c.lat, d: (c.lng - cLng) ** 2 + (c.lat - cLat) ** 2 }))
       .sort((a, b) => a.d - b.d)
       .slice(0, count)
@@ -102,36 +112,42 @@ export default function MapScreen() {
       [60, 40, 360, 40],
       0,
     )
-  }, [catches])
+  }, [groups])
 
   const geojson = useMemo(() => ({
     type: 'FeatureCollection',
-    features: catches.map(c => ({
-      type: 'Feature',
-      id: `${c.user_id}/${c.filename}`,
-      geometry: { type: 'Point', coordinates: [c.lng, c.lat] },
-      properties: { filename: c.filename, userId: c.user_id },
-    })),
-  }), [catches])
+    features: groups.map(g => {
+      const lead = g[0]
+      return {
+        type: 'Feature',
+        id: lead.catchId ?? `${lead.user_id}/${lead.filename}`,
+        geometry: { type: 'Point', coordinates: [lead.lng, lead.lat] },
+        properties: { catchId: lead.catchId ?? null, filename: lead.filename, userId: lead.user_id },
+      }
+    }),
+  }), [groups])
 
   const handleMarkerPress = useCallback((e) => {
     const props = e.features?.[0]?.properties
     if (!props) return
-    const full = catches.find(c => c.filename === props.filename && c.user_id === props.userId)
-    if (full) {
-      setSelected(full)
+    const group = props.catchId
+      ? groups.find(g => g[0].catchId === props.catchId)
+      : groups.find(g => g[0].filename === props.filename && g[0].user_id === props.userId)
+    if (group) {
+      setSelected(group[0])
       sheetRef.current?.snapToIndex(1)
     }
-  }, [catches])
+  }, [groups])
 
   const handleMapPress = useCallback(() => {
     setSelected(null)
     sheetRef.current?.snapToIndex(1)
   }, [])
 
-  const selectFromList = useCallback((item) => {
-    setSelected(item)
-    cameraRef.current?.setCamera({ centerCoordinate: [item.lng, item.lat], animationDuration: 500 })
+  const selectFromList = useCallback((group) => {
+    const lead = group[0]
+    setSelected(lead)
+    cameraRef.current?.setCamera({ centerCoordinate: [lead.lng, lead.lat], animationDuration: 500 })
     sheetRef.current?.snapToIndex(1)
   }, [])
 
@@ -140,30 +156,29 @@ export default function MapScreen() {
     sheetRef.current?.snapToIndex(1)
   }, [])
 
-  const renderCatchItem = useCallback(({ item }) => {
-    const species = cleanSpecies(item.species)
-    const locationStr = formatLocation(item.meta?.location)
+  const renderCatchItem = useCallback(({ item: group }) => {
+    const lead = group[0]
+    const species = cleanSpecies(lead.species)
+    const locationStr = formatLocation(lead.meta?.location)
     return (
-      <TouchableOpacity style={styles.item} onPress={() => selectFromList(item)} activeOpacity={0.7}>
-        <Image source={{ uri: photoUrl(item.user_id, item.filename, item.storage_path) }} style={styles.thumb} />
+      <TouchableOpacity style={styles.item} onPress={() => selectFromList(group)} activeOpacity={0.7}>
+        <Image source={{ uri: photoUrl(lead.user_id, lead.filename, lead.storage_path) }} style={styles.thumb} />
         <View style={styles.meta}>
           <AnglerRow user={user} profile={profile} />
           {species
             ? <Text style={styles.species} numberOfLines={1}>{species}</Text>
             : <Text style={styles.speciesEmpty} numberOfLines={1}>Unknown</Text>
           }
-          {item.time && <Text style={styles.datetime}>{formatDateFull(item.time)}</Text>}
+          {lead.time && <Text style={styles.datetime}>{formatDateFull(lead.time)}</Text>}
           {locationStr && <Text style={styles.location}>{locationStr}</Text>}
         </View>
       </TouchableOpacity>
     )
   }, [user, selectFromList])
 
-  const keyExtractor = useCallback((item) => `${item.user_id}/${item.filename}`, [])
-
+  const keyExtractor = useCallback((group) => group[0].catchId ?? `${group[0].user_id}/${group[0].filename}`, [])
 
   const selectedSpecies = selected ? cleanSpecies(selected.species) : null
-  const selectedLocation = selected ? formatLocation(selected.meta?.location) : null
   const selectedWeatherLocation = selected ? (() => {
     const w = selected.meta?.weather
     const loc = formatLocation(selected.meta?.location)
@@ -256,13 +271,13 @@ export default function MapScreen() {
           </BottomSheetScrollView>
         ) : (
           <BottomSheetFlatList
-            data={catches}
+            data={groups}
             keyExtractor={keyExtractor}
             renderItem={renderCatchItem}
             ListHeaderComponent={
               <View style={styles.listHeader}>
                 <Text style={styles.listHeaderText}>
-                  {catches.length} {catches.length === 1 ? 'catch' : 'catches'}
+                  {groups.length} {groups.length === 1 ? 'catch' : 'catches'}
                 </Text>
               </View>
             }

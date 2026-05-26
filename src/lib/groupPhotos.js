@@ -1,19 +1,14 @@
-import { groupByTime } from './groupByTime.js'
-
 const ORDER_UNSET = 999
 
-// Groups photos by catch_id (new catches) with groupByTime as fallback for
-// legacy photos that pre-date the catches table (catch_id === null).
-// Caller is responsible for pre-filtering by hasGps if needed (same contract as groupByTime).
 export function groupPhotos(photos) {
   const byCatchId = {}
-  const legacy = []
+  const ungrouped = []
 
   for (const p of photos) {
     if (p.catchId) {
       (byCatchId[p.catchId] ??= []).push(p)
     } else {
-      legacy.push(p)
+      ungrouped.push([p])
     }
   }
 
@@ -24,8 +19,6 @@ export function groupPhotos(photos) {
     )
   )
 
-  const legacyGroups = groupByTime(legacy)
-
-  return [...catchGroups, ...legacyGroups]
+  return [...catchGroups, ...ungrouped]
     .sort((a, b) => (b[0]?.time ?? 0) - (a[0]?.time ?? 0))
 }

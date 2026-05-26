@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "identify": "node --env-file=.env scripts/identify.js",
+    "backfill-catches": "node --env-file=.env scripts/backfill-catches.mjs",
     "serve": "node server.js"
   },
   "dependencies": {
