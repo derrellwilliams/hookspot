@@ -69,7 +69,7 @@ export default function MapScreen() {
     if (!user) return
     supabase
       .from('photos')
-      .select('filename, user_id, lat, lng, species, time, meta, storage_path')
+      .select('filename, user_id, catch_id, lat, lng, species, time, meta, storage_path')
       .eq('user_id', user.id)
       .not('lat', 'is', null)
       .not('lng', 'is', null)

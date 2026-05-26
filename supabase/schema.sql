@@ -29,10 +29,32 @@ create policy "follows readable by all" on follows for select using (true);
 create policy "owner can follow"        on follows for insert with check (auth.uid() = follower_id);
 create policy "owner can unfollow"      on follows for delete using (auth.uid() = follower_id);
 
--- photos (individual photos; grouping stays client-side via groupByTime)
+-- catches (one row per upload session; photos reference this via catch_id)
+create table catches (
+  id         uuid        default gen_random_uuid() primary key,
+  user_id    uuid        references auth.users on delete cascade not null,
+  species    text,
+  rod        text,
+  fly        text,
+  lat        double precision,
+  lng        double precision,
+  time       timestamptz,
+  created_at timestamptz default now()
+);
+alter table catches enable row level security;
+create policy "owner or follower can select" on catches for select using (
+  auth.uid() = user_id or
+  exists (select 1 from follows where follower_id = auth.uid() and following_id = user_id)
+);
+create policy "owner can insert" on catches for insert with check (auth.uid() = user_id);
+create policy "owner can update" on catches for update using (auth.uid() = user_id);
+create policy "owner can delete" on catches for delete using (auth.uid() = user_id);
+
+-- photos (individual media attached to a catch; catch_id null for legacy photos)
 create table photos (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users on delete cascade not null,
+  catch_id uuid references catches(id) on delete set null,
   filename text not null,
   storage_path text not null,
   url text not null,

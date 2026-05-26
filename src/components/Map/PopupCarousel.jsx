@@ -56,6 +56,13 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
         .eq('filename', lead.name)
         .eq('user_id', user.id)
       if (error) throw error
+      if (lead.catchId) {
+        const { error: catchError } = await supabase.from('catches')
+          .update({ species: species || null, rod: rod || null, fly: fly || null })
+          .eq('id', lead.catchId)
+          .eq('user_id', user.id)
+        if (catchError) throw catchError
+      }
       updatePhoto(updatedPhoto)
       if (localOrder) {
         const newOrderedGroup = localOrder.map(i => group[i])

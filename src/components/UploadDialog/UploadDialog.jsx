@@ -9,6 +9,8 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { handleFiles } from '../../lib/fileLoader.js'
 import { extractExif, toDisplayBlob } from '../../exif.js'
+import { supabase } from '../../lib/supabase.js'
+import { parseExifDate } from '../../lib/formatters.js'
 import { identifySpecies } from '../../identify.js'
 import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
@@ -26,6 +28,7 @@ export function UploadDialog() {
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const showToast = usePhotoStore(s => s.showToast)
   const setPendingUploadFiles = usePhotoStore(s => s.setPendingUploadFiles)
+  const user = useAuthStore(s => s.user)
   const gearRods = useAuthStore(useShallow(s => s.user?.user_metadata?.gear_rods ?? []))
   const gearFlies = useAuthStore(useShallow(s => s.user?.user_metadata?.gear_flies ?? []))
   const prevRods = gearRods
@@ -170,9 +173,45 @@ export function UploadDialog() {
   }
 
   async function submit() {
+    if (!user) return
     const files = pendingFiles.slice()
     const blobs = pendingBlobs.slice()
-    const meta = { species, rod, fly, identified: true }
+
+    // Resolve catch coordinates: manual pin → EXIF from first file → null
+    let catchLat = manualPin?.lat ?? null
+    let catchLng = manualPin?.lng ?? null
+    let catchTime = null
+    if (!manualPin) {
+      const firstExif = await extractExif(files[0]).catch(() => null)
+      catchLat = firstExif?.latitude ?? null
+      catchLng = firstExif?.longitude ?? null
+      const rawTime = firstExif?.DateTimeOriginal
+      catchTime = rawTime instanceof Date
+        ? rawTime.toISOString()
+        : (parseExifDate(rawTime) ? new Date(parseExifDate(rawTime)).toISOString() : null)
+    }
+    catchTime ??= new Date().toISOString()
+
+    const { data: catchRow, error: catchError } = await supabase
+      .from('catches')
+      .insert({
+        user_id: user.id,
+        species: species || null,
+        rod: rod || null,
+        fly: fly || null,
+        lat: catchLat,
+        lng: catchLng,
+        time: catchTime,
+      })
+      .select('id')
+      .single()
+
+    if (catchError) {
+      showToast('Failed to add catch.')
+      return
+    }
+
+    const meta = { species, rod, fly, identified: true, catchId: catchRow.id }
     if (manualPin) { meta.manualLat = manualPin.lat; meta.manualLng = manualPin.lng }
     close()
     try {

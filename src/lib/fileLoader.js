@@ -30,6 +30,7 @@ function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
     name: row.filename,
     storagePath: row.storage_path ?? null,
     userId: row.user_id,
+    catchId: row.catch_id ?? null,
     isOwn: row.user_id === currentUserId,
     ownerProfile: ownerProfile ?? null,
     blob,
@@ -214,8 +215,10 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
   // Fall back to upload time so manually-pinned catches sort to the top of the sidebar
   const time = exifTime ?? (uploadMeta.manualLat != null ? Date.now() : null)
 
+  const { catchId: _catchId, manualLat: _mlat, manualLng: _mlng, ...storedMeta } = uploadMeta
   const row = {
     user_id: user.id,
+    catch_id: uploadMeta.catchId ?? null,
     filename: file.name,
     storage_path: storagePath,
     url: publicUrl,
@@ -223,7 +226,7 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     lat: exif?.latitude ?? uploadMeta.manualLat ?? null,
     lng: exif?.longitude ?? uploadMeta.manualLng ?? null,
     time: time ? new Date(time).toISOString() : null,
-    meta: uploadMeta,
+    meta: storedMeta,
   }
 
   const { error: dbError } = await supabase.from('photos').insert(row)
@@ -271,6 +274,7 @@ export async function uploadPhotoToGroup(file, groupLead) {
 
   const row = {
     user_id: user.id,
+    catch_id: groupLead.catchId ?? null,
     filename: file.name,
     storage_path: storagePath,
     url: publicUrl,
