@@ -7,9 +7,9 @@ import { EditPencil, Xmark, Map as MapIcon } from 'iconoir-react-native'
 import Constants from 'expo-constants'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
+import { usePhotoStore } from '../../store/usePhotoStore'
 import { TAB_BAR_HEIGHT } from './_layout'
 import { formatDateFull, formatLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
-import { groupPhotos } from '../../lib/groupPhotos'
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
@@ -54,12 +54,16 @@ function AnglerRow({ user, profile }) {
 export default function MapScreen() {
   const user = useAuthStore(s => s.user)
   const profile = useAuthStore(s => s.profile)
+  const groups = usePhotoStore(s => s.groups)
+  const loading = usePhotoStore(s => s.loading)
+  const loadingMore = usePhotoStore(s => s.loadingMore)
+  const loadPhotos = usePhotoStore(s => s.loadPhotos)
+  const loadMore = usePhotoStore(s => s.loadMore)
+  const reset = usePhotoStore(s => s.reset)
   const insets = useSafeAreaInsets()
   const tabBarInset = insets.bottom + TAB_BAR_HEIGHT + 20
   const cameraRef = useRef(null)
   const sheetRef = useRef(null)
-  const [groups, setGroups] = useState([])
-  const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [sheetIndex, setSheetIndex] = useState(1)
   const fitted = useRef(false)
@@ -67,29 +71,13 @@ export default function MapScreen() {
   const snapPoints = useMemo(() => ['8%', '65%', '92%'], [])
 
   useEffect(() => {
-    if (!user) return
-    supabase
-      .from('photos')
-      .select('id, filename, user_id, catch_id, lat, lng, species, time, meta, storage_path')
-      .eq('user_id', user.id)
-      .not('lat', 'is', null)
-      .not('lng', 'is', null)
-      .order('time', { ascending: false })
-      .limit(500)
-      .then(({ data, error }) => {
-        if (error) console.error('[map] photos fetch error:', error)
-        if (data) {
-          // groupPhotos expects catchId (camelCase) and time as ms for arithmetic
-          const photos = data.map(p => ({
-            ...p,
-            catchId: p.catch_id,
-            time: p.time ? new Date(p.time).getTime() : null,
-          }))
-          setGroups(groupPhotos(photos))
-        }
-        setLoading(false)
-      })
-  }, [user])
+    if (!user) {
+      reset()
+      return
+    }
+    fitted.current = false
+    loadPhotos(user.id)
+  }, [user?.id])
 
   useEffect(() => {
     if (fitted.current || groups.length === 0 || !cameraRef.current) return
@@ -274,12 +262,18 @@ export default function MapScreen() {
             data={groups}
             keyExtractor={keyExtractor}
             renderItem={renderCatchItem}
+            onEndReached={() => { if (user) loadMore(user.id) }}
+            onEndReachedThreshold={0.3}
             ListHeaderComponent={
               <View style={styles.listHeader}>
                 <Text style={styles.listHeaderText}>
                   {groups.length} {groups.length === 1 ? 'catch' : 'catches'}
                 </Text>
               </View>
+            }
+            ListFooterComponent={loadingMore
+              ? <ActivityIndicator size="small" color={C.muted} style={styles.loadMoreSpinner} />
+              : null
             }
             contentContainerStyle={[styles.listContent, {
               paddingBottom: sheetIndex > 1 ? tabBarInset + 72 : tabBarInset,
@@ -325,6 +319,7 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 32, paddingHorizontal: 20 },
   listHeader: { paddingVertical: 14 },
   listHeaderText: { fontFamily: 'RobotoCondensed_500Medium', fontSize: 15, color: C.text },
+  loadMoreSpinner: { paddingVertical: 20 },
 
   item: {
     flexDirection: 'row',
