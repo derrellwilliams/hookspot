@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { groupByTime } from '../lib/groupByTime.js'
+import { groupPhotos } from '../lib/groupPhotos.js'
 
 const pk = p => `${p.userId}/${p.name}`
 
@@ -16,13 +16,13 @@ export const usePhotoStore = create((set, get) => ({
 
   addPhoto(photo) {
     const photos = [...get().photos, photo]
-    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)) })
+    set({ photos, groups: groupPhotos(photos.filter(p => p.hasGps)) })
   },
 
   batchAddPhotos(newPhotos) {
     if (!newPhotos.length) return
     const photos = [...get().photos, ...newPhotos]
-    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)) })
+    set({ photos, groups: groupPhotos(photos.filter(p => p.hasGps)) })
   },
 
   updatePhoto(updatedPhoto) {
@@ -32,7 +32,7 @@ export const usePhotoStore = create((set, get) => ({
     const updatedActive = activeGroup
       ? activeGroup.map(p => pk(p) === key ? updatedPhoto : p)
       : activeGroup
-    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: updatedActive })
+    set({ photos, groups: groupPhotos(photos.filter(p => p.hasGps)), activeGroup: updatedActive })
   },
 
   removePhotos(toDelete) {
@@ -40,14 +40,14 @@ export const usePhotoStore = create((set, get) => ({
     const removed = get().photos.filter(p => keySet.has(pk(p)))
     removed.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
     const photos = get().photos.filter(p => !keySet.has(pk(p)))
-    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: null })
+    set({ photos, groups: groupPhotos(photos.filter(p => p.hasGps)), activeGroup: null })
   },
 
   removeUserPhotos(userId) {
     const toRemove = get().photos.filter(p => p.userId === userId)
     toRemove.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
     const photos = get().photos.filter(p => p.userId !== userId)
-    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: null })
+    set({ photos, groups: groupPhotos(photos.filter(p => p.hasGps)), activeGroup: null })
   },
 
   setFlyToPhoto(fn) {
@@ -69,7 +69,7 @@ export const usePhotoStore = create((set, get) => ({
     const photos = get().photos.map(p => keyMap.get(pk(p)) ?? p)
     const activeGroup = get().activeGroup
     const updatedActive = activeGroup?.some(p => keyMap.has(pk(p))) ? updated : activeGroup
-    set({ photos, groups: groupByTime(photos.filter(p => p.hasGps)), activeGroup: updatedActive })
+    set({ photos, groups: groupPhotos(photos.filter(p => p.hasGps)), activeGroup: updatedActive })
   },
 
   setUploadOpen(open) {

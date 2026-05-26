@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { initPhotos, deletePhotos } from '../lib/fileLoader.js'
-import { groupByTime } from '../lib/groupByTime.js'
+import { groupPhotos } from '../lib/groupPhotos.js'
 import { renderStats } from '../stats.js'
 import { animateMesh } from '../lib/mesh.js'
 
@@ -162,7 +162,7 @@ export function UserProfilePage() {
     [isOwnProfile, photos, profile?.id, otherPhotos]
   )
 
-  const catchGroups = useMemo(() => groupByTime(effectivePhotos), [effectivePhotos])
+  const catchGroups = useMemo(() => groupPhotos(effectivePhotos), [effectivePhotos])
 
   const catchesThisYear = useMemo(() => {
     const year = new Date().getFullYear()
@@ -187,7 +187,7 @@ export function UserProfilePage() {
   }, [catchGroups])
 
   const userGroups = useMemo(
-    () => groupByTime(effectivePhotos.filter(p => p.hasGps)),
+    () => groupPhotos(effectivePhotos.filter(p => p.hasGps)),
     [effectivePhotos]
   )
 
@@ -196,7 +196,7 @@ export function UserProfilePage() {
   const sentinelRef = useRef(null)
 
   const recentCatches = useMemo(
-    () => groupByTime(effectivePhotos).sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
+    () => groupPhotos(effectivePhotos).sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
     [effectivePhotos]
   )
 
