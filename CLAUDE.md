@@ -4,7 +4,7 @@
 - **React 19** + Vite 5 (`@vitejs/plugin-react@4` — do NOT upgrade to v5/v6)
 - **Zustand v5**: `src/store/usePhotoStore.js`, `src/store/useAuthStore.js`
 - **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/design`
-- **Supabase** auth + profiles (`src/lib/supabase.js`)
+- **Supabase** auth + storage + database (`src/lib/supabase.js`)
 - **Mapbox GL JS** (raw, no react-map-gl); popups use `createRoot(el).render(<PopupCarousel/>)`
 - **Radix UI** for modals, dropdowns, tooltips; **iconoir-react** icons
 - **CSS Modules** + CSS custom properties; tokens in `src/tokens.js` mirror `src/style.css`
@@ -14,14 +14,26 @@
 - **Pages**: `src/pages/` — MapPage, StatsPage, LoginPage, OnboardingPage, UserProfilePage, DesignPage, NotFoundPage, FeedPage (WIP, unrouted)
 - **Components**: `src/components/` — Map, Sidebar, Nav, UploadDialog, DropOverlay, FavoritePicker, Toast, ui/; root-level `ProfileBlob.jsx`, `RequireAuth.jsx`
 - **Stores**: `usePhotoStore` (photos, groups, flyToPhoto, activeGroup, toast, uploadOpen, bulkUploading, pendingUploadFiles, ownOnly, photosInitialized); `useAuthStore` (user, session, username, loading)
-- **Lib**: `src/lib/` — fileLoader.js, groupByTime.js, formatters.js, supabase.js, geocode.js, weather.js, validation.js, imageUtils.js, mesh.js
+- **Lib**: `src/lib/` — fileLoader.js, groupPhotos.js, formatters.js, supabase.js, geocode.js, weather.js, validation.js, imageUtils.js, mesh.js
 - **Utilities**: `src/cache.js` (IndexedDB), `src/exif.js`, `src/identify.js`, `src/stats.js` — keep pure (no React)
 - **API**: Vite middleware in `vite.config.js` — `/identify` (Claude AI via Anthropic SDK, requires `ANTHROPIC_API_KEY`), `/api/check-username`, `/api/save-profile`, `/api/profile`, `/api/photos`
 
+## Data Model
+- **`catches`** — one row per fishing session: `id, user_id, species, rod, fly, lat, lng, time`
+- **`photos`** — one row per image: `catch_id (FK → catches)`, `filename, storage_path, url, species, lat, lng, time, meta`
+- Every upload creates a `catches` row first, then inserts photos with that `catch_id`
+- `groupPhotos(photos)` in `src/lib/groupPhotos.js` groups by `catchId`; photos with no `catchId` become singleton groups
+- `PopupCarousel.saveEdit()` writes edits to both `photos` and `catches` to keep them in sync
+
 ## Architecture
 - `PopupCarousel` runs in its own React root inside Mapbox popup DOM; unmount on popup close to prevent leaks
-- `DropOverlay` listens globally to drag events; calls `handleFiles()` from fileLoader.js on drop
+- `DropOverlay` listens globally to drag events; on drop it sets `pendingUploadFiles` + opens `UploadDialog` — all uploads go through one flow
 - `src/cache.js` — IndexedDB `fishmap-cache` caches photo blobs + EXIF keyed by `{userId}/{filename}`; fileLoader checks cache before network
+
+## Mobile (`mobile/`)
+- Expo 54 bare workflow, React Native 0.81.5
+- `mobile/store` and `mobile/lib` are symlinks → `../src/store` and `../src/lib` (shared code)
+- Map screen (`mobile/app/(tabs)/map.js`) fetches photos, maps `catch_id → catchId` + ISO → ms, calls `groupPhotos()`, renders one marker/list item per group
 
 ## Standards
 - **Zustand selectors**: Select only what's needed (`usePhotoStore(s => s.photos)`) — no whole-store subscriptions
