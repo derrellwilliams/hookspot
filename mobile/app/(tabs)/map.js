@@ -63,7 +63,7 @@ export default function MapScreen() {
   const [sheetIndex, setSheetIndex] = useState(1)
   const fitted = useRef(false)
 
-  const snapPoints = useMemo(() => ['8%', '50%', '92%'], [])
+  const snapPoints = useMemo(() => ['8%', '65%', '92%'], [])
 
   useEffect(() => {
     if (!user) return
@@ -120,7 +120,7 @@ export default function MapScreen() {
     const full = catches.find(c => c.filename === props.filename && c.user_id === props.userId)
     if (full) {
       setSelected(full)
-      sheetRef.current?.snapToIndex(2)
+      sheetRef.current?.snapToIndex(1)
     }
   }, [catches])
 
@@ -132,7 +132,7 @@ export default function MapScreen() {
   const selectFromList = useCallback((item) => {
     setSelected(item)
     cameraRef.current?.setCamera({ centerCoordinate: [item.lng, item.lat], animationDuration: 500 })
-    sheetRef.current?.snapToIndex(2)
+    sheetRef.current?.snapToIndex(1)
   }, [])
 
   const clearSelected = useCallback(() => {
@@ -171,7 +171,8 @@ export default function MapScreen() {
     if (weatherStr && loc) return `${weatherStr} · ${loc}`
     return weatherStr || loc || null
   })() : null
-  const selectedGear = selected ? [selected.meta?.rod, selected.meta?.fly].filter(Boolean).join(' · ') || null : null
+  const selectedRod = selected?.meta?.rod || null
+  const selectedFly = selected?.meta?.fly || null
 
   return (
     <View style={styles.container}>
@@ -235,18 +236,21 @@ export default function MapScreen() {
               </View>
             </View>
             <View style={styles.detailBody}>
+              <AnglerRow user={user} profile={profile} />
               <Text style={styles.detailTitle} numberOfLines={1}>
                 {selectedSpecies || '—'}
               </Text>
-              <AnglerRow user={user} profile={profile} />
               {selected.time && (
                 <Text style={styles.detailMeta}>{formatDateFull(selected.time)}</Text>
               )}
               {selectedWeatherLocation && (
                 <Text style={styles.detailMeta}>{selectedWeatherLocation}</Text>
               )}
-              {selectedGear && (
-                <Text style={styles.detailMeta}>{selectedGear}</Text>
+              {selectedRod && (
+                <Text style={styles.detailMeta}>{selectedRod}</Text>
+              )}
+              {selectedFly && (
+                <Text style={styles.detailMeta}>{selectedFly}</Text>
               )}
             </View>
           </BottomSheetScrollView>
@@ -321,14 +325,14 @@ const styles = StyleSheet.create({
 
   // Angler row
   angler: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  anglerAvatar: { width: 16, height: 16, borderRadius: 8 },
+  anglerAvatar: { width: 18, height: 18, borderRadius: 9 },
   anglerFallback: {
-    width: 16, height: 16, borderRadius: 8,
+    width: 18, height: 18, borderRadius: 9,
     backgroundColor: C.border,
     alignItems: 'center', justifyContent: 'center',
   },
   anglerInitial: { color: C.muted, fontSize: 8, fontWeight: '700' },
-  anglerName: { fontFamily: 'RobotoCondensed_400Regular', fontSize: 13, color: C.muted },
+  anglerName: { fontFamily: 'RobotoCondensed_400Regular', fontSize: 15, color: C.muted },
 
   species: { fontFamily: 'Roboto_700Bold', fontSize: 22, color: C.text },
   speciesEmpty: { fontFamily: 'Roboto_400Regular', fontSize: 22, color: C.muted, fontStyle: 'italic' },
@@ -338,16 +342,16 @@ const styles = StyleSheet.create({
   // Detail
   detailContainer: { paddingBottom: 40 },
   detailImgWrap: { marginHorizontal: 16, borderRadius: 10, overflow: 'hidden' },
-  detailImage: { height: 240 },
+  detailImage: { aspectRatio: 4 / 3, width: '100%' },
   imgBtns: { position: 'absolute', top: 10, right: 10, flexDirection: 'row', gap: 6 },
   imgBtn: {
     width: 44, height: 44, borderRadius: 8,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center', justifyContent: 'center',
   },
-  detailBody: { paddingHorizontal: 20, paddingTop: 14, gap: 6 },
-  detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 22, color: C.text },
-  detailMeta: { fontFamily: 'RobotoMono_400Regular', fontSize: 12, color: C.muted },
+  detailBody: { paddingHorizontal: 20, paddingTop: 14, gap: 4 },
+  detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 26, color: C.text },
+  detailMeta: { fontFamily: 'RobotoMono_400Regular', fontSize: 14, color: C.muted },
 
   // Floating map button
   mapFloatWrap: {
