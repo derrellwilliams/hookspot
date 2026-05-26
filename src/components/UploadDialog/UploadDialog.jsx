@@ -211,13 +211,20 @@ export function UploadDialog() {
       return
     }
 
-    const meta = { species, rod, fly, identified: true, catchId: catchRow.id }
+    const catchId = catchRow.id
+    const meta = { species, rod, fly, identified: true, catchId }
     if (manualPin) { meta.manualLat = manualPin.lat; meta.manualLng = manualPin.lng }
     close()
     try {
       const { added = 0 } = await handleFiles(files, meta, blobs) ?? {}
-      showToast(added > 0 ? 'Catch added!' : 'Failed to add catch.')
+      if (added === 0) {
+        await supabase.from('catches').delete().eq('id', catchId)
+        showToast('Failed to add catch.')
+      } else {
+        showToast('Catch added!')
+      }
     } catch {
+      await supabase.from('catches').delete().eq('id', catchId)
       showToast('Failed to add catch.')
     }
   }

@@ -15,7 +15,7 @@ import { RequireAuth } from './components/RequireAuth.jsx'
 import { supabase } from './lib/supabase.js'
 import { useAuthStore } from './store/useAuthStore.js'
 import { usePhotoStore } from './store/usePhotoStore.js'
-import { initPhotos } from './lib/fileLoader.js'
+import { initPhotos, clearUploadingNames } from './lib/fileLoader.js'
 import styles from './App.module.css'
 
 function ProfileRedirect() {
@@ -66,6 +66,7 @@ function AppInner() {
       } else {
         setUser(session?.user ?? null)
         if (event === 'SIGNED_OUT') {
+          clearUploadingNames()
           usePhotoStore.getState().clearPhotos()
         }
       }

@@ -27,6 +27,7 @@ function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
     ? { ...exif, latitude: exif?.latitude ?? row.lat, longitude: exif?.longitude ?? row.lng }
     : exif ?? null
   return {
+    id: row.id ?? null,
     name: row.filename,
     storagePath: row.storage_path ?? null,
     userId: row.user_id,
@@ -91,6 +92,10 @@ let _initInProgress = false
 let _initQueued = false
 const _failedKeys = new Set()
 const _uploadingNames = new Set()
+
+export function clearUploadingNames() {
+  _uploadingNames.clear()
+}
 
 export async function initPhotos() {
   if (_initInProgress) {
@@ -229,12 +234,13 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     meta: storedMeta,
   }
 
-  const { error: dbError } = await supabase.from('photos').insert(row)
+  const { data: insertedRow, error: dbError } = await supabase.from('photos').insert(row).select('id').single()
   if (dbError) {
     await supabase.storage.from('catches').remove([storagePath])
     console.error('[hookspot] db insert failed', dbError)
     return false
   }
+  row.id = insertedRow?.id ?? null
 
   await setCached(`${user.id}/${file.name}`, { blob, exif })
 
@@ -285,11 +291,12 @@ export async function uploadPhotoToGroup(file, groupLead) {
     meta: {},
   }
 
-  const { error: dbError } = await supabase.from('photos').insert(row)
+  const { data: insertedRow, error: dbError } = await supabase.from('photos').insert(row).select('id').single()
   if (dbError) {
     await supabase.storage.from('catches').remove([storagePath])
     throw new Error('DB: ' + dbError.message)
   }
+  row.id = insertedRow?.id ?? null
 
   await setCached(`${user.id}/${file.name}`, { blob, exif })
   const photo = buildPhoto(blob, exif, row, null, user.id)
@@ -307,7 +314,17 @@ export async function deletePhotos(toDelete) {
   const paths = list.map(p => p.storagePath ?? `${user.id}/${storageKey(p.name)}`)
   const filenames = list.map(p => p.name)
 
-  const { error: dbError } = await supabase.from('photos').delete().in('filename', filenames).eq('user_id', user.id)
+  const withId = list.filter(p => p.id)
+  const withoutId = list.filter(p => !p.id)
+  let dbError
+  if (withId.length) {
+    const { error } = await supabase.from('photos').delete().in('id', withId.map(p => p.id))
+    if (error) dbError = error
+  }
+  if (withoutId.length) {
+    const { error } = await supabase.from('photos').delete().in('filename', withoutId.map(p => p.name)).eq('user_id', user.id)
+    if (error) dbError = error
+  }
   if (dbError) { console.error('[hookspot] db delete failed', dbError); return }
 
   const { error: storageError } = await supabase.storage.from('catches').remove(paths)
