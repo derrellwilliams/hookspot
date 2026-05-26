@@ -304,6 +304,7 @@ export function UploadDialog() {
                 onRemove={removeThumb}
                 onReorder={reorderThumbs}
                 onSelect={() => {}}
+                onAddClick={() => fileInputRef.current?.click()}
               />
               <div className={styles.form}>
                 <label>Species</label>

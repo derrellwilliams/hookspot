@@ -12,6 +12,7 @@ import { LoginPage } from './pages/LoginPage.jsx'
 import { OnboardingPage } from './pages/OnboardingPage.jsx'
 import { UserProfilePage } from './pages/UserProfilePage.jsx'
 import { RequireAuth } from './components/RequireAuth.jsx'
+import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { supabase } from './lib/supabase.js'
 import { useAuthStore } from './store/useAuthStore.js'
 import { usePhotoStore } from './store/usePhotoStore.js'
@@ -102,10 +103,12 @@ function AppInner() {
 
 export default function App() {
   return (
-    <IconoirProvider iconProps={{ strokeWidth: 2 }}>
-      <BrowserRouter>
-        <AppInner />
-      </BrowserRouter>
-    </IconoirProvider>
+    <ErrorBoundary>
+      <IconoirProvider iconProps={{ strokeWidth: 2 }}>
+        <BrowserRouter>
+          <AppInner />
+        </BrowserRouter>
+      </IconoirProvider>
+    </ErrorBoundary>
   )
 }

@@ -66,7 +66,7 @@ export function renderStats(groups, refs = {}) {
   // Use first photo in each group for weather (it's where weather is stored)
   const leadsForWeather = groups.map(g => g[0])
 
-  const totalEl = refs.total ?? document.getElementById('stats-total')
+  const totalEl = refs.total
   if (totalEl) totalEl.textContent = `${groups.length} catch${groups.length !== 1 ? 'es' : ''}`
 
   if (!groups.length) return
@@ -82,7 +82,7 @@ export function renderStats(groups, refs = {}) {
     if (diff >= 0 && diff < 12) mCounts[11 - diff]++
   })
 
-  make(refs.monthly ?? document.getElementById('chart-monthly'), {
+  make(refs.monthly, {
     ...BASE,
     chart: { ...BASE_CHART, type: 'bar', height: 200 },
     series: [{ name: 'Catches', data: mCounts }],
@@ -98,7 +98,7 @@ export function renderStats(groups, refs = {}) {
     i === 0 ? '12a' : i < 12 ? `${i}a` : i === 12 ? '12p' : `${i - 12}p`
   )
 
-  make(refs.hourly ?? document.getElementById('chart-hourly'), {
+  make(refs.hourly, {
     ...BASE,
     chart: { ...BASE_CHART, type: 'bar', height: 180 },
     series: [{ name: 'Catches', data: hCounts }],
@@ -116,7 +116,7 @@ export function renderStats(groups, refs = {}) {
   })
   const spEntries = Object.entries(spCounts).sort((a, b) => b[1] - a[1])
 
-  make(refs.species ?? document.getElementById('chart-species'), {
+  make(refs.species, {
     ...BASE,
     chart: { ...BASE_CHART, type: 'donut', height: 260 },
     series: spEntries.map(([, v]) => v),
@@ -159,7 +159,7 @@ export function renderStats(groups, refs = {}) {
     }),
   }))
 
-  make(refs.speciesMonthly ?? document.getElementById('chart-species-monthly'), {
+  make(refs.speciesMonthly, {
     ...BASE,
     chart: { ...BASE_CHART, type: 'bar', stacked: true, height: 260 },
     series: spMonthly,
@@ -185,7 +185,7 @@ export function renderStats(groups, refs = {}) {
   })
   const condEntries = Object.entries(condCounts).sort((a, b) => b[1] - a[1])
 
-  make(refs.weatherCond ?? document.getElementById('chart-weather-cond'), {
+  make(refs.weatherCond, {
     ...BASE,
     chart: { ...BASE_CHART, type: 'bar', height: 220 },
     series: [{ name: 'Catches', data: condEntries.map(([, v]) => v) }],
@@ -204,7 +204,7 @@ export function renderStats(groups, refs = {}) {
   const tempEntries = Object.entries(tempCounts)
     .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
 
-  make(refs.weatherTemp ?? document.getElementById('chart-weather-temp'), {
+  make(refs.weatherTemp, {
     ...BASE,
     chart: { ...BASE_CHART, type: 'bar', height: 220 },
     series: [{ name: 'Catches', data: tempEntries.map(([, v]) => v) }],

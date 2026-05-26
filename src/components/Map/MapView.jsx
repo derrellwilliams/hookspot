@@ -62,8 +62,7 @@ export function MapView({ active }) {
         markersRef.current.forEach(m => m.popup.remove())
         const lnglat = marker.getLngLat()
         const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
-        const sidebar = document.getElementById('sidebar')
-        const sidebarRight = sidebar ? Math.ceil(sidebar.getBoundingClientRect().right) : DEFAULT_SIDEBAR_RIGHT
+        const sidebarRight = DEFAULT_SIDEBAR_RIGHT
         map.jumpTo({ center: lnglat, zoom, padding: { left: sidebarRight, right: 0, top: 0, bottom: 0 } })
         popup.addTo(map)
         requestAnimationFrame(() => {
