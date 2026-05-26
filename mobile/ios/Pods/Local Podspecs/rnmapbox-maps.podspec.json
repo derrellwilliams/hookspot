@@ -40,8 +40,9 @@
         "DEFINES_MODULE": "YES",
         "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/Headers/Private/Yoga\"",
         "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
-        "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 ",
-        "OTHER_SWIFT_FLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED"
+        "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1  -ivfsoverlay $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml",
+        "OTHER_SWIFT_FLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED -Xcc -ivfsoverlay -Xcc $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml",
+        "OTHER_CFLAGS": "$(inherited) -ivfsoverlay $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml"
       },
       "compiler_flags": "-DRCT_NEW_ARCH_ENABLED=1",
       "dependencies": {

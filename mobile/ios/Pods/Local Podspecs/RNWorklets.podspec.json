@@ -51,7 +51,7 @@
     "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]": "$(inherited) HERMES_ENABLE_DEBUGGER=1",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]": "$(inherited)",
-    "OTHER_CFLAGS": "$(inherited) -DWORKLETS_FEATURE_FLAGS=\"[RUNTIME_TEST_FLAG:false][FETCH_PREVIEW_ENABLED:false][IOS_DYNAMIC_FRAMERATE_ENABLED:true]\" -DWORKLETS_VERSION=0.8.3 -DREACT_NATIVE_MINOR_VERSION=81   "
+    "OTHER_CFLAGS": "$(inherited) -DWORKLETS_FEATURE_FLAGS=\"[RUNTIME_TEST_FLAG:false][FETCH_PREVIEW_ENABLED:false][IOS_DYNAMIC_FRAMERATE_ENABLED:true]\" -DWORKLETS_VERSION=0.8.3 -DREACT_NATIVE_MINOR_VERSION=85   -DHERMES_V1_ENABLED"
   },
   "xcconfig": {
     "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/../../node_modules/react-native/ReactCommon\" \"$(PODS_ROOT)/../../node_modules/react-native/ReactCommon/jsitooling\""

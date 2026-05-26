@@ -1,6 +1,6 @@
 {
   "name": "React-RCTFBReactNativeSpec",
-  "version": "0.81.5",
+  "version": "0.85.3",
   "summary": "FBReactNativeSpec for React Native.",
   "homepage": "https://reactnative.dev/",
   "license": "MIT",
@@ -10,7 +10,7 @@
   },
   "source": {
     "git": "https://github.com/facebook/react-native.git",
-    "tag": "v0.81.5"
+    "tag": "v0.85.3"
   },
   "source_files": "FBReactNativeSpec/**/*.{h}",
   "compiler_flags": "-DRCT_NEW_ARCH_ENABLED=1",
@@ -22,7 +22,10 @@
   "pod_target_xcconfig": {
     "USE_HEADERMAP": "NO",
     "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
-    "HEADER_SEARCH_PATHS": "\"$(PODS_TARGET_SRCROOT)/FBReactNativeSpec\" \"$(PODS_ROOT)/Headers/Private/Yoga\" \"${PODS_ROOT}/ReactCommon\" \"${PODS_ROOT}/ReactCommon/react/nativemodule/core\" \"${PODS_ROOT}/ReactCommon\" \"${PODS_ROOT}/ReactCommon/react/nativemodule/bridging\""
+    "HEADER_SEARCH_PATHS": "\"$(PODS_TARGET_SRCROOT)/FBReactNativeSpec\" \"$(PODS_ROOT)/Headers/Private/Yoga\" \"${PODS_ROOT}/ReactCommon\" \"${PODS_ROOT}/ReactCommon/react/nativemodule/core\" \"${PODS_ROOT}/ReactCommon\" \"${PODS_ROOT}/ReactCommon/react/nativemodule/bridging\"",
+    "OTHER_CFLAGS": "$(inherited) -ivfsoverlay $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml",
+    "OTHER_CPLUSPLUSFLAGS": "$(inherited) -ivfsoverlay $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml",
+    "OTHER_SWIFT_FLAGS": "$(inherited) -Xcc -ivfsoverlay -Xcc $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml"
   },
   "dependencies": {
     "React-jsi": [],

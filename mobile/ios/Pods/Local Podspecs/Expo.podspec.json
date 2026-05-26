@@ -1,16 +1,17 @@
 {
   "name": "Expo",
-  "version": "54.0.34",
+  "version": "56.0.3",
   "summary": "The Expo SDK",
   "description": "The Expo SDK",
   "license": "MIT",
   "authors": "Expo",
   "homepage": "https://github.com/expo/expo/tree/main/packages/expo",
   "platforms": {
-    "ios": "15.1",
-    "osx": "11.0",
-    "tvos": "15.1"
+    "ios": "16.4",
+    "osx": "13.4",
+    "tvos": "16.4"
   },
+  "swift_versions": "6.0",
   "source": {
     "git": "https://github.com/expo/expo.git"
   },
@@ -18,6 +19,7 @@
   "header_dir": "Expo",
   "dependencies": {
     "ExpoModulesCore": [],
+    "ExpoModulesJSI": [],
     "React-RCTAppDelegate": [],
     "React-RCTFabric": [],
     "ReactAppDependencyProvider": [],
@@ -45,8 +47,9 @@
   "pod_target_xcconfig": {
     "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/Headers/Private/React-Core\" \"$(PODS_ROOT)/DoubleConversion\" \"${PODS_CONFIGURATION_BUILD_DIR}/ExpoModulesCore/Swift Compatibility Header\" \"$(PODS_ROOT)/Headers/Private/Yoga\"",
     "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
-    "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 ",
-    "OTHER_SWIFT_FLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED"
+    "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1  -ivfsoverlay $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml",
+    "OTHER_SWIFT_FLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED -Xcc -ivfsoverlay -Xcc $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml",
+    "OTHER_CFLAGS": "$(inherited) -ivfsoverlay $(PODS_ROOT)/React-Core-prebuilt/React-VFS.yaml"
   },
   "user_target_xcconfig": {
     "HEADER_SEARCH_PATHS": [
@@ -64,7 +67,11 @@
     {
       "name": "Tests",
       "test_type": "unit",
+      "dependencies": {
+        "ExpoModulesTestCore": []
+      },
       "source_files": "ios/Tests"
     }
-  ]
+  ],
+  "swift_version": "6.0"
 }
