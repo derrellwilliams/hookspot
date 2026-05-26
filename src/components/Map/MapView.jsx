@@ -8,14 +8,14 @@ import { PopupCarousel } from './PopupCarousel.jsx'
 import styles from './Map.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 
-const MAP_CENTER = [-111.1, 39.5]
-const MAP_ZOOM = 7
+const MAP_CENTER = [-111.891, 40.760]
+const MAP_ZOOM = 11
 const MARKER_COLOR = '#000000'
 const POPUP_MAX_WIDTH = '484px'
 const MIN_FLY_ZOOM = 13
 const POPUP_PAN_FACTOR = 0.65
 const BOUNDS_PADDING_DEGREES = 0.008  // ~0.55 miles
-const BOUNDS_SUBSET_FRACTION = 0.8
+const INITIAL_FIT_COUNT = 15
 const DEFAULT_SIDEBAR_RIGHT = 260
 
 function avg(arr) {
@@ -31,6 +31,7 @@ export function MapView({ active }) {
   const [fitted, setFitted] = useState(false)
 
   const groups = usePhotoStore(s => s.groups)
+  const photosInitialized = usePhotoStore(s => s.photosInitialized)
   const ownOnly = usePhotoStore(s => s.ownOnly)
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
@@ -174,27 +175,30 @@ export function MapView({ active }) {
     if (active && mapRef.current) mapRef.current.resize()
   }, [active])
 
-  // Fit bounds once on initial load (closest 80% of catches by distance from centroid)
+  // Fit bounds once on initial load to the 15 most recent catches (everyone tab).
+  // Falls back to Salt Lake region when the user has no visible catches.
   useEffect(() => {
-    if (!mapReady || groups.length === 0 || fitted) return
+    if (!mapReady || fitted || !photosInitialized) return
+
     const map = mapRef.current
 
-    const points = groups.map(g => ({
+    if (groups.length === 0) {
+      map.jumpTo({ center: MAP_CENTER, zoom: MAP_ZOOM })
+      setFitted(true)
+      return
+    }
+
+    const recent = [...groups]
+      .sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0))
+      .slice(0, INITIAL_FIT_COUNT)
+
+    const points = recent.map(g => ({
       lng: avg(g.map(p => p.exif.longitude)),
       lat: avg(g.map(p => p.exif.latitude)),
     }))
 
-    const cLng = avg(points.map(p => p.lng))
-    const cLat = avg(points.map(p => p.lat))
-
-    const count = Math.max(1, Math.ceil(points.length * BOUNDS_SUBSET_FRACTION))
-    const subset = points
-      .map(p => ({ ...p, d: (p.lng - cLng) ** 2 + (p.lat - cLat) ** 2 }))
-      .sort((a, b) => a.d - b.d)
-      .slice(0, count)
-
-    const lngs = subset.map(p => p.lng)
-    const lats = subset.map(p => p.lat)
+    const lngs = points.map(p => p.lng)
+    const lats = points.map(p => p.lat)
     const bounds = new mapboxgl.LngLatBounds(
       [Math.min(...lngs) - BOUNDS_PADDING_DEGREES, Math.min(...lats) - BOUNDS_PADDING_DEGREES],
       [Math.max(...lngs) + BOUNDS_PADDING_DEGREES, Math.max(...lats) + BOUNDS_PADDING_DEGREES]
@@ -205,7 +209,7 @@ export function MapView({ active }) {
       duration: 0,
     })
     setFitted(true)
-  }, [groups, mapReady, fitted])
+  }, [groups, mapReady, fitted, photosInitialized])
 
   return <div ref={containerRef} className={styles.map} />
 }
