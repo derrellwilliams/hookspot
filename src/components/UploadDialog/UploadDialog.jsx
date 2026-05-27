@@ -217,7 +217,7 @@ export function UploadDialog() {
 
     const catchId = catchRow.id
     const meta = { species, rod, fly, identified: true, catchId }
-    if (manualPin) { meta.manualLat = manualPin.lat; meta.manualLng = manualPin.lng }
+    if (catchLat != null && catchLng != null) { meta.manualLat = catchLat; meta.manualLng = catchLng }
     close()
     try {
       const { added = 0 } = await handleFiles(files, meta, blobs) ?? {}
