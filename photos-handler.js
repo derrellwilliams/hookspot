@@ -28,11 +28,35 @@ export function createPhotosHandler(env) {
         { headers }
       )
       if (!photosRes.ok) throw new Error(`Supabase error: ${photosRes.status}`)
-      const rows = await photosRes.json()
+      let rows = await photosRes.json()
       if (!Array.isArray(rows) || !rows.length) {
         sendJson(res, { rows: [], profiles: [] })
         return
       }
+
+      // Backfill time from the catches table for photos where photos.time is null
+      // but catch_id is set — happens when EXIF has GPS but no timestamp.
+      const nullTimeCatchIds = [...new Set(
+        rows.filter(r => !r.time && r.catch_id).map(r => r.catch_id)
+      )]
+      if (nullTimeCatchIds.length > 0) {
+        const catchesRes = await fetch(
+          `${env.VITE_SUPABASE_URL}/rest/v1/catches?select=id,time&id=in.(${nullTimeCatchIds.map(encodeURIComponent).join(',')})`,
+          { headers }
+        )
+        if (catchesRes.ok) {
+          const catches = await catchesRes.json()
+          if (Array.isArray(catches) && catches.length) {
+            const catchTimeMap = Object.fromEntries(catches.map(c => [c.id, c.time]))
+            rows = rows.map(r =>
+              (!r.time && r.catch_id && catchTimeMap[r.catch_id])
+                ? { ...r, time: catchTimeMap[r.catch_id] }
+                : r
+            )
+          }
+        }
+      }
+
       const userIds = [...new Set(rows.map(r => r.user_id))]
       const profilesRes = await fetch(
         `${env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id,username,display_name,avatar_url&id=in.(${userIds.map(encodeURIComponent).join(',')})`,

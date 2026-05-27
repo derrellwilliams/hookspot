@@ -180,13 +180,14 @@ export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
   if (!files.length) return { added: 0, failed: 0 }
 
   const uploads = []
+  let order = 0
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) continue
     if (existingNames.has(file.name) || _uploadingNames.has(file.name)) continue
     _uploadingNames.add(file.name)
     uploads.push(
-      uploadPhoto(file, user, meta, displayBlobs[i])
+      uploadPhoto(file, user, { ...meta, order: order++ }, displayBlobs[i])
         .catch(() => false)
         .finally(() => _uploadingNames.delete(file.name))
     )
@@ -217,8 +218,8 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
   const exifTime = exif?.DateTimeOriginal instanceof Date
     ? exif.DateTimeOriginal.getTime()
     : parseExifDate(exif?.DateTimeOriginal)
-  // Fall back to upload time so manually-pinned catches sort to the top of the sidebar
-  const time = exifTime ?? (uploadMeta.manualLat != null ? Date.now() : null)
+  // Always fall back to upload time so catches sort to the top of recent activity
+  const time = exifTime ?? Date.now()
 
   const { catchId: _catchId, manualLat: _mlat, manualLng: _mlng, ...storedMeta } = uploadMeta
   const row = {
