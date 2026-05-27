@@ -39,7 +39,7 @@ export function Sidebar() {
   return (
     <aside id="sidebar" className={styles.sidebar}>
       <div className={styles.filterRow}>
-        <span className={styles.filterTitle}>Latest Catches</span>
+        {hasPhotos && <span className={styles.filterTitle}>Latest Catches</span>}
         {hasOthers && (
           <div
             className={styles.filterTabs}
@@ -99,10 +99,16 @@ export function Sidebar() {
                   <p className={styles.emptySubtitle}>Add photos of your catches to pin them to the map. Follow other anglers to see their catches here too.</p>
                 </div>
               )}
-              <button className={styles.addCard} onClick={() => setUploadOpen(true)}>
+              <motion.button
+                className={styles.addCard}
+                onClick={() => setUploadOpen(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              >
                 <Plus width={24} height={24} className={styles.addIcon} />
                 <span className={styles.addLabel}>Add catches</span>
-              </button>
+              </motion.button>
             </div>
           </ScrollArea.Viewport>
           <ScrollArea.Scrollbar className={styles.scrollbar} orientation="vertical">

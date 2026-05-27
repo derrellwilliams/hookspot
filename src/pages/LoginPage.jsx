@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { animateMesh, DEFAULT_BLOBS } from '../lib/mesh.js'
+import { Button } from '../components/ui/Button.jsx'
 import styles from './LoginPage.module.css'
 
 export function LoginPage() {
@@ -58,7 +59,6 @@ export function LoginPage() {
         <div className={styles.card}>
           {!sent ? (
             <form onSubmit={handleSubmit} className={styles.form}>
-              <label className={styles.label}>Email</label>
               <input
                 className={styles.input}
                 type="email"
@@ -68,15 +68,14 @@ export function LoginPage() {
                 required
                 autoFocus
               />
-              <button className={styles.button} disabled={sending}>
+              <Button className={styles.button} disabled={sending}>
                 {sending ? 'Sending…' : 'Continue'}
-              </button>
+              </Button>
               {error && <p className={styles.error}>{error}</p>}
             </form>
           ) : (
             <form onSubmit={handleVerify} className={styles.form}>
               <div className={styles.sent}>Check your email for a 6-digit code.</div>
-              <label className={styles.label}>Code</label>
               <input
                 className={styles.input}
                 type="text"
@@ -87,9 +86,9 @@ export function LoginPage() {
                 required
                 autoFocus
               />
-              <button className={styles.button} disabled={verifying || code.length < 6}>
+              <Button className={styles.button} disabled={verifying || code.length < 6}>
                 {verifying ? 'Verifying…' : 'Sign in'}
-              </button>
+              </Button>
               {error && <p className={styles.error}>{error}</p>}
               <button type="button" className={styles.resend} onClick={() => { setSent(false); setCode(''); setError(null) }}>
                 Use a different email

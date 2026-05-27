@@ -210,9 +210,9 @@ export function OnboardingPage() {
 
         {saveError && <div className={styles.saveError}>{saveError}</div>}
 
-        <button className={styles.saveBtn} disabled={saving || !usernameOk || !avatarUrl} type="submit">
+        <Button className={styles.saveBtn} disabled={saving || !usernameOk || !avatarUrl} type="submit">
           {saving ? 'Saving…' : 'Get started'}
-        </button>
+        </Button>
       </form>
     </div>
   )

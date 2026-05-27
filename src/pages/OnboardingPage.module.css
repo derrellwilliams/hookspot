@@ -157,6 +157,11 @@
   border-color: #4ade80 !important;
 }
 
+.input::placeholder,
+.textarea::placeholder {
+  font-family: 'Roboto Mono', monospace;
+}
+
 .textarea {
   background: var(--ui-bg);
   border: 1px solid var(--dark-border);
@@ -199,23 +204,5 @@
 
 /* Save button */
 .saveBtn {
-  background: var(--accent);
-  border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-size: 15px;
-  font-weight: 600;
-  font-family: inherit;
-  color: #fff;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.saveBtn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.saveBtn:not(:disabled):hover {
-  opacity: 0.88;
+  width: 100%;
 }
