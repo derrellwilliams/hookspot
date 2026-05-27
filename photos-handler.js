@@ -34,25 +34,30 @@ export function createPhotosHandler(env) {
         return
       }
 
-      // Backfill time from the catches table for photos where photos.time is null
-      // but catch_id is set — happens when EXIF has GPS but no timestamp.
-      const nullTimeCatchIds = [...new Set(
-        rows.filter(r => !r.time && r.catch_id).map(r => r.catch_id)
+      // Backfill time and/or lat/lng from catches for photos missing either field.
+      // Null time happens when EXIF has GPS but no timestamp (old data).
+      // Null lat/lng happens when a secondary photo had no EXIF GPS and the catch
+      // coordinates weren't propagated (old data, fixed in upload flow).
+      const needsCatchData = [...new Set(
+        rows.filter(r => (!r.time || !r.lat) && r.catch_id).map(r => r.catch_id)
       )]
-      if (nullTimeCatchIds.length > 0) {
+      if (needsCatchData.length > 0) {
         const catchesRes = await fetch(
-          `${env.VITE_SUPABASE_URL}/rest/v1/catches?select=id,time&id=in.(${nullTimeCatchIds.map(encodeURIComponent).join(',')})`,
+          `${env.VITE_SUPABASE_URL}/rest/v1/catches?select=id,time,lat,lng&id=in.(${needsCatchData.join(',')})`,
           { headers }
         )
         if (catchesRes.ok) {
           const catches = await catchesRes.json()
           if (Array.isArray(catches) && catches.length) {
-            const catchTimeMap = Object.fromEntries(catches.map(c => [c.id, c.time]))
-            rows = rows.map(r =>
-              (!r.time && r.catch_id && catchTimeMap[r.catch_id])
-                ? { ...r, time: catchTimeMap[r.catch_id] }
-                : r
-            )
+            const catchMap = Object.fromEntries(catches.map(c => [c.id, c]))
+            rows = rows.map(r => {
+              if (!r.catch_id || !catchMap[r.catch_id]) return r
+              const c = catchMap[r.catch_id]
+              const patch = {}
+              if (!r.time && c.time) patch.time = c.time
+              if (!r.lat && c.lat) { patch.lat = c.lat; patch.lng = c.lng }
+              return Object.keys(patch).length ? { ...r, ...patch } : r
+            })
           }
         }
       }
