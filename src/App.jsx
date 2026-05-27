@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { MotionConfig } from 'motion/react'
 import { IconoirProvider } from 'iconoir-react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Nav } from './components/Nav/Nav.jsx'
@@ -104,11 +105,13 @@ function AppInner() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <IconoirProvider iconProps={{ strokeWidth: 2 }}>
-        <BrowserRouter>
-          <AppInner />
-        </BrowserRouter>
-      </IconoirProvider>
+      <MotionConfig reducedMotion="user">
+        <IconoirProvider iconProps={{ strokeWidth: 2 }}>
+          <BrowserRouter>
+            <AppInner />
+          </BrowserRouter>
+        </IconoirProvider>
+      </MotionConfig>
     </ErrorBoundary>
   )
 }

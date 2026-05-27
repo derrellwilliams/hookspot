@@ -6,6 +6,9 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { SidebarItem } from './SidebarItem.jsx'
 import styles from './Sidebar.module.css'
 
+const spring = { type: 'spring', stiffness: 400, damping: 17 }
+const springTight = { type: 'spring', stiffness: 400, damping: 35 }
+
 export function Sidebar() {
   const groups = usePhotoStore(s => s.groups)
   const hasPhotos = usePhotoStore(s => s.photos.length > 0)
@@ -70,7 +73,7 @@ export function Sidebar() {
                       layoutId="filter-highlight"
                       className={styles.filterHighlight}
                       initial={false}
-                      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                      transition={springTight}
                     />
                   )}
                   <span className={styles.filterLabel}>{label}</span>
@@ -104,7 +107,7 @@ export function Sidebar() {
                 onClick={() => setUploadOpen(true)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                transition={spring}
               >
                 <Plus width={24} height={24} className={styles.addIcon} />
                 <span className={styles.addLabel}>Add catches</span>

@@ -17,6 +17,9 @@ import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 
+const spring = { type: 'spring', stiffness: 400, damping: 17 }
+const STEP_FADE = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
+
 function computeHomeCenter(photos) {
   const pts = photos.filter(p => p.isOwn && p.hasGps && p.exif?.latitude != null && p.exif?.longitude != null)
   if (!pts.length) return null
@@ -245,8 +248,6 @@ export function UploadDialog() {
     if (files.length) await goToNextStep(files)
   }
 
-  const stepFade = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
-
   return (
     <Dialog.Root open={uploadOpen} onOpenChange={open => { if (!open) close() }}>
       <Dialog.Portal forceMount>
@@ -266,10 +267,10 @@ export function UploadDialog() {
               <Dialog.Content className={styles.contentPositioner} aria-describedby={undefined}>
                 <motion.div
                   className={styles.content}
-                  initial={{ opacity: 0, filter: 'blur(6px)', z: -40, rotateY: 8, rotateX: 2, transformPerspective: 800 }}
-                  animate={{ opacity: 1, filter: 'blur(0px)', rotateX: 0, rotateY: 0, z: 0 }}
-                  exit={{ opacity: 0, filter: 'blur(6px)', z: -40, rotateY: 8, rotateX: 2, transformPerspective: 800, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
-                  transition={{ delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1], opacity: { delay: 0.05, duration: 0.25, ease: 'easeOut' } }}
+                  initial={{ opacity: 0, scale: 0.97, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
+                  transition={{ delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
                 >
                   <div className={styles.header}>
                     <Dialog.Title className={styles.title}>Add a catch</Dialog.Title>
@@ -278,7 +279,7 @@ export function UploadDialog() {
 
                   <AnimatePresence mode="wait" initial={false}>
                     {step === 1 && (
-                      <motion.div key="step-1" {...stepFade}>
+                      <motion.div key="step-1" {...STEP_FADE}>
                         <div
                           className={`${styles.dropZone} ${dropOver ? styles.dragOver : ''}`}
                           onDragOver={e => { e.preventDefault(); setDropOver(true) }}
@@ -298,6 +299,7 @@ export function UploadDialog() {
                                 onClick={() => fileInputRef.current?.click()}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
+                                transition={spring}
                               >Browse</motion.button>
                             </>
                           )}
@@ -306,7 +308,7 @@ export function UploadDialog() {
                     )}
 
                     {step === 2 && (
-                      <motion.div key="step-2" {...stepFade} className={styles.locationStep}>
+                      <motion.div key="step-2" {...STEP_FADE} className={styles.locationStep}>
                         <div className={styles.locationBanner}>No GPS data found — pin your catch location</div>
                         <div ref={locationMapRef} className={styles.locationMap} />
                         <div className={styles.locationFooter}>
@@ -324,7 +326,7 @@ export function UploadDialog() {
                     )}
 
                     {step === 3 && (
-                      <motion.div key="step-3" {...stepFade}>
+                      <motion.div key="step-3" {...STEP_FADE}>
                         <div className={styles.previewWrap}>
                           <img className={styles.previewImg} src={pendingUrls[0]} alt="preview" />
                         </div>
