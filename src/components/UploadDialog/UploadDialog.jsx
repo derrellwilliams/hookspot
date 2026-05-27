@@ -259,17 +259,17 @@ export function UploadDialog() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  transition={{ duration: 0.2 }}
                 />
               </Dialog.Overlay>
 
               <Dialog.Content className={styles.contentPositioner} aria-describedby={undefined}>
                 <motion.div
                   className={styles.content}
-                  initial={{ opacity: 0, scale: 0.97, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 1.03, y: -8 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  initial={{ opacity: 0, filter: 'blur(6px)', z: -40, rotateY: 8, rotateX: 2, transformPerspective: 800 }}
+                  animate={{ opacity: 1, filter: 'blur(0px)', rotateX: 0, rotateY: 0, z: 0 }}
+                  exit={{ opacity: 0, filter: 'blur(6px)', z: -40, rotateY: 8, rotateX: 2, transformPerspective: 800, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
+                  transition={{ delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1], opacity: { delay: 0.05, duration: 0.25, ease: 'easeOut' } }}
                 >
                   <div className={styles.header}>
                     <Dialog.Title className={styles.title}>Add a catch</Dialog.Title>
@@ -293,7 +293,12 @@ export function UploadDialog() {
                               <MediaImage width={24} height={24} style={{ opacity: 0.4 }} />
                               <div className={styles.dropLabel}>Drop photos here</div>
                               <div className={styles.dropOr}>or</div>
-                              <button className={styles.browseBtn} onClick={() => fileInputRef.current?.click()}>Browse</button>
+                              <motion.button
+                                className={styles.browseBtn}
+                                onClick={() => fileInputRef.current?.click()}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >Browse</motion.button>
                             </>
                           )}
                         </div>

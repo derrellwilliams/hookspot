@@ -22,11 +22,14 @@ export function Nav() {
           const isActive = path === itemPath || (itemPath === '/profile' && path.startsWith('/user/'))
 
           return (
-            <button
+            <motion.button
               key={itemPath}
               className={`${styles.navItem} ${isActive ? styles.active : ''}`}
               onClick={() => navigate(itemPath)}
               aria-label={label}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             >
               {isActive && (
                 <motion.div
@@ -37,16 +40,19 @@ export function Nav() {
                 />
               )}
               <span className={styles.label}>{label}</span>
-            </button>
+            </motion.button>
           )
         })}
-        <button
+        <motion.button
           className={styles.plusBtn}
           onClick={() => setUploadOpen(true)}
           aria-label="Add catch"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         >
           <Plus width={24} height={24} />
-        </button>
+        </motion.button>
       </div>
     </nav>
   )

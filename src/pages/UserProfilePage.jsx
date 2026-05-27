@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { EditPencil, Settings, UserCircle } from 'iconoir-react'
@@ -65,6 +66,7 @@ export function UserProfilePage() {
   const [editName, setEditName] = useState('')
   const [editBio, setEditBio] = useState('')
   const [saving, setSaving] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [gearDialogOpen, setGearDialogOpen] = useState(false)
   const [editRods, setEditRods] = useState([])
   const [editFlies, setEditFlies] = useState([])
@@ -413,25 +415,43 @@ export function UserProfilePage() {
           <div ref={headerMeshRef} className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
           {isOwnProfile ? (
-            <DropdownMenu.Root>
+            <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
               <DropdownMenu.Trigger asChild>
                 <Button variant="icon-sm" className={styles.editProfileBtn} aria-label="Profile settings">
                   <Settings width={16} height={16} />
                 </Button>
               </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content className={styles.dropdownContent} sideOffset={6} align="start">
-                  <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>
-                    Edit profile
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>
-                    Edit gear
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>
-                    Log out
-                  </DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
+              <AnimatePresence>
+                {settingsOpen && (
+                  <DropdownMenu.Portal forceMount>
+                    <DropdownMenu.Content
+                      forceMount
+                      sideOffset={6}
+                      align="start"
+                      asChild
+                    >
+                      <motion.div
+                        className={styles.dropdownContent}
+                        initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                        style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
+                      >
+                        <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>
+                          Edit profile
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>
+                          Edit gear
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>
+                          Log out
+                        </DropdownMenu.Item>
+                      </motion.div>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                )}
+              </AnimatePresence>
             </DropdownMenu.Root>
           ) : (
             <Button
