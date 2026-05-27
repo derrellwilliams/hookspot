@@ -29,6 +29,7 @@ export function MapView({ active }) {
   const markerByNameRef = useRef(new Map())
   const [mapReady, setMapReady] = useState(false)
   const [fitted, setFitted] = useState(false)
+  const savedViewRef = useRef(null)
 
   const groups = usePhotoStore(s => s.groups)
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
@@ -170,9 +171,21 @@ export function MapView({ active }) {
     markerByNameRef.current = markerByName
   }, [visibleGroups, mapReady, setActiveGroup])
 
-  // Resize map when it becomes visible (e.g. navigating from /profile to /)
+  // Resize map when it becomes visible (e.g. navigating from /profile to /).
+  // Save/restore center+zoom because the hidden container collapses to 0×0 and
+  // Mapbox recalculates zoom relative to that, zooming out to the whole world.
   useEffect(() => {
-    if (active && mapRef.current) mapRef.current.resize()
+    const map = mapRef.current
+    if (!map) return
+    if (active) {
+      map.resize()
+      if (savedViewRef.current) {
+        map.jumpTo(savedViewRef.current)
+        savedViewRef.current = null
+      }
+    } else {
+      savedViewRef.current = { center: map.getCenter(), zoom: map.getZoom() }
+    }
   }, [active])
 
   // Fit bounds once on initial load to the 15 most recent catches (everyone tab).
