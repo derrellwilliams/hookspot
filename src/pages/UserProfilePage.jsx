@@ -27,6 +27,10 @@ import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
 import { createImageDataUrl } from '../lib/imageUtils.js'
 import styles from './UserProfilePage.module.css'
 
+const spring = { type: 'spring', stiffness: 400, damping: 17 }
+const cardVariants = { rest: { y: 0 }, hover: { y: -2 } }
+const imgVariants = { rest: { scale: 1 }, hover: { scale: 1.03 } }
+
 const FAVORITES_KEY = 'hookspot:favorites'
 function loadFavoritesCache() {
   try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) ?? [null, null, null, null] }
@@ -522,8 +526,29 @@ export function UserProfilePage() {
 
         {/* Tab bar */}
         <div className={styles.tabBar}>
-          <button className={activeTab === 'profile' ? styles.tabActive : styles.tab} onClick={() => setActiveTab('profile')}>Recent Activity</button>
-          <button className={activeTab === 'stats' ? styles.tabActive : styles.tab} onClick={() => setActiveTab('stats')}>Stats</button>
+          {[{ id: 'profile', label: 'Recent Activity' }, { id: 'stats', label: 'Stats' }].map(({ id, label }) => {
+            const isActive = activeTab === id
+            return (
+              <motion.button
+                key={id}
+                className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab(id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.96 }}
+                transition={spring}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="tab-highlight"
+                    className={styles.tabHighlight}
+                    initial={false}
+                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                  />
+                )}
+                <span className={styles.tabLabel}>{label}</span>
+              </motion.button>
+            )
+          })}
         </div>
 
         {/* Profile tab */}
@@ -545,15 +570,24 @@ export function UserProfilePage() {
               const photo = group[0]
               const species = cleanSpecies(photo.species)
               return (
-                <button key={photo.name} className={styles.catchThumb} onClick={() => setCatchPopupGroup(group)}>
-                  <div className={styles.catchThumbImgWrap}>
+                <motion.button
+                  key={photo.name}
+                  className={styles.catchThumb}
+                  onClick={() => setCatchPopupGroup(group)}
+                  initial="rest"
+                  whileHover="hover"
+                  whileTap={{ scale: 0.99 }}
+                  variants={cardVariants}
+                  transition={spring}
+                >
+                  <motion.div className={styles.catchThumbImgWrap} variants={imgVariants} transition={spring}>
                     <img src={photo.url} alt="" className={styles.catchThumbImg} loading="lazy" />
-                  </div>
+                  </motion.div>
                   <div className={styles.catchMeta}>
                     {species && <div className={styles.catchSpecies}>{species}</div>}
                     {photo.time && <div className={styles.catchDatetime}>{formatDateFull(photo.time).split(' ·')[0]}</div>}
                   </div>
-                </button>
+                </motion.button>
               )
             })}
             {visibleCount < recentCatches.length && (
