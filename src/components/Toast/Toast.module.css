@@ -1,22 +1,18 @@
-.toast {
+.anchor {
   position: fixed;
   bottom: 32px;
   left: 50%;
-  transform: translateX(-50%) translateY(6px);
+  transform: translateX(-50%);
+  z-index: 3000;
+  pointer-events: none;
+}
+
+.toast {
   background: var(--accent);
   color: white;
   padding: 10px 20px;
   border-radius: 99px;
   font-size: 13px;
   font-weight: 500;
-  z-index: 3000;
-  opacity: 0;
-  transition: opacity 0.2s, transform 0.2s;
-  pointer-events: none;
   white-space: nowrap;
-}
-
-.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
 }

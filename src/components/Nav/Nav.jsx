@@ -1,3 +1,4 @@
+import { motion } from 'motion/react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
@@ -19,6 +20,7 @@ export function Nav() {
       <div className={styles.pill}>
         {NAV_ITEMS.map(({ path: itemPath, label }) => {
           const isActive = path === itemPath || (itemPath === '/profile' && path.startsWith('/user/'))
+
           return (
             <button
               key={itemPath}
@@ -26,6 +28,14 @@ export function Nav() {
               onClick={() => navigate(itemPath)}
               aria-label={label}
             >
+              {isActive && (
+                <motion.div
+                  layoutId="nav-highlight"
+                  className={styles.highlight}
+                  initial={false}
+                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                />
+              )}
               <span className={styles.label}>{label}</span>
             </button>
           )

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import styles from './DropOverlay.module.css'
 
@@ -41,8 +42,26 @@ export function DropOverlay() {
   }, [])
 
   return (
-    <div className={`${styles.overlay} ${active ? styles.active : ''}`}>
-      <div className={styles.message}>Drop photos to add them</div>
-    </div>
+    <AnimatePresence>
+      {active && (
+        <motion.div
+          className={styles.overlay}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          <motion.div
+            className={styles.message}
+            initial={{ scale: 0.96, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.96, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            Drop photos to add them
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

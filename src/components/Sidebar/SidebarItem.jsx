@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef } from 'react'
+import { motion } from 'motion/react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { formatDateFull, cleanSpecies, formatLocation, getDisplayName } from '../../lib/formatters.js'
@@ -35,10 +36,13 @@ export const SidebarItem = memo(function SidebarItem({ group }) {
   }
 
   return (
-    <button
+    <motion.button
       ref={ref}
       className={`${styles.item} ${isActive ? styles.active : ''}`}
       onClick={handleClick}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
     >
       <div className={styles.thumbWrap}>
         <img className={styles.thumb} src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} loading="lazy" />
@@ -59,6 +63,6 @@ export const SidebarItem = memo(function SidebarItem({ group }) {
           <div className={styles.location}>{locationStr}</div>
         )}
       </div>
-    </button>
+    </motion.button>
   )
 })

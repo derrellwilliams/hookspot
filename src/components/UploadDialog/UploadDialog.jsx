@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useShallow } from 'zustand/react/shallow'
 import * as Dialog from '@radix-ui/react-dialog'
 import mapboxgl from 'mapbox-gl'
@@ -244,103 +245,132 @@ export function UploadDialog() {
     if (files.length) await goToNextStep(files)
   }
 
+  const stepFade = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
+
   return (
     <Dialog.Root open={uploadOpen} onOpenChange={open => { if (!open) close() }}>
-      <Dialog.Portal>
-        <Dialog.Overlay className={styles.backdrop} />
-        <Dialog.Content className={styles.content} aria-describedby={undefined}>
-          <div className={styles.header}>
-            <Dialog.Title className={styles.title}>Add a catch</Dialog.Title>
-            <Dialog.Close asChild><Button variant="icon-sm" aria-label="Close"><Xmark width={20} height={20} /></Button></Dialog.Close>
-          </div>
-
-          {step === 1 && (
-            <div
-              className={`${styles.dropZone} ${dropOver ? styles.dragOver : ''}`}
-              onDragOver={e => { e.preventDefault(); setDropOver(true) }}
-              onDragEnter={e => { e.preventDefault(); setDropOver(true) }}
-              onDragLeave={() => setDropOver(false)}
-              onDrop={onZoneDrop}
-            >
-              {loading ? (
-                <div className={styles.spinner} />
-              ) : (
-                <>
-                  <MediaImage width={24} height={24} style={{opacity:0.4}} />
-                  <div className={styles.dropLabel}>Drop photos here</div>
-                  <div className={styles.dropOr}>or</div>
-                  <button className={styles.browseBtn} onClick={() => fileInputRef.current?.click()}>Browse</button>
-                </>
-              )}
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className={styles.locationStep}>
-              <div className={styles.locationBanner}>No GPS data found — pin your catch location</div>
-              <div ref={locationMapRef} className={styles.locationMap} />
-              <div className={styles.locationFooter}>
-                <div className={styles.locationCoords}>
-                  {manualPin
-                    ? `${manualPin.lat.toFixed(4)}, ${manualPin.lng.toFixed(4)}`
-                    : 'Click the map to place a pin'}
-                </div>
-                <div className={styles.locationActions}>
-                  <Button variant="secondary" onClick={() => { setStep(1); setManualPin(null) }}>Back</Button>
-                  <Button variant="primary" onClick={() => setStep(3)} disabled={!manualPin}>Next</Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
+      <Dialog.Portal forceMount>
+        <AnimatePresence>
+          {uploadOpen && (
             <>
-              <div className={styles.previewWrap}>
-                <img className={styles.previewImg} src={pendingUrls[0]} alt="preview" />
-              </div>
-              <ThumbStrip
-                urls={pendingUrls}
-                heroIndex={0}
-                onRemove={removeThumb}
-                onReorder={reorderThumbs}
-                onSelect={() => {}}
-                onAddClick={() => fileInputRef.current?.click()}
-              />
-              <div className={styles.form}>
-                <label>Species</label>
-                <div className={styles.inputWrap}>
-                  <Input
-                    value={species}
-                    onChange={e => setSpecies(e.target.value)}
-                    placeholder={identifying ? 'Identifying…' : 'e.g. Brown Trout'}
-                    disabled={identifying}
-                    className={identifying ? styles.inputLoading : ''}
-                    autoFocus
+              <Dialog.Overlay asChild>
+                <motion.div
+                  className={styles.backdrop}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                />
+              </Dialog.Overlay>
+
+              <Dialog.Content className={styles.contentPositioner} aria-describedby={undefined}>
+                <motion.div
+                  className={styles.content}
+                  initial={{ opacity: 0, scale: 0.97, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.03, y: -8 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                >
+                  <div className={styles.header}>
+                    <Dialog.Title className={styles.title}>Add a catch</Dialog.Title>
+                    <Dialog.Close asChild><Button variant="icon-sm" aria-label="Close"><Xmark width={20} height={20} /></Button></Dialog.Close>
+                  </div>
+
+                  <AnimatePresence mode="wait" initial={false}>
+                    {step === 1 && (
+                      <motion.div key="step-1" {...stepFade}>
+                        <div
+                          className={`${styles.dropZone} ${dropOver ? styles.dragOver : ''}`}
+                          onDragOver={e => { e.preventDefault(); setDropOver(true) }}
+                          onDragEnter={e => { e.preventDefault(); setDropOver(true) }}
+                          onDragLeave={() => setDropOver(false)}
+                          onDrop={onZoneDrop}
+                        >
+                          {loading ? (
+                            <div className={styles.spinner} />
+                          ) : (
+                            <>
+                              <MediaImage width={24} height={24} style={{ opacity: 0.4 }} />
+                              <div className={styles.dropLabel}>Drop photos here</div>
+                              <div className={styles.dropOr}>or</div>
+                              <button className={styles.browseBtn} onClick={() => fileInputRef.current?.click()}>Browse</button>
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {step === 2 && (
+                      <motion.div key="step-2" {...stepFade} className={styles.locationStep}>
+                        <div className={styles.locationBanner}>No GPS data found — pin your catch location</div>
+                        <div ref={locationMapRef} className={styles.locationMap} />
+                        <div className={styles.locationFooter}>
+                          <div className={styles.locationCoords}>
+                            {manualPin
+                              ? `${manualPin.lat.toFixed(4)}, ${manualPin.lng.toFixed(4)}`
+                              : 'Click the map to place a pin'}
+                          </div>
+                          <div className={styles.locationActions}>
+                            <Button variant="secondary" onClick={() => { setStep(1); setManualPin(null) }}>Back</Button>
+                            <Button variant="primary" onClick={() => setStep(3)} disabled={!manualPin}>Next</Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {step === 3 && (
+                      <motion.div key="step-3" {...stepFade}>
+                        <div className={styles.previewWrap}>
+                          <img className={styles.previewImg} src={pendingUrls[0]} alt="preview" />
+                        </div>
+                        <ThumbStrip
+                          urls={pendingUrls}
+                          heroIndex={0}
+                          onRemove={removeThumb}
+                          onReorder={reorderThumbs}
+                          onSelect={() => {}}
+                          onAddClick={() => fileInputRef.current?.click()}
+                        />
+                        <div className={styles.form}>
+                          <label>Species</label>
+                          <div className={styles.inputWrap}>
+                            <Input
+                              value={species}
+                              onChange={e => setSpecies(e.target.value)}
+                              placeholder={identifying ? 'Identifying…' : 'e.g. Brown Trout'}
+                              disabled={identifying}
+                              className={identifying ? styles.inputLoading : ''}
+                              autoFocus
+                            />
+                            {identifying && <div className={styles.inputSpinner} />}
+                          </div>
+                          <label>Rod</label>
+                          <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="Select your rod" suggestions={prevRods} />
+                          <label>Fly</label>
+                          <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="Select your fly" suggestions={prevFlys} />
+                          <div className={styles.actions}>
+                            <Button variant="secondary" onClick={close}>Cancel</Button>
+                            <Button variant="primary" onClick={submit}>Add Catch</Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <input
+                    id="__file-input"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={onFileChange}
                   />
-                  {identifying && <div className={styles.inputSpinner} />}
-                </div>
-                <label>Rod</label>
-                <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="Select your rod" suggestions={prevRods} />
-                <label>Fly</label>
-                <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="Select your fly" suggestions={prevFlys} />
-                <div className={styles.actions}>
-                  <Button variant="secondary" onClick={close}>Cancel</Button>
-                  <Button variant="primary" onClick={submit}>Add Catch</Button>
-                </div>
-              </div>
+                </motion.div>
+              </Dialog.Content>
             </>
           )}
-
-          <input
-            id="__file-input"
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            style={{ display: 'none' }}
-            onChange={onFileChange}
-          />
-        </Dialog.Content>
+        </AnimatePresence>
       </Dialog.Portal>
     </Dialog.Root>
   )

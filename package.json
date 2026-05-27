@@ -25,6 +25,7 @@
     "heic2any": "^0.0.4",
     "iconoir-react": "^7.11.0",
     "mapbox-gl": "^3.22.0",
+    "motion": "^12.40.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.2",

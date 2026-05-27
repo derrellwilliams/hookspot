@@ -8,13 +8,6 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.active {
-  opacity: 1;
-  pointer-events: all;
 }
 
 .message {

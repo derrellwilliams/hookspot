@@ -7,18 +7,21 @@
   z-index: 2000;
 }
 
-.content {
+.contentPositioner {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  z-index: 2001;
+  outline: none;
+}
+
+.content {
   width: 420px;
   background: rgba(0, 0, 0, 0.85);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
-  z-index: 2001;
-  outline: none;
 }
 
 .header {
