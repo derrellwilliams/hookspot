@@ -783,19 +783,22 @@
   z-index: 2000;
 }
 
-.catchDialogContent {
+.catchDialogPositioner {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 484px;
+  z-index: 2001;
+  outline: none;
+}
+
+.catchDialogContent {
+  width: 460px;
   max-width: calc(100vw - 32px);
   background: rgba(0, 0, 0, 0.85);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  z-index: 2001;
-  outline: none;
 }
 
 /* ── Footer ── */

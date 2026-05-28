@@ -621,21 +621,41 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      {catchPopupGroup && (
-        <Dialog.Root open onOpenChange={o => { if (!o) setCatchPopupGroup(null) }}>
-          <Dialog.Portal>
-            <Dialog.Overlay className={styles.catchDialogBackdrop} />
-            <Dialog.Content className={styles.catchDialogContent} aria-describedby={undefined}>
-              <Dialog.Title className={styles.srOnly}>Catch details</Dialog.Title>
-              <PopupCarousel
-                initialGroup={catchPopupGroup}
-                onClose={() => setCatchPopupGroup(null)}
-                onDelete={handleCatchDelete}
-              />
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
-      )}
+      <Dialog.Root open={!!catchPopupGroup} onOpenChange={o => { if (!o) setCatchPopupGroup(null) }}>
+        <Dialog.Portal forceMount>
+          <AnimatePresence>
+            {catchPopupGroup && (
+              <>
+                <Dialog.Overlay asChild>
+                  <motion.div
+                    className={styles.catchDialogBackdrop}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </Dialog.Overlay>
+                <Dialog.Content className={styles.catchDialogPositioner} aria-describedby={undefined}>
+                  <Dialog.Title className={styles.srOnly}>Catch details</Dialog.Title>
+                  <motion.div
+                    className={styles.catchDialogContent}
+                    initial={{ opacity: 0, scale: 0.97, y: 4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
+                    transition={{ delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
+                  >
+                    <PopupCarousel
+                      initialGroup={catchPopupGroup}
+                      onClose={() => setCatchPopupGroup(null)}
+                      onDelete={handleCatchDelete}
+                    />
+                  </motion.div>
+                </Dialog.Content>
+              </>
+            )}
+          </AnimatePresence>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       {isOwnProfile && (
         <>
