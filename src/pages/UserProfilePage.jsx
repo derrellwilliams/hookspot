@@ -27,9 +27,9 @@ import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
 import { createImageDataUrl } from '../lib/imageUtils.js'
 import styles from './UserProfilePage.module.css'
 
-const spring = { type: 'spring', stiffness: 400, damping: 17 }
-const cardVariants = { rest: { y: 0 }, hover: { y: -2 } }
-const imgVariants = { rest: { scale: 1 }, hover: { scale: 1.03 } }
+const spring = { type: 'spring', stiffness: 300, damping: 24 }
+const cardVariants = { rest: { y: 0 }, hover: { y: -1 } }
+const imgVariants = { rest: { scale: 1 }, hover: { scale: 1.015 } }
 
 const FAVORITES_KEY = 'hookspot:favorites'
 function loadFavoritesCache() {
@@ -533,8 +533,8 @@ export function UserProfilePage() {
                 key={id}
                 className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
                 onClick={() => setActiveTab(id)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.007 }}
+                whileTap={{ scale: 0.975 }}
                 transition={spring}
               >
                 {isActive && (

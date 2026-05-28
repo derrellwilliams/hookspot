@@ -17,7 +17,7 @@ import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 
-const spring = { type: 'spring', stiffness: 400, damping: 17 }
+const spring = { type: 'spring', stiffness: 300, damping: 24 }
 const STEP_FADE = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
 
 function computeHomeCenter(photos) {
@@ -297,8 +297,8 @@ export function UploadDialog() {
                               <motion.button
                                 className={styles.browseBtn}
                                 onClick={() => fileInputRef.current?.click()}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.007 }}
+                                whileTap={{ scale: 0.975 }}
                                 transition={spring}
                               >Browse</motion.button>
                             </>

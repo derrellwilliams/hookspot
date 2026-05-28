@@ -6,7 +6,7 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { SidebarItem } from './SidebarItem.jsx'
 import styles from './Sidebar.module.css'
 
-const spring = { type: 'spring', stiffness: 400, damping: 17 }
+const spring = { type: 'spring', stiffness: 300, damping: 24 }
 const springTight = { type: 'spring', stiffness: 400, damping: 35 }
 
 export function Sidebar() {
@@ -105,8 +105,8 @@ export function Sidebar() {
               <motion.button
                 className={styles.addCard}
                 onClick={() => setUploadOpen(true)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.007 }}
+                whileTap={{ scale: 0.975 }}
                 transition={spring}
               >
                 <Plus width={24} height={24} className={styles.addIcon} />

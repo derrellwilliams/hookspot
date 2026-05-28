@@ -4,7 +4,7 @@ import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import styles from './Nav.module.css'
 
-const spring = { type: 'spring', stiffness: 400, damping: 17 }
+const spring = { type: 'spring', stiffness: 300, damping: 24 }
 const springTight = { type: 'spring', stiffness: 400, damping: 35 }
 
 const NAV_ITEMS = [
@@ -30,8 +30,8 @@ export function Nav() {
               className={`${styles.navItem} ${isActive ? styles.active : ''}`}
               onClick={() => navigate(itemPath)}
               aria-label={label}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.96 }}
+              whileHover={{ scale: 1.007 }}
+              whileTap={{ scale: 0.975 }}
               transition={spring}
             >
               {isActive && (
@@ -50,8 +50,8 @@ export function Nav() {
           className={styles.plusBtn}
           onClick={() => setUploadOpen(true)}
           aria-label="Add catch"
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.007 }}
+          whileTap={{ scale: 0.975 }}
           transition={spring}
         >
           <Plus width={24} height={24} />
