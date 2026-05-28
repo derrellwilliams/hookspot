@@ -44,9 +44,9 @@
   color: rgba(255, 255, 255, 0.4);
   border-radius: 10px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  font-family: "Roboto", sans-serif;
+  font-family: var(--font-sans);
   white-space: nowrap;
   transition: color 0.18s ease;
 }

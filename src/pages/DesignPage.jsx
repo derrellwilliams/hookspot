@@ -2,7 +2,7 @@ import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Xmark, EditPencil } from 'iconoir-react'
 import { tokens } from '../tokens.js'
-import { Button, Input, Card } from '../components/ui/index.js'
+import { Button, Input } from '../components/ui/index.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import styles from './DesignPage.module.css'
 import d from '../components/UploadDialog/UploadDialog.module.css'
@@ -69,17 +69,20 @@ export function DesignPage() {
 
         <Section label="Typography">
           {[
-            { label: 'fontDisplay (Space Mono)', font: tokens.fontDisplay },
-            { label: 'fontSans (Roboto)', font: tokens.fontSans },
-            { label: 'fontMono (Roboto Mono)', font: tokens.fontMono },
-          ].map(({ label, font }) => (
-            <div key={label} className={styles.typeFamilyRow}>
-              <div className={styles.typeFamilyLabel}>{label}</div>
-              <div className={styles.typeSamples}>
-                <span style={{ fontFamily: font, fontSize: 24, fontWeight: 700 }}>Heading</span>
-                <span style={{ fontFamily: font, fontSize: 16 }}>Body text sample</span>
-                <span style={{ fontFamily: font, fontSize: 12 }}>Small caption text</span>
-              </div>
+            { family: 'Display',   font: tokens.fontDisplay,   combos: [{ weight: 700, size: 36 }, { weight: 700, size: 26 }] },
+            { family: 'Condensed', font: tokens.fontCondensed, combos: [{ weight: 500, size: 26 }, { weight: 500, size: 15 }, { weight: 400, size: 12 }] },
+            { family: 'Mono',      font: tokens.fontMono,      combos: [{ weight: 600, size: 20 }, { weight: 400, size: 13 }, { weight: 400, size: 11 }] },
+            { family: 'Sans',      font: tokens.fontSans,      combos: [{ weight: 600, size: 28 }, { weight: 600, size: 24 }, { weight: 600, size: 22 }, { weight: 600, size: 20 }, { weight: 600, size: 16 }, { weight: 600, size: 14 }, { weight: 600, size: 11 }, { weight: 400, size: 20 }, { weight: 400, size: 16 }, { weight: 400, size: 14 }] },
+          ].map(({ family, font, combos }) => (
+            <div key={family} className={styles.typeComboGroup}>
+              {combos.map(({ weight, size }) => (
+                <div key={`${weight}-${size}`} className={styles.typeComboRow}>
+                  <code className={styles.typeComboLabel}>{family} · {weight} · {size}px</code>
+                  <span style={{ fontFamily: font, fontWeight: weight, fontSize: size, color: 'var(--dark-text)' }}>
+                    Brown Trout
+                  </span>
+                </div>
+              ))}
             </div>
           ))}
         </Section>
@@ -104,15 +107,6 @@ export function DesignPage() {
             <Input placeholder="Default input" />
             <Input placeholder="Disabled input" disabled />
           </div>
-        </Section>
-
-        <Section label="Card">
-          <Card>
-            <div className={styles.cardContent}>
-              <strong>Card Title</strong>
-              <p>This is example content inside a Card component.</p>
-            </div>
-          </Card>
         </Section>
 
         <Section label="Dialog">

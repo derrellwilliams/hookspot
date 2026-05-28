@@ -1,4 +1,5 @@
 import ApexCharts from 'apexcharts'
+import { tokens } from './tokens.js'
 
 let charts = []
 
@@ -11,7 +12,7 @@ const BASE_CHART = {
   background: 'transparent',
   foreColor: '#a1a1aa',
   toolbar: { show: false },
-  fontFamily: 'Roboto, sans-serif',
+  fontFamily: tokens.fontSans,
   animations: { speed: 450, animateGradually: { enabled: false } },
 }
 
@@ -126,7 +127,7 @@ export function renderStats(groups, refs = {}) {
       position: 'bottom',
       labels: { colors: '#a1a1aa' },
       fontSize: '12px',
-      fontFamily: 'Roboto, sans-serif',
+      fontFamily: tokens.fontSans,
     },
     stroke: { colors: ['#1c1c1e'], width: 2 },
     plotOptions: {
@@ -135,7 +136,7 @@ export function renderStats(groups, refs = {}) {
           size: '62%',
           labels: {
             show: true,
-            total: { show: true, label: 'Total', color: '#a1a1aa', fontFamily: 'Roboto, sans-serif' },
+            total: { show: true, label: 'Total', color: '#a1a1aa', fontFamily: tokens.fontSans },
           },
         },
       },
@@ -169,7 +170,7 @@ export function renderStats(groups, refs = {}) {
     legend: {
       labels: { colors: '#a1a1aa' },
       fontSize: '12px',
-      fontFamily: 'Roboto, sans-serif',
+      fontFamily: tokens.fontSans,
     },
   })
 

@@ -71,7 +71,7 @@
 .monthHeader {
   padding: 8px 8px 2px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.3);
@@ -121,19 +121,19 @@
 
 .species {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--dark-text);
 }
 
 .date {
   color: var(--dark-muted);
-  font-size: 13px;
+  font-size: 14px;
   margin-top: 2px;
 }
 
 .mono {
-  font-family: "Roboto Mono", monospace;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
 .check {
@@ -162,7 +162,7 @@
 .removeBtn {
   background: none;
   border: none;
-  font-size: 13px;
+  font-size: 14px;
   font-family: inherit;
   color: rgba(255, 80, 80, 0.75);
   cursor: pointer;

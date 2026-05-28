@@ -180,7 +180,7 @@
   background: var(--dark-border);
   color: var(--dark-muted);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,9 +188,9 @@
 }
 
 .popupAttributionName {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-family: var(--font-condensed);
+  font-size: 12px;
+  font-weight: 400;
   color: var(--dark-muted);
   text-decoration: none;
   transition: color 0.12s;
@@ -201,15 +201,15 @@
 }
 
 .popupSpecies {
-  font-family: "Roboto", sans-serif;
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 20px;
   color: #fff;
 }
 
 .popupDetail {
   font-size: 13px;
-  font-family: "Roboto Mono", monospace;
+  font-family: var(--font-mono);
   color: var(--dark-muted);
   margin-top: 4px;
   line-height: 1.3;

@@ -13,7 +13,7 @@
 }
 
 .filterTitle {
-  font-family: 'Roboto Condensed', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 15px;
   font-weight: 500;
   color: #fff;
@@ -38,9 +38,9 @@
 
 .filterTab {
   position: relative;
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.4);
   background: none;
@@ -174,7 +174,7 @@
 
 .addLabel {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -195,7 +195,7 @@
 }
 
 .emptyTitle {
-  font-family: 'Roboto Condensed', sans-serif;
+  font-family: var(--font-condensed);
   font-size: 26px;
   font-weight: 500;
   color: #ffffff;
@@ -203,7 +203,7 @@
 }
 
 .emptySubtitle {
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 400;
   color: var(--dark-muted);
@@ -213,7 +213,7 @@
 .monthHeader {
   padding: 2px 8px 0;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.3);
@@ -267,7 +267,7 @@
   background: var(--accent);
   color: white;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   min-width: 16px;
   height: 16px;
   border-radius: 8px;
@@ -305,7 +305,7 @@
   background: var(--dark-border);
   color: var(--dark-muted);
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -313,7 +313,7 @@
 }
 
 .anglerName {
-  font-family: "Roboto Condensed", sans-serif;
+  font-family: var(--font-condensed);
   font-size: 12px;
   font-weight: 400;
   color: #8d8d8d;
@@ -323,9 +323,9 @@
 }
 
 .species {
-  font-family: "Roboto", sans-serif;
+  font-family: var(--font-sans);
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
@@ -334,7 +334,7 @@
 }
 
 .datetime {
-  font-family: "Roboto Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 400;
   color: #8d8d8d;
@@ -342,7 +342,7 @@
 }
 
 .location {
-  font-family: "Roboto Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 400;
   color: #8d8d8d;

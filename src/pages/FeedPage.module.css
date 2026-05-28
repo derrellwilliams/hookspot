@@ -9,7 +9,7 @@
 }
 
 .label {
-  font-family: "Roboto Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -18,7 +18,7 @@
 }
 
 .soon {
-  font-family: "Space Mono", monospace;
+  font-family: var(--font-display);
   font-size: clamp(40px, 6vw, 80px);
   font-weight: 700;
   color: var(--dark-text);

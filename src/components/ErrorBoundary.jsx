@@ -10,7 +10,7 @@ export class ErrorBoundary extends Component {
   render() {
     if (this.state.error) {
       return (
-        <div style={{ padding: 32, color: 'var(--color-text-secondary)', fontFamily: 'sans-serif' }}>
+        <div style={{ padding: 32, color: 'var(--dark-muted)', fontFamily: 'sans-serif' }}>
           Something went wrong.{' '}
           <button onClick={() => this.setState({ error: null })} style={{ cursor: 'pointer' }}>
             Retry

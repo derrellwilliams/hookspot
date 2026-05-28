@@ -148,7 +148,7 @@
 }
 
 .avatarInitial {
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   font-size: 24px;
   font-weight: 600;
   color: var(--dark-muted);
@@ -162,9 +162,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--dark-muted);
 }
 
@@ -180,7 +180,7 @@
 }
 
 .headerUsername {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-display);
   font-size: 36px;
   font-weight: 700;
   color: var(--dark-text);
@@ -188,7 +188,7 @@
 }
 
 .headerBio {
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   color: var(--dark-text);
   margin: 0;
@@ -217,7 +217,7 @@
 }
 
 .headerStatNum {
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 20px;
   font-weight: 600;
   color: var(--dark-text);
@@ -225,9 +225,9 @@
 }
 
 .headerStatLabel {
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: rgba(255, 255, 255, 0.45);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -264,8 +264,8 @@
   display: block;
   width: 100%;
   padding: 8px 12px;
-  font-size: 13px;
-  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-family: var(--font-sans);
   color: var(--dark-text);
   border-radius: 5px;
   cursor: pointer;
@@ -301,9 +301,9 @@
   border: none;
   background: none;
   border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: var(--font-sans);
   color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
   text-transform: uppercase;
@@ -343,9 +343,9 @@
 }
 
 .catchSpecies {
-  font-family: 'Roboto', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
   color: var(--dark-text);
   white-space: nowrap;
   overflow: hidden;
@@ -353,7 +353,7 @@
 }
 
 .catchDatetime {
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--dark-muted);
   white-space: nowrap;
@@ -456,14 +456,14 @@
 }
 
 .statsTitle {
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--dark-text);
 }
 
 .statsTotal {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--dark-muted);
 }
 
@@ -472,7 +472,7 @@
   text-align: center;
   font-size: 14px;
   color: var(--dark-muted);
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
 }
 
 .grid {
@@ -490,7 +490,7 @@
 
 .cardLabel {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--dark-muted);
@@ -530,9 +530,9 @@
 
 .dialogTitle {
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 400;
   color: rgba(255,255,255,0.7);
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   padding: 20px 20px 16px;
 }
 
@@ -555,8 +555,8 @@
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 16px;
-  font-weight: 700;
-  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  font-family: var(--font-sans);
   color: var(--dark-text);
   outline: none;
   width: 100%;
@@ -574,7 +574,7 @@
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 14px;
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   color: var(--dark-text);
   outline: none;
   width: 100%;
@@ -664,7 +664,7 @@
 }
 
 .gearSectionLabel {
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -690,7 +690,7 @@
 }
 
 .gearItemLabel {
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   color: var(--dark-text);
   flex: 1;
@@ -719,8 +719,8 @@
 }
 
 .gearEmpty {
-  font-family: 'Roboto', sans-serif;
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: 14px;
   color: var(--dark-muted);
   font-style: italic;
   padding: 2px 0;
@@ -738,7 +738,7 @@
   border-radius: 8px;
   padding: 7px 10px;
   font-size: 14px;
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   color: var(--dark-text);
   outline: none;
   box-sizing: border-box;
@@ -759,8 +759,8 @@
   border: 1px solid var(--dark-border);
   border-radius: 8px;
   padding: 7px 14px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   font-family: inherit;
   color: var(--dark-text);
   cursor: pointer;
@@ -824,7 +824,7 @@
   padding: 60px;
   font-size: 14px;
   color: var(--dark-muted);
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
 }
 
 .errorState {
@@ -833,7 +833,7 @@
   align-items: center;
   gap: 16px;
   padding: 60px 24px;
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   color: var(--dark-muted);
   font-size: 14px;
 }

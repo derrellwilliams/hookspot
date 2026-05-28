@@ -14,10 +14,16 @@
   --dark-border: #3a3a3c;
   --dark-text: #f4f4f5;
   --dark-muted: #a1a1aa;
+
+  /* Typography */
+  --font-sans: "Roboto", sans-serif;
+  --font-condensed: "Roboto Condensed", sans-serif;
+  --font-mono: "Roboto Mono", monospace;
+  --font-display: "Space Mono", monospace;
 }
 
 body {
-  font-family: "Roboto", sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   color: var(--dark-text);
   background: #111113;

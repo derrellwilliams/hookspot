@@ -25,7 +25,7 @@
 
 
 .wordmark {
-  font-family: 'Space Mono', monospace;
+  font-family: var(--font-display);
   font-size: 26px;
   font-weight: 700;
   color: #ffffff;
@@ -58,7 +58,7 @@
 
 .label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--dark-muted);
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -92,7 +92,7 @@
 
 .input::placeholder {
   color: rgba(255, 255, 255, 0.35);
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 .button {
@@ -100,14 +100,14 @@
 }
 
 .error {
-  font-size: 13px;
+  font-size: 14px;
   color: #f87171;
 }
 
 .sent {
-  font-family: 'Roboto', sans-serif;
-  font-size: 15px;
-  font-weight: 500;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
   color: rgba(255, 255, 255, 0.7);
   text-align: center;
 }
@@ -116,7 +116,7 @@
   background: none;
   border: none;
   padding: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--dark-muted);
   cursor: pointer;
   text-align: center;
