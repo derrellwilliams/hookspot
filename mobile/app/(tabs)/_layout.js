@@ -4,11 +4,14 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Map, User, Plus } from 'iconoir-react-native'
 import { useAuthStore } from '../../store/useAuthStore'
+import { usePhotoStore } from '../../store/usePhotoStore'
+import { UploadSheet } from '../../components/UploadSheet'
 
 export const TAB_BAR_HEIGHT = 56 // content height, excluding safe area
 
 function CustomTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets()
+  const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
 
   return (
     <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
@@ -31,7 +34,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
               <Text style={[styles.label, isFocused && styles.labelActive]}>{label}</Text>
             </TouchableOpacity>
             {index === 0 && (
-              <TouchableOpacity style={styles.addBtn} activeOpacity={0.8}>
+              <TouchableOpacity style={styles.addBtn} activeOpacity={0.8} onPress={() => setUploadOpen(true)}>
                 <Plus color="#fff" width={22} height={22} strokeWidth={2.5} />
               </TouchableOpacity>
             )}
@@ -50,13 +53,16 @@ export default function TabsLayout() {
   if (!user) return <Redirect href="/(auth)/login" />
 
   return (
-    <Tabs
-      tabBar={props => <CustomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      <Tabs.Screen name="map" />
-      <Tabs.Screen name="profile" />
-    </Tabs>
+    <>
+      <Tabs
+        tabBar={props => <CustomTabBar {...props} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen name="map" />
+        <Tabs.Screen name="profile" />
+      </Tabs>
+      <UploadSheet />
+    </>
   )
 }
 

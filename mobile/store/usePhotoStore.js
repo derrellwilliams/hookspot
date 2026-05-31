@@ -30,6 +30,7 @@ export const usePhotoStore = create((set, get) => ({
   loading: false,
   loadingMore: false,
   hasMore: true,
+  uploadOpen: false,
 
   async loadPhotos(userId) {
     set({ loading: true, photos: [], groups: [], hasMore: true })
@@ -60,7 +61,16 @@ export const usePhotoStore = create((set, get) => ({
     })
   },
 
+  setUploadOpen(open) {
+    set({ uploadOpen: open })
+  },
+
+  addPhoto(photo) {
+    const photos = [...get().photos, photo]
+    set({ photos, groups: groupPhotos(photos) })
+  },
+
   reset() {
-    set({ photos: [], groups: [], loading: false, loadingMore: false, hasMore: true })
+    set({ photos: [], groups: [], loading: false, loadingMore: false, hasMore: true, uploadOpen: false })
   },
 }))
