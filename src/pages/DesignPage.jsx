@@ -70,9 +70,9 @@ export function DesignPage() {
         <Section label="Typography">
           {[
             { family: 'Display',   font: tokens.fontDisplay,   combos: [{ weight: 700, size: 36 }, { weight: 700, size: 26 }] },
-            { family: 'Condensed', font: tokens.fontCondensed, combos: [{ weight: 500, size: 26 }, { weight: 500, size: 15 }, { weight: 400, size: 12 }] },
+            { family: 'Condensed', font: tokens.fontCondensed, combos: [{ weight: 500, size: 26 }, { weight: 500, size: 16 }, { weight: 400, size: 12 }] },
             { family: 'Mono',      font: tokens.fontMono,      combos: [{ weight: 600, size: 20 }, { weight: 400, size: 13 }, { weight: 400, size: 11 }] },
-            { family: 'Sans',      font: tokens.fontSans,      combos: [{ weight: 600, size: 28 }, { weight: 600, size: 24 }, { weight: 600, size: 22 }, { weight: 600, size: 20 }, { weight: 600, size: 16 }, { weight: 600, size: 14 }, { weight: 600, size: 11 }, { weight: 400, size: 20 }, { weight: 400, size: 16 }, { weight: 400, size: 14 }] },
+            { family: 'Sans',      font: tokens.fontSans,      combos: [{ weight: 600, size: 28 }, { weight: 600, size: 24 }, { weight: 600, size: 22 }, { weight: 600, size: 20 }, { weight: 600, size: 16 }, { weight: 600, size: 14 }, { weight: 600, size: 11 }, { weight: 400, size: 16 }, { weight: 400, size: 14 }] },
           ].map(({ family, font, combos }) => (
             <div key={family} className={styles.typeComboGroup}>
               {combos.map(({ weight, size }) => (
