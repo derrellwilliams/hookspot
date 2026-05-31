@@ -81,6 +81,7 @@ export function UploadSheet() {
   // When the sheet opens, immediately launch the image picker
   useEffect(() => {
     if (uploadOpen) {
+      if (step !== 'idle') return
       pickPhotos()
     } else {
       setStep('idle')

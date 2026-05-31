@@ -47,7 +47,7 @@ function StatBox({ label, value }) {
 
 function CatchCard({ group }) {
   const lead = group[0]
-  const uri = photoUrl(lead.user_id, lead.filename, lead.meta?.storage_path)
+  const uri = photoUrl(lead.user_id, lead.filename, lead.storage_path)
   const species = cleanSpecies(lead.species)
   const dateStr = lead.time ? formatDateFull(lead.time).split(' ·')[0] : null
 
@@ -123,7 +123,7 @@ export default function ProfileScreen() {
   const displayName = getDisplayName(user?.user_metadata) || 'Angler'
   const bio = user?.user_metadata?.bio ?? null
 
-  async function pickAvatar() {
+  const pickAvatar = useCallback(async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!granted) return
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -144,37 +144,13 @@ export default function ProfileScreen() {
     } finally {
       setUploading(false)
     }
-  }
+  }, [user, setUser])
 
-  function openSettings() {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Edit Profile', 'Edit Gear', 'Sign Out'],
-          cancelButtonIndex: 0,
-          destructiveButtonIndex: 3,
-        },
-        idx => {
-          if (idx === 1) openEditProfile()
-          else if (idx === 2) openEditGear()
-          else if (idx === 3) signOut()
-        }
-      )
-    } else {
-      Alert.alert('Settings', undefined, [
-        { text: 'Edit Profile', onPress: openEditProfile },
-        { text: 'Edit Gear', onPress: openEditGear },
-        { text: 'Sign Out', style: 'destructive', onPress: signOut },
-        { text: 'Cancel', style: 'cancel' },
-      ])
-    }
-  }
-
-  function openEditProfile() {
+  const openEditProfile = useCallback(() => {
     setEditName(user?.user_metadata?.display_name || user?.user_metadata?.full_name || '')
     setEditBio(user?.user_metadata?.bio || '')
     setEditProfileOpen(true)
-  }
+  }, [user])
 
   async function saveProfile() {
     setSaving(true)
@@ -204,7 +180,7 @@ export default function ProfileScreen() {
     }
   }
 
-  function openEditGear() {
+  const openEditGear = useCallback(() => {
     const savedRods = user?.user_metadata?.gear_rods
     const savedFlies = user?.user_metadata?.gear_flies
     setRods(savedRods != null
@@ -218,7 +194,31 @@ export default function ProfileScreen() {
     setNewRod('')
     setNewFly('')
     setEditGearOpen(true)
-  }
+  }, [user, ownGroups])
+
+  const openSettings = useCallback(() => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Edit Profile', 'Edit Gear', 'Sign Out'],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 3,
+        },
+        idx => {
+          if (idx === 1) openEditProfile()
+          else if (idx === 2) openEditGear()
+          else if (idx === 3) signOut()
+        }
+      )
+    } else {
+      Alert.alert('Settings', undefined, [
+        { text: 'Edit Profile', onPress: openEditProfile },
+        { text: 'Edit Gear', onPress: openEditGear },
+        { text: 'Sign Out', style: 'destructive', onPress: signOut },
+        { text: 'Cancel', style: 'cancel' },
+      ])
+    }
+  }, [openEditProfile, openEditGear, signOut])
 
   async function saveGear() {
     setGearSaving(true)
@@ -295,7 +295,7 @@ export default function ProfileScreen() {
         <Text style={styles.sectionLabel}>Recent Catches</Text>
       )}
     </View>
-  ), [avatarUrl, uploading, displayName, bio, statsAll, statsYear, statsMonth, statsSpecies, ownGroups.length])
+  ), [avatarUrl, uploading, displayName, bio, statsAll, statsYear, statsMonth, statsSpecies, ownGroups.length, openSettings, pickAvatar])
 
   const renderItem = useCallback(({ item }) => <CatchCard group={item} />, [])
   const keyExtractor = useCallback(item => item[0].catchId ?? item[0].filename, [])
@@ -390,7 +390,7 @@ export default function ProfileScreen() {
             <Text style={styles.fieldLabel}>Rods</Text>
             {rods.length === 0 && <Text style={styles.gearEmpty}>No rods added yet</Text>}
             {rods.map((rod, i) => (
-              <View key={i} style={styles.gearItem}>
+              <View key={rod} style={styles.gearItem}>
                 <Text style={styles.gearItemText} numberOfLines={1}>{rod}</Text>
                 <TouchableOpacity onPress={() => setRods(prev => prev.filter((_, j) => j !== i))} hitSlop={8}>
                   <Text style={styles.gearRemove}>✕</Text>
@@ -415,7 +415,7 @@ export default function ProfileScreen() {
             <Text style={[styles.fieldLabel, { marginTop: 24 }]}>Flies</Text>
             {flies.length === 0 && <Text style={styles.gearEmpty}>No flies added yet</Text>}
             {flies.map((fly, i) => (
-              <View key={i} style={styles.gearItem}>
+              <View key={fly} style={styles.gearItem}>
                 <Text style={styles.gearItemText} numberOfLines={1}>{fly}</Text>
                 <TouchableOpacity onPress={() => setFlies(prev => prev.filter((_, j) => j !== i))} hitSlop={8}>
                   <Text style={styles.gearRemove}>✕</Text>

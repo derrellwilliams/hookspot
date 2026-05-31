@@ -15,14 +15,14 @@ export function parseGpsFromAsset(asset) {
   if (gps?.Latitude != null && gps?.Longitude != null) {
     const lat = gps.Latitude * (gps.LatitudeRef === 'S' ? -1 : 1)
     const lng = gps.Longitude * (gps.LongitudeRef === 'W' ? -1 : 1)
-    if (isFinite(lat) && isFinite(lng) && lat !== 0) return { lat, lng }
+    if (isFinite(lat) && isFinite(lng) && (lat !== 0 || lng !== 0)) return { lat, lng }
   }
 
   // Android / flat format
   if (exif.GPSLatitude != null && exif.GPSLongitude != null) {
     const lat = Number(exif.GPSLatitude) * (exif.GPSLatitudeRef === 'S' ? -1 : 1)
     const lng = Number(exif.GPSLongitude) * (exif.GPSLongitudeRef === 'W' ? -1 : 1)
-    if (isFinite(lat) && isFinite(lng) && lat !== 0) return { lat, lng }
+    if (isFinite(lat) && isFinite(lng) && (lat !== 0 || lng !== 0)) return { lat, lng }
   }
 
   // Decimal already normalized by some parsers
@@ -80,7 +80,7 @@ export async function uploadCatch(assets, { species, rod, fly, manualLat, manual
     // expo-image-picker returns fileName on iOS, name on Android, or we generate one
     const rawName = asset.fileName || asset.name || `catch_${Date.now()}_${i}.jpg`
     const filename = rawName.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
-    const storagePath = `${user.id}/${storageKey(filename)}`
+    const storagePath = `${user.id}/${catchId}/${storageKey(filename)}`
     const assetGps = parseGpsFromAsset(asset) ?? (lat != null ? { lat, lng } : null)
     const assetTime = parseTimeFromAsset(asset) ?? catchTime
 
