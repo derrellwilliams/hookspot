@@ -1,10 +1,8 @@
 import { useMemo } from 'react'
-import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native'
+import { View, Text, ScrollView, StyleSheet, useWindowDimensions } from 'react-native'
 import { Svg, G, Rect, Path, Text as SvgText, Line } from 'react-native-svg'
 
-const { width: SCREEN_W } = Dimensions.get('window')
 const CARD_PAD = 16
-const CHART_W = SCREEN_W - CARD_PAD * 4 // card padding + outer padding
 
 const C = {
   surface: '#2c2c2e',
@@ -184,11 +182,14 @@ function DonutChart({ data, radius = 84, innerRadius = 52, size = 180, totalLabe
   const total = data.reduce((s, d) => s + d.value, 0)
   if (!total) return null
 
+  // Reserve gap degrees upfront so total never exceeds 360°
+  const GAP_DEG = data.length > 1 ? 2 : 0
+  const dataDeg = 360 - data.length * GAP_DEG
   let angle = 0
   const slices = data.map(({ value, color }) => {
-    const sweep = (value / total) * 358 // 358 leaves a tiny gap seam
+    const sweep = (value / total) * dataDeg
     const slice = { d: donutSlice(cx, cy, radius, innerRadius, angle, angle + sweep), color }
-    angle += sweep + (358 / total > 2 ? 2 : 0.5) // gap between slices
+    angle += sweep + GAP_DEG
     return slice
   })
 
@@ -219,6 +220,9 @@ function ChartCard({ title, children }) {
 // ── Main export ───────────────────────────────────────────────────────────────
 
 export function StatsCharts({ groups }) {
+  const { width: screenW } = useWindowDimensions()
+  const chartW = screenW - CARD_PAD * 4 // card padding + outer padding
+
   const { monthly, hourly, species, weatherCond, weatherTemp, hasWeather } = useStatsData(groups)
 
   if (!groups.length) {
@@ -229,14 +233,12 @@ export function StatsCharts({ groups }) {
     )
   }
 
-  // Hourly chart is wider than screen — needs horizontal scroll
-  const HOURLY_BAR_SLOT = 20
-  const hourlyChartW = 24 * HOURLY_BAR_SLOT + 32
+  const hourlyChartW = 24 * 20 + 32
 
   return (
     <View style={styles.container}>
       <ChartCard title="Catches per Month">
-        <BarChartSvg data={monthly} width={CHART_W} />
+        <BarChartSvg data={monthly} width={chartW} />
       </ChartCard>
 
       <ChartCard title="Time of Day">
@@ -264,13 +266,13 @@ export function StatsCharts({ groups }) {
 
       {hasWeather && weatherCond.length > 0 && (
         <ChartCard title="Catches by Condition">
-          <BarChartSvg data={weatherCond} width={CHART_W} color={BLUES[1]} />
+          <BarChartSvg data={weatherCond} width={chartW} color={BLUES[1]} />
         </ChartCard>
       )}
 
       {hasWeather && weatherTemp.length > 0 && (
         <ChartCard title="Catches by Temperature">
-          <BarChartSvg data={weatherTemp} width={CHART_W} color={BLUES[2]} />
+          <BarChartSvg data={weatherTemp} width={chartW} color={BLUES[2]} />
         </ChartCard>
       )}
     </View>

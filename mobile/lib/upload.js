@@ -156,7 +156,9 @@ export async function addPhotosToGroup(assets, groupLead, user) {
   const photos = []
   for (let i = 0; i < assets.length; i++) {
     const asset = assets[i]
-    const rawName = asset.fileName || asset.name || `catch_${Date.now()}_${i}.jpg`
+    const base = asset.fileName || asset.name || `photo.jpg`
+    // Prefix with timestamp+index so re-adding the same photo never collides
+    const rawName = `${Date.now()}_${i}_${base}`
     const filename = rawName.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
     const storagePath = `${user.id}/${catchId}/${storageKey(filename)}`
     const assetTime = parseTimeFromAsset(asset) ?? groupLead.time ?? Date.now()
