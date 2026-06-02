@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import { Settings } from 'iconoir-react-native'
 import { supabase } from '../../lib/supabase'
+import { StatsCharts } from '../../components/StatsCharts'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
 import { TAB_BAR_HEIGHT } from './_layout'
@@ -83,6 +84,8 @@ export default function ProfileScreen() {
   const [newRod, setNewRod] = useState('')
   const [newFly, setNewFly] = useState('')
   const [gearSaving, setGearSaving] = useState(false)
+
+  const [activeTab, setActiveTab] = useState('catches')
 
   useEffect(() => {
     if (!user?.id) return
@@ -291,32 +294,67 @@ export default function ProfileScreen() {
         <StatBox label="Species" value={statsSpecies} />
       </View>
 
-      {ownGroups.length > 0 && (
+      <View style={styles.tabRow}>
+        <TouchableOpacity
+          style={[styles.tabPill, activeTab === 'catches' && styles.tabPillActive]}
+          onPress={() => setActiveTab('catches')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.tabPillText, activeTab === 'catches' && styles.tabPillTextActive]}>
+            Catches
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabPill, activeTab === 'stats' && styles.tabPillActive]}
+          onPress={() => setActiveTab('stats')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.tabPillText, activeTab === 'stats' && styles.tabPillTextActive]}>
+            Stats
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === 'catches' && ownGroups.length > 0 && (
         <Text style={styles.sectionLabel}>Recent Catches</Text>
       )}
     </View>
-  ), [avatarUrl, uploading, displayName, bio, statsAll, statsYear, statsMonth, statsSpecies, ownGroups.length, openSettings, pickAvatar])
+  ), [avatarUrl, uploading, displayName, bio, statsAll, statsYear, statsMonth, statsSpecies, ownGroups.length, openSettings, pickAvatar, activeTab])
 
   const renderItem = useCallback(({ item }) => <CatchCard group={item} />, [])
   const keyExtractor = useCallback(item => item[0].catchId ?? item[0].filename, [])
 
+  const statsBottomPad = insets.bottom + TAB_BAR_HEIGHT + 16
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <FlatList
-        data={ownGroups}
-        numColumns={2}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No catches yet</Text>
+      {activeTab === 'catches' ? (
+        <FlatList
+          data={ownGroups}
+          numColumns={2}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No catches yet</Text>
+            </View>
+          }
+          columnWrapperStyle={styles.columnWrapper}
+          contentContainerStyle={{ paddingBottom: statsBottomPad }}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: statsBottomPad }}
+        >
+          {renderHeader()}
+          <View style={styles.statsSection}>
+            <StatsCharts groups={ownGroups} />
           </View>
-        }
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={{ paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 16 }}
-        showsVerticalScrollIndicator={false}
-      />
+        </ScrollView>
+      )}
 
       {/* Edit Profile */}
       <Modal
@@ -521,4 +559,36 @@ const styles = StyleSheet.create({
   gearAddRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   addBtn: { backgroundColor: C.accent, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 12, justifyContent: 'center' },
   addBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+
+  // Tab selector
+  tabRow: {
+    flexDirection: 'row',
+    backgroundColor: C.surface,
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  tabPill: {
+    flex: 1,
+    paddingVertical: 7,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  tabPillActive: {
+    backgroundColor: '#3a3a3c',
+  },
+  tabPillText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: C.muted,
+  },
+  tabPillTextActive: {
+    color: C.text,
+    fontWeight: '600',
+  },
+
+  // Stats section
+  statsSection: { paddingHorizontal: GRID_PADDING },
 })
