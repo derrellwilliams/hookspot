@@ -70,6 +70,13 @@ export const usePhotoStore = create((set, get) => ({
     set({ photos, groups: groupPhotos(photos) })
   },
 
+  removePhotos(toRemove) {
+    const ids = new Set(toRemove.map(p => p.id).filter(Boolean))
+    const filenames = new Set(toRemove.map(p => p.filename).filter(Boolean))
+    const photos = get().photos.filter(p => !(ids.has(p.id) || filenames.has(p.filename)))
+    set({ photos, groups: groupPhotos(photos) })
+  },
+
   reset() {
     set({ photos: [], groups: [], loading: false, loadingMore: false, hasMore: true, uploadOpen: false })
   },

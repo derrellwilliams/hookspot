@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import MapboxGL from '@rnmapbox/maps'
 import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
-import { EditPencil, Xmark, Map as MapIcon } from 'iconoir-react-native'
+import { EditPencil, Trash, Xmark, Map as MapIcon } from 'iconoir-react-native'
 import Constants from 'expo-constants'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -59,6 +59,7 @@ export default function MapScreen() {
   const loadingMore = usePhotoStore(s => s.loadingMore)
   const loadPhotos = usePhotoStore(s => s.loadPhotos)
   const loadMore = usePhotoStore(s => s.loadMore)
+  const removePhotos = usePhotoStore(s => s.removePhotos)
   const reset = usePhotoStore(s => s.reset)
   const insets = useSafeAreaInsets()
   const tabBarInset = insets.bottom + TAB_BAR_HEIGHT + 20
@@ -143,6 +144,48 @@ export default function MapScreen() {
     setSelected(null)
     sheetRef.current?.snapToIndex(1)
   }, [])
+
+  const selectedGroup = useMemo(() => {
+    if (!selected) return null
+    return selected.catchId
+      ? groups.find(g => g[0].catchId === selected.catchId)
+      : groups.find(g => g[0].filename === selected.filename && g[0].user_id === selected.user_id)
+  }, [selected, groups])
+
+  const handleDelete = useCallback((group) => {
+    Alert.alert(
+      'Delete catch?',
+      'This will permanently remove this entry and all its photos.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const catchId = group[0].catchId
+            const photoIds = group.map(p => p.id).filter(Boolean)
+            try {
+              if (catchId) {
+                await supabase.from('photos').delete().eq('catch_id', catchId)
+                await supabase.from('catches').delete().eq('id', catchId)
+              } else if (photoIds.length) {
+                await supabase.from('photos').delete().in('id', photoIds)
+              }
+              const paths = group.map(p =>
+                p.storage_path ?? `${user.id}/${storageKey(p.filename)}`
+              )
+              await supabase.storage.from('catches').remove(paths)
+              removePhotos(group)
+              clearSelected()
+            } catch (err) {
+              console.error('[delete]', err)
+              Alert.alert('Error', 'Failed to delete. Please try again.')
+            }
+          },
+        },
+      ],
+    )
+  }, [user, removePhotos, clearSelected])
 
   const renderCatchItem = useCallback(({ item: group }) => {
     const lead = group[0]
@@ -229,9 +272,18 @@ export default function MapScreen() {
               />
               <View style={styles.imgBtns}>
                 {selected.user_id === user?.id && (
-                  <TouchableOpacity style={styles.imgBtn} hitSlop={4}>
-                    <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
-                  </TouchableOpacity>
+                  <>
+                    <TouchableOpacity style={styles.imgBtn} hitSlop={4}>
+                      <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.imgBtn}
+                      onPress={() => selectedGroup && handleDelete(selectedGroup)}
+                      hitSlop={4}
+                    >
+                      <Trash width={16} height={16} color="#f87171" strokeWidth={2} />
+                    </TouchableOpacity>
+                  </>
                 )}
                 <TouchableOpacity style={styles.imgBtn} onPress={clearSelected} hitSlop={4}>
                   <Xmark width={16} height={16} color="#fff" strokeWidth={2} />
