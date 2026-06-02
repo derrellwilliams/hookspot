@@ -17,14 +17,14 @@ export const useAuthStore = create((set) => ({
   username: null,
   loading: true,
   setUser: (user) => {
-    set({ user, loading: false })
-    if (user) {
-      fetchProfile(user.id).then(profile => {
-        if (profile) set({ profile, username: profile.username })
-      })
-    } else {
-      set({ profile: null, username: null })
+    if (!user) {
+      set({ user: null, profile: null, username: null, loading: false })
+      return
     }
+    set({ user, loading: true })
+    fetchProfile(user.id)
+      .then(profile => set({ profile, username: profile?.username ?? null, loading: false }))
+      .catch(() => set({ loading: false }))
   },
   setSession: (session) => set({ session }),
   setUsername: (username) => set({ username }),

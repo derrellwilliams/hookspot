@@ -47,10 +47,12 @@ function CustomTabBar({ state, descriptors, navigation }) {
 
 export default function TabsLayout() {
   const user = useAuthStore(s => s.user)
+  const username = useAuthStore(s => s.username)
   const loading = useAuthStore(s => s.loading)
 
   if (loading) return null
   if (!user) return <Redirect href="/(auth)/login" />
+  if (!username) return <Redirect href="/(auth)/onboarding" />
 
   return (
     <>
