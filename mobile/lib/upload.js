@@ -144,3 +144,76 @@ export async function uploadCatch(assets, { species, rod, fly, manualLat, manual
 
   return photos
 }
+
+/**
+ * Upload additional photos into an existing catch group.
+ * Inherits location, species, rod, fly from the group lead.
+ */
+export async function addPhotosToGroup(assets, groupLead, user) {
+  const catchId = groupLead.catchId
+  if (!catchId) throw new Error('Cannot add photos to a catch without an ID')
+
+  const photos = []
+  for (let i = 0; i < assets.length; i++) {
+    const asset = assets[i]
+    const rawName = asset.fileName || asset.name || `catch_${Date.now()}_${i}.jpg`
+    const filename = rawName.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
+    const storagePath = `${user.id}/${catchId}/${storageKey(filename)}`
+    const assetTime = parseTimeFromAsset(asset) ?? groupLead.time ?? Date.now()
+
+    const { error: uploadError } = await supabase.storage
+      .from('catches')
+      .upload(storagePath, { uri: asset.uri, name: filename, type: 'image/jpeg' }, {
+        upsert: false,
+        contentType: 'image/jpeg',
+      })
+
+    if (uploadError) {
+      console.error('[addPhotos] storage error for', filename, uploadError)
+      continue
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
+
+    const { data: photoRow, error: dbError } = await supabase
+      .from('photos')
+      .insert({
+        user_id: user.id,
+        catch_id: catchId,
+        filename: rawName,
+        storage_path: storagePath,
+        url: publicUrl,
+        species: groupLead.species || null,
+        lat: groupLead.lat ?? null,
+        lng: groupLead.lng ?? null,
+        time: new Date(assetTime).toISOString(),
+        meta: { rod: groupLead.meta?.rod || null, fly: groupLead.meta?.fly || null },
+      })
+      .select('id')
+      .single()
+
+    if (dbError) {
+      console.error('[addPhotos] db error for', filename, dbError)
+      await supabase.storage.from('catches').remove([storagePath])
+      continue
+    }
+
+    photos.push({
+      id: photoRow.id,
+      filename: rawName,
+      user_id: user.id,
+      catch_id: catchId,
+      catchId,
+      lat: groupLead.lat ?? null,
+      lng: groupLead.lng ?? null,
+      species: groupLead.species || null,
+      time: assetTime,
+      meta: { rod: groupLead.meta?.rod || null, fly: groupLead.meta?.fly || null },
+      storage_path: storagePath,
+      url: publicUrl,
+    })
+  }
+
+  if (photos.length === 0) throw new Error('All photo uploads failed')
+  return photos
+}

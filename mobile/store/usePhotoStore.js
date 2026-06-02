@@ -70,6 +70,11 @@ export const usePhotoStore = create((set, get) => ({
     set({ photos, groups: groupPhotos(photos) })
   },
 
+  addPhotos(newPhotos) {
+    const photos = [...get().photos, ...newPhotos]
+    set({ photos, groups: groupPhotos(photos) })
+  },
+
   removePhotos(toRemove) {
     const ids = new Set(toRemove.map(p => p.id).filter(Boolean))
     const filenames = new Set(toRemove.map(p => p.filename).filter(Boolean))

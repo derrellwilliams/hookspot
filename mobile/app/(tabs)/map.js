@@ -3,9 +3,11 @@ import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator, Ale
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import MapboxGL from '@rnmapbox/maps'
 import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
-import { EditPencil, Trash, Xmark, Map as MapIcon } from 'iconoir-react-native'
+import { EditPencil, Trash, Xmark, Map as MapIcon, Plus } from 'iconoir-react-native'
 import Constants from 'expo-constants'
+import * as ImagePicker from 'expo-image-picker'
 import { supabase } from '../../lib/supabase'
+import { addPhotosToGroup } from '../../lib/upload'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
 import { TAB_BAR_HEIGHT } from './_layout'
@@ -59,6 +61,7 @@ export default function MapScreen() {
   const loadingMore = usePhotoStore(s => s.loadingMore)
   const loadPhotos = usePhotoStore(s => s.loadPhotos)
   const loadMore = usePhotoStore(s => s.loadMore)
+  const addPhotos = usePhotoStore(s => s.addPhotos)
   const removePhotos = usePhotoStore(s => s.removePhotos)
   const reset = usePhotoStore(s => s.reset)
   const insets = useSafeAreaInsets()
@@ -67,6 +70,7 @@ export default function MapScreen() {
   const sheetRef = useRef(null)
   const [selected, setSelected] = useState(null)
   const [sheetIndex, setSheetIndex] = useState(1)
+  const [addingPhotos, setAddingPhotos] = useState(false)
   const fitted = useRef(false)
 
   const snapPoints = useMemo(() => ['8%', '65%', '92%'], [])
@@ -186,6 +190,31 @@ export default function MapScreen() {
       ],
     )
   }, [user, removePhotos, clearSelected])
+
+  const handleAddPhotos = useCallback(async (groupLead) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Allow photo library access to add photos.')
+      return
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images',
+      allowsMultipleSelection: true,
+      quality: 0.85,
+      exif: true,
+    })
+    if (result.canceled) return
+    setAddingPhotos(true)
+    try {
+      const photos = await addPhotosToGroup(result.assets, groupLead, user)
+      addPhotos(photos)
+    } catch (err) {
+      console.error('[addPhotos]', err)
+      Alert.alert('Upload failed', err.message || 'Please try again.')
+    } finally {
+      setAddingPhotos(false)
+    }
+  }, [user, addPhotos])
 
   const renderCatchItem = useCallback(({ item: group }) => {
     const lead = group[0]
@@ -307,6 +336,22 @@ export default function MapScreen() {
               {selectedFly && (
                 <Text style={styles.detailMeta}>{selectedFly}</Text>
               )}
+              {selected.user_id === user?.id && (
+                <TouchableOpacity
+                  style={[styles.addPhotosBtn, addingPhotos && styles.addPhotosBtnDisabled]}
+                  onPress={() => handleAddPhotos(selected)}
+                  disabled={addingPhotos}
+                  activeOpacity={0.8}
+                >
+                  {addingPhotos
+                    ? <ActivityIndicator size="small" color={C.muted} />
+                    : <>
+                        <Plus width={14} height={14} color={C.muted} strokeWidth={2} />
+                        <Text style={styles.addPhotosBtnText}>Add photos</Text>
+                      </>
+                  }
+                </TouchableOpacity>
+              )}
             </View>
           </BottomSheetScrollView>
         ) : (
@@ -414,6 +459,20 @@ const styles = StyleSheet.create({
   detailBody: { paddingHorizontal: 20, paddingTop: 14, gap: 4 },
   detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 26, color: C.text },
   detailMeta: { fontFamily: 'RobotoMono_400Regular', fontSize: 14, color: C.muted },
+  addPhotosBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: C.border,
+    alignSelf: 'flex-start',
+  },
+  addPhotosBtnDisabled: { opacity: 0.4 },
+  addPhotosBtnText: { fontFamily: 'Roboto_400Regular', fontSize: 14, color: C.muted },
 
   // Floating map button
   mapFloatWrap: {
