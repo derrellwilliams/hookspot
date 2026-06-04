@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 4,
   },
-  thumb: { width: 90, height: 90, borderRadius: 6, backgroundColor: C.border, flexShrink: 0 },
+  thumb: { width: 100, height: 100, borderRadius: 6, backgroundColor: C.border, flexShrink: 0 },
   meta: { flex: 1, gap: 3, paddingTop: 2 },
 
   // Angler row
