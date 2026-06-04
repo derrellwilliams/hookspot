@@ -7,6 +7,7 @@ import {
 import { router } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { supabase } from '../../lib/supabase'
+import { uploadAvatar } from '../../lib/upload'
 import { useAuthStore } from '../../store/useAuthStore'
 import { USERNAME_RE } from '../../lib/validation'
 import { MeshBackground } from '../../components/MeshBackground'
@@ -16,7 +17,7 @@ export default function OnboardingScreen() {
   const setUsernameStore = useAuthStore(s => s.setUsername)
 
   const [avatarUri, setAvatarUri] = useState(null)
-  const [avatarDataUrl, setAvatarDataUrl] = useState(null)
+  const [avatarAsset, setAvatarAsset] = useState(null)
   const [username, setUsernameVal] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
@@ -35,12 +36,11 @@ export default function OnboardingScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      base64: true,
       quality: 0.7,
     })
     if (result.canceled) return
     setAvatarUri(result.assets[0].uri)
-    setAvatarDataUrl(`data:image/jpeg;base64,${result.assets[0].base64}`)
+    setAvatarAsset(result.assets[0])
   }, [])
 
   async function checkUsername(val) {
@@ -89,7 +89,7 @@ export default function OnboardingScreen() {
 
   async function handleSave() {
     if (saving) return
-    if (!avatarDataUrl) {
+    if (!avatarAsset) {
       Alert.alert('Profile photo', 'Please choose a profile photo to continue.')
       return
     }
@@ -100,12 +100,14 @@ export default function OnboardingScreen() {
       const trimmedName = displayName.trim() || null
       const trimmedBio = bio.trim() || null
 
+      const avatarUrl = await uploadAvatar(user.id, avatarAsset)
+
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: user.id,
         username,
         display_name: trimmedName,
         bio: trimmedBio,
-        avatar_url: avatarDataUrl,
+        avatar_url: avatarUrl,
       })
       if (profileError) throw profileError
 
@@ -127,7 +129,7 @@ export default function OnboardingScreen() {
     }
   }
 
-  const canSubmit = usernameStatus === 'ok' && !!avatarDataUrl && !saving
+  const canSubmit = usernameStatus === 'ok' && !!avatarAsset && !saving
 
   return (
     <View style={styles.page}>

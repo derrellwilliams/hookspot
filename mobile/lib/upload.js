@@ -1,6 +1,23 @@
 import { supabase } from './supabase'
 import { storageKey } from './storage'
 
+/**
+ * Upload a user's avatar to the `avatars` storage bucket and return the public URL.
+ * Overwrites any previous avatar for the same user (upsert: true).
+ * Requires an `avatars` bucket to exist in Supabase Storage (public).
+ */
+export async function uploadAvatar(userId, asset) {
+  const storagePath = `${userId}/avatar.jpg`
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(storagePath, { uri: asset.uri, name: 'avatar.jpg', type: 'image/jpeg' }, {
+      upsert: true,
+      contentType: 'image/jpeg',
+    })
+  if (error) throw error
+  return supabase.storage.from('avatars').getPublicUrl(storagePath).data.publicUrl
+}
+
 // expo-image-picker v56 returns GPS in asset.exif with various key formats
 // depending on platform and iOS photo authorization level.
 export function parseGpsFromAsset(asset) {

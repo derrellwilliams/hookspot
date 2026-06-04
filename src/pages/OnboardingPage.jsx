@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { EditPencil, User } from 'iconoir-react'
 import { Button } from '../components/ui/index.js'
 import { useAuthStore } from '../store/useAuthStore.js'
-import { createImageDataUrl } from '../lib/imageUtils.js'
+import { uploadAvatar } from '../lib/avatarUpload.js'
 import { initPhotos } from '../lib/fileLoader.js'
 import { animateMesh, DEFAULT_BLOBS } from '../lib/mesh.js'
 import { USERNAME_RE } from '../lib/validation.js'
@@ -22,6 +22,7 @@ export function OnboardingPage() {
   )
   const [bio, setBio] = useState(user?.user_metadata?.bio || '')
   const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '')
+  const [avatarFile, setAvatarFile] = useState(null)
   const [usernameError, setUsernameError] = useState('')
   const [usernameOk, setUsernameOk] = useState(false)
   const [checking, setChecking] = useState(false)
@@ -77,12 +78,8 @@ export function OnboardingPage() {
   async function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    try {
-      const dataUrl = await createImageDataUrl(file)
-      setAvatarUrl(dataUrl)
-    } catch (err) {
-      console.error('[onboarding] avatar read failed', err)
-    }
+    setAvatarFile(file)
+    setAvatarUrl(URL.createObjectURL(file))
     e.target.value = ''
   }
 
@@ -95,6 +92,9 @@ export function OnboardingPage() {
     setSaving(true)
     setSaveError('')
     try {
+      const storedAvatarUrl = avatarFile
+        ? await uploadAvatar(user.id, avatarFile)
+        : (avatarUrl || null)
       const res = await fetch('/api/save-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +103,7 @@ export function OnboardingPage() {
           username,
           displayName: displayName.trim() || null,
           bio: bio.trim() || null,
-          avatarUrl: avatarUrl || null,
+          avatarUrl: storedAvatarUrl,
         }),
       })
       const json = await res.json()

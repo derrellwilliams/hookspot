@@ -24,7 +24,7 @@ import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
 import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
-import { createImageDataUrl } from '../lib/imageUtils.js'
+import { uploadAvatar } from '../lib/avatarUpload.js'
 import styles from './UserProfilePage.module.css'
 
 const spring = { type: 'spring', stiffness: 300, damping: 24 }
@@ -273,10 +273,10 @@ export function UserProfilePage() {
     if (!file || !myUser) return
     setUploading(true)
     try {
-      const dataUrl = await createImageDataUrl(file)
-      const { error } = await supabase.from('profiles').upsert({ id: myUser.id, avatar_url: dataUrl })
+      const url = await uploadAvatar(myUser.id, file)
+      const { error } = await supabase.from('profiles').upsert({ id: myUser.id, avatar_url: url })
       if (error) throw new Error(`Profile update failed: ${error.message}`)
-      setUser({ ...myUser, user_metadata: { ...myUser.user_metadata, avatar_url: dataUrl } })
+      setUser({ ...myUser, user_metadata: { ...myUser.user_metadata, avatar_url: url } })
       showToast('Profile photo updated!')
     } catch (err) {
       console.error('[hookspot] avatar upload failed', err)
@@ -306,7 +306,7 @@ export function UserProfilePage() {
         bio: editBio.trim() || null,
         avatar_url: myUser?.user_metadata?.avatar_url || null,
       })
-      setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, avatar_url: myUser?.user_metadata?.avatar_url ?? data.user.user_metadata?.avatar_url } })
+      setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, avatar_url: myUser?.user_metadata?.avatar_url } })
       setDialogOpen(false)
     } catch (err) {
       console.error('[hookspot] profile save failed', err)
@@ -357,7 +357,7 @@ export function UserProfilePage() {
         data: { gear_rods: editRods, gear_flies: editFlies },
       })
       if (error) throw error
-      setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, avatar_url: myUser?.user_metadata?.avatar_url ?? data.user.user_metadata?.avatar_url } })
+      setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, avatar_url: myUser?.user_metadata?.avatar_url } })
       setGearDialogOpen(false)
     } catch (err) {
       console.error('[hookspot] gear save failed', err)

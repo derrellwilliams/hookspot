@@ -10,6 +10,7 @@ import { Settings } from 'iconoir-react-native'
 import { supabase } from '../../lib/supabase'
 import { C } from '../../lib/theme'
 import { photoUrl } from '../../lib/storage'
+import { uploadAvatar } from '../../lib/upload'
 import { MeshBackground } from '../../components/MeshBackground'
 import { StatsCharts } from '../../components/StatsCharts'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -61,10 +62,12 @@ export default function ProfileScreen() {
   const user = useAuthStore(s => s.user)
   const setUser = useAuthStore(s => s.setUser)
   const signOut = useAuthStore(s => s.signOut)
+  const profile = useAuthStore(s => s.profile)
+  const setProfile = useAuthStore(s => s.setProfile)
   const groups = usePhotoStore(s => s.groups)
   const insets = useSafeAreaInsets()
 
-  const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url ?? null)
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? null)
   const [uploading, setUploading] = useState(false)
 
   const [editProfileOpen, setEditProfileOpen] = useState(false)
@@ -80,12 +83,6 @@ export default function ProfileScreen() {
   const [gearSaving, setGearSaving] = useState(false)
 
   const [activeTab, setActiveTab] = useState('catches')
-
-  useEffect(() => {
-    if (!user?.id) return
-    supabase.from('profiles').select('avatar_url').eq('id', user.id).single()
-      .then(({ data }) => { if (data?.avatar_url) setAvatarUrl(data.avatar_url) })
-  }, [user?.id])
 
   const ownGroups = useMemo(() =>
     groups
@@ -125,23 +122,22 @@ export default function ProfileScreen() {
     if (!granted) return
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      base64: true,
       quality: 0.7,
     })
     if (result.canceled) return
     setUploading(true)
     try {
-      const dataUrl = `data:image/jpeg;base64,${result.assets[0].base64}`
-      const { error } = await supabase.from('profiles').upsert({ id: user.id, avatar_url: dataUrl })
+      const url = await uploadAvatar(user.id, result.assets[0])
+      const { error } = await supabase.from('profiles').upsert({ id: user.id, avatar_url: url })
       if (error) throw error
-      setAvatarUrl(dataUrl)
-      setUser({ ...user, user_metadata: { ...user.user_metadata, avatar_url: dataUrl } })
+      setAvatarUrl(url)
+      setProfile({ avatar_url: url })
     } catch {
       Alert.alert('Error', 'Failed to update profile photo.')
     } finally {
       setUploading(false)
     }
-  }, [user, setUser])
+  }, [user.id, setProfile])
 
   const openEditProfile = useCallback(() => {
     setEditName(user?.user_metadata?.display_name || user?.user_metadata?.full_name || '')
@@ -162,13 +158,7 @@ export default function ProfileScreen() {
         bio: editBio.trim() || null,
         avatar_url: avatarUrl,
       })
-      setUser({
-        ...data.user,
-        user_metadata: {
-          ...data.user.user_metadata,
-          avatar_url: avatarUrl ?? data.user.user_metadata?.avatar_url,
-        },
-      })
+      setUser(data.user)
       setEditProfileOpen(false)
     } catch {
       Alert.alert('Error', 'Failed to save profile.')
@@ -224,13 +214,7 @@ export default function ProfileScreen() {
         data: { gear_rods: rods, gear_flies: flies },
       })
       if (error) throw error
-      setUser({
-        ...data.user,
-        user_metadata: {
-          ...data.user.user_metadata,
-          avatar_url: avatarUrl ?? data.user.user_metadata?.avatar_url,
-        },
-      })
+      setUser(data.user)
       setEditGearOpen(false)
     } catch {
       Alert.alert('Error', 'Failed to save gear.')

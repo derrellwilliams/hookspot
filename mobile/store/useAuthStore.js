@@ -28,6 +28,9 @@ export const useAuthStore = create((set) => ({
   },
   setSession: (session) => set({ session }),
   setUsername: (username) => set({ username }),
+  setProfile: (updates) => set(state => ({
+    profile: state.profile ? { ...state.profile, ...updates } : updates,
+  })),
   signOut: async () => {
     await supabase.auth.signOut()
     set({ user: null, session: null, profile: null, username: null })

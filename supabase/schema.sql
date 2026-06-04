@@ -94,5 +94,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- storage bucket (run separately or create manually in Storage tab)
+-- storage buckets (run separately or create manually in Storage tab)
 -- insert into storage.buckets (id, name, public) values ('catches', 'catches', true);
+-- insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true);
+-- See migrations/003_avatars_bucket.sql for full avatars bucket + RLS policies.
