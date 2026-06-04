@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { View, Image, StyleSheet } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import Reanimated, {
   useSharedValue, useAnimatedStyle,
   withRepeat, withTiming, Easing,
@@ -16,7 +16,6 @@ const DEFAULT_BLOBS = [
 ]
 
 const BLOB_SIZE = 500
-const noiseTexture = require('../assets/noise.png')
 
 function BlobView({ blob, index, t }) {
   const animStyle = useAnimatedStyle(() => ({
@@ -46,7 +45,6 @@ function BlobView({ blob, index, t }) {
 export function MeshBackground({
   blobs = DEFAULT_BLOBS,
   bgColor = '#1A1953',
-  noiseOpacity = 0.04,
 }) {
   const t = useSharedValue(0)
 
@@ -63,11 +61,6 @@ export function MeshBackground({
       {blobs.map((blob, i) => (
         <BlobView key={i} blob={blob} index={i} t={t} />
       ))}
-      <Image
-        source={noiseTexture}
-        style={[styles.noise, { opacity: noiseOpacity }]}
-        resizeMode="repeat"
-      />
     </View>
   )
 }
@@ -79,8 +72,5 @@ const styles = StyleSheet.create({
     height: BLOB_SIZE,
     marginLeft: -BLOB_SIZE / 2,
     marginTop: -BLOB_SIZE / 2,
-  },
-  noise: {
-    ...StyleSheet.absoluteFillObject,
   },
 })

@@ -255,9 +255,8 @@ export default function ProfileScreen() {
 
   const renderHeader = useCallback(() => (
     <View style={styles.header}>
-      {/* Hero section — mesh + grain behind avatar and stats */}
       <View style={styles.heroSection}>
-        <MeshBackground blobs={PROFILE_BLOBS} bgColor={C.bg} noiseOpacity={0.15} />
+        <MeshBackground blobs={PROFILE_BLOBS} bgColor={C.bg} />
         <TouchableOpacity style={styles.settingsBtn} onPress={openSettings} hitSlop={12}>
           <Settings width={20} height={20} color={C.text} strokeWidth={1.5} />
         </TouchableOpacity>
