@@ -6,19 +6,12 @@ import {
 import { Stack, useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../lib/supabase'
+import { C } from '../../lib/theme'
+import { photoUrl } from '../../lib/storage'
 import { groupPhotos } from '../../lib/groupPhotos'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
 import { formatDateFull, cleanSpecies } from '../../lib/formatters'
-
-const C = {
-  bg: '#202020',
-  surface: '#2c2c2e',
-  border: '#3a3a3c',
-  text: '#f4f4f5',
-  muted: '#8d8d8d',
-  accent: '#2563eb',
-}
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const GRID_PADDING = 12
@@ -26,15 +19,6 @@ const GRID_GAP = 8
 const CARD_W = (SCREEN_W - GRID_PADDING * 2 - GRID_GAP) / 2
 
 const QUERY_COLS = 'id, filename, user_id, catch_id, lat, lng, species, time, meta, storage_path'
-
-function storageKey(filename) {
-  return filename.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
-}
-
-function photoUrl(userId, filename, storagePath) {
-  const path = storagePath ?? `${userId}/${storageKey(filename)}`
-  return supabase.storage.from('catches').getPublicUrl(path).data.publicUrl
-}
 
 function normalize(row) {
   return { ...row, catchId: row.catch_id, time: row.time ? new Date(row.time).getTime() : null }
@@ -149,7 +133,7 @@ export default function UserProfileScreen() {
     return seen.size
   }, [groups])
 
-  async function handleFollow() {
+  const handleFollow = useCallback(async () => {
     if (!myUser || !profile) return
     setFollowLoading(true)
     try {
@@ -164,9 +148,9 @@ export default function UserProfileScreen() {
     } finally {
       setFollowLoading(false)
     }
-  }
+  }, [myUser, profile, photos, addPhotos])
 
-  async function handleUnfollow() {
+  const handleUnfollow = useCallback(async () => {
     if (!myUser || !profile) return
     setFollowLoading(true)
     try {
@@ -183,7 +167,7 @@ export default function UserProfileScreen() {
     } finally {
       setFollowLoading(false)
     }
-  }
+  }, [myUser, profile, removeUserPhotos])
 
   const renderHeader = useCallback(() => {
     if (!profile) return null
@@ -233,7 +217,7 @@ export default function UserProfileScreen() {
         )}
       </View>
     )
-  }, [profile, statsAll, statsYear, statsMonth, statsSpecies, isFollowing, followLoading])
+  }, [profile, statsAll, statsYear, statsMonth, statsSpecies, isFollowing, followLoading, handleFollow, handleUnfollow])
 
   const renderItem = useCallback(({ item }) => <CatchCard group={item} />, [])
   const keyExtractor = useCallback(item => item[0].catchId ?? item[0].filename, [])

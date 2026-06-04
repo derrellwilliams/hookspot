@@ -8,34 +8,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import { Settings } from 'iconoir-react-native'
 import { supabase } from '../../lib/supabase'
+import { C } from '../../lib/theme'
+import { photoUrl } from '../../lib/storage'
+import { MeshBackground } from '../../components/MeshBackground'
 import { StatsCharts } from '../../components/StatsCharts'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
 import { TAB_BAR_HEIGHT } from './_layout'
 import { formatDateFull, cleanSpecies, getDisplayName } from '../../lib/formatters'
 
-const C = {
-  bg: '#202020',
-  surface: '#2c2c2e',
-  border: '#3a3a3c',
-  text: '#f4f4f5',
-  muted: '#8d8d8d',
-  accent: '#2563eb',
-}
+const PROFILE_BLOBS = [
+  { x: 58, y: 33, color: '#2563eb', dx: 0.8,  dy: 0.6,  offset: 0.0 },
+  { x: 27, y: 45, color: '#64748b', dx: 0.7,  dy: -0.8, offset: 1.3 },
+  { x: 74, y: 66, color: '#1A1953', dx: -0.6, dy: 0.5,  offset: 2.6 },
+  { x: 35, y: 67, color: '#a1a1aa', dx: 0.9,  dy: -0.7, offset: 3.9 },
+  { x: 31, y: 18, color: '#2c2c2e', dx: 0.6,  dy: 0.8,  offset: 5.2 },
+  { x: 15, y: 55, color: '#060a1a', dx: -0.5, dy: 0.6,  offset: 6.5 },
+]
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const GRID_PADDING = 12
 const GRID_GAP = 8
 const CARD_W = (SCREEN_W - GRID_PADDING * 2 - GRID_GAP) / 2
-
-function storageKey(filename) {
-  return filename.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
-}
-
-function photoUrl(userId, filename, storagePath) {
-  const path = storagePath ?? `${userId}/${storageKey(filename)}`
-  return supabase.storage.from('catches').getPublicUrl(path).data.publicUrl
-}
 
 function StatBox({ label, value }) {
   return (
@@ -261,37 +255,40 @@ export default function ProfileScreen() {
 
   const renderHeader = useCallback(() => (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.settingsBtn} onPress={openSettings} hitSlop={12}>
-        <Settings width={20} height={20} color={C.text} strokeWidth={1.5} />
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.avatarWrap} onPress={pickAvatar} disabled={uploading}>
-        {avatarUrl
-          ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-          : (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
-            </View>
-          )
-        }
-        {uploading && (
-          <View style={styles.avatarOverlay}>
-            <ActivityIndicator color={C.text} size="small" />
+      {/* Hero section — mesh + grain behind avatar and stats */}
+      <View style={styles.heroSection}>
+        <MeshBackground blobs={PROFILE_BLOBS} bgColor={C.bg} noiseOpacity={0.15} />
+        <TouchableOpacity style={styles.settingsBtn} onPress={openSettings} hitSlop={12}>
+          <Settings width={20} height={20} color={C.text} strokeWidth={1.5} />
+        </TouchableOpacity>
+        <View style={styles.heroContent}>
+          <TouchableOpacity style={styles.avatarWrap} onPress={pickAvatar} disabled={uploading}>
+            {avatarUrl
+              ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+              : (
+                <View style={styles.avatarFallback}>
+                  <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
+                </View>
+              )
+            }
+            {uploading && (
+              <View style={styles.avatarOverlay}>
+                <ActivityIndicator color={C.text} size="small" />
+              </View>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.displayName}>{displayName}</Text>
+          {bio ? <Text style={styles.bio}>{bio}</Text> : null}
+          <View style={styles.statsRow}>
+            <StatBox label="All" value={statsAll} />
+            <View style={styles.statDivider} />
+            <StatBox label="Year" value={statsYear} />
+            <View style={styles.statDivider} />
+            <StatBox label="Month" value={statsMonth} />
+            <View style={styles.statDivider} />
+            <StatBox label="Species" value={statsSpecies} />
           </View>
-        )}
-      </TouchableOpacity>
-
-      <Text style={styles.displayName}>{displayName}</Text>
-      {bio ? <Text style={styles.bio}>{bio}</Text> : null}
-
-      <View style={styles.statsRow}>
-        <StatBox label="All" value={statsAll} />
-        <View style={styles.statDivider} />
-        <StatBox label="Year" value={statsYear} />
-        <View style={styles.statDivider} />
-        <StatBox label="Month" value={statsMonth} />
-        <View style={styles.statDivider} />
-        <StatBox label="Species" value={statsSpecies} />
+        </View>
       </View>
 
       <View style={styles.tabRow}>
@@ -485,8 +482,19 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
 
   // Header
-  header: { paddingHorizontal: GRID_PADDING, paddingTop: 20, paddingBottom: 16 },
-  settingsBtn: { position: 'absolute', top: 20, right: GRID_PADDING, zIndex: 1, padding: 4 },
+  header: { paddingHorizontal: GRID_PADDING, paddingBottom: 16 },
+  heroSection: {
+    overflow: 'hidden',
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  heroContent: {
+    paddingHorizontal: GRID_PADDING,
+    paddingTop: 32,
+    paddingBottom: 28,
+    alignItems: 'center',
+  },
+  settingsBtn: { position: 'absolute', top: 16, right: 16, zIndex: 1, padding: 4 },
   avatarWrap: { width: 80, height: 80, borderRadius: 40, alignSelf: 'center', marginBottom: 12 },
   avatar: { width: 80, height: 80, borderRadius: 40 },
   avatarFallback: {
@@ -502,7 +510,7 @@ const styles = StyleSheet.create({
   bio: { fontSize: 14, color: C.muted, textAlign: 'center', lineHeight: 20, marginBottom: 16 },
 
   // Stats
-  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   statBox: { alignItems: 'center', paddingHorizontal: 16 },
   statValue: { fontSize: 20, fontWeight: '700', color: C.text },
   statLabel: { fontSize: 11, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },

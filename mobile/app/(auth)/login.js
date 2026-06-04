@@ -1,67 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native'
-import Reanimated, {
-  useSharedValue, useAnimatedStyle,
-  withRepeat, withTiming, Easing,
-} from 'react-native-reanimated'
-import { Svg, Defs, RadialGradient, Stop, Circle } from 'react-native-svg'
 import { supabase } from '../../lib/supabase'
-
-const BLOBS = [
-  { x: 62, y: 28, color: '#3b82f6', dx: 0.8,  dy: 0.6  },
-  { x: 22, y: 52, color: '#60a5fa', dx: 0.7,  dy: -0.8 },
-  { x: 78, y: 68, color: '#0ea5e9', dx: -0.6, dy: 0.5  },
-  { x: 38, y: 72, color: '#818cf8', dx: 0.9,  dy: -0.7 },
-  { x: 15, y: 36, color: '#a5b4fc', dx: 0.5,  dy: 0.4  },
-  { x: 48, y: 14, color: '#38bdf8', dx: 0.6,  dy: 0.8  },
-]
-
-const BLOB_SIZE = 500
-
-function MeshBackground() {
-  const t = useSharedValue(0)
-
-  useEffect(() => {
-    t.value = withRepeat(
-      withTiming(1000, { duration: 1_100_000, easing: Easing.linear }),
-      -1, false,
-    )
-  }, [])
-
-  const s0 = useAnimatedStyle(() => ({ transform: [{ translateX: Math.sin(t.value * BLOBS[0].dx + 0.0) * 30 }, { translateY: Math.cos(t.value * BLOBS[0].dy + 0.0) * 24 }] }))
-  const s1 = useAnimatedStyle(() => ({ transform: [{ translateX: Math.sin(t.value * BLOBS[1].dx + 1.3) * 30 }, { translateY: Math.cos(t.value * BLOBS[1].dy + 1.1) * 24 }] }))
-  const s2 = useAnimatedStyle(() => ({ transform: [{ translateX: Math.sin(t.value * BLOBS[2].dx + 2.6) * 30 }, { translateY: Math.cos(t.value * BLOBS[2].dy + 2.2) * 24 }] }))
-  const s3 = useAnimatedStyle(() => ({ transform: [{ translateX: Math.sin(t.value * BLOBS[3].dx + 3.9) * 30 }, { translateY: Math.cos(t.value * BLOBS[3].dy + 3.3) * 24 }] }))
-  const s4 = useAnimatedStyle(() => ({ transform: [{ translateX: Math.sin(t.value * BLOBS[4].dx + 5.2) * 30 }, { translateY: Math.cos(t.value * BLOBS[4].dy + 4.4) * 24 }] }))
-  const s5 = useAnimatedStyle(() => ({ transform: [{ translateX: Math.sin(t.value * BLOBS[5].dx + 6.5) * 30 }, { translateY: Math.cos(t.value * BLOBS[5].dy + 5.5) * 24 }] }))
-
-  const blobStyles = [s0, s1, s2, s3, s4, s5]
-
-  return (
-    <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#1A1953' }]} />
-      {BLOBS.map((blob, i) => (
-        <Reanimated.View
-          key={i}
-          style={[styles.blobWrap, { left: `${blob.x}%`, top: `${blob.y}%` }, blobStyles[i]]}
-        >
-          <Svg width={BLOB_SIZE} height={BLOB_SIZE} viewBox="0 0 100 100">
-            <Defs>
-              <RadialGradient id={`g${i}`} cx="50%" cy="50%" r="50%">
-                <Stop offset="0%" stopColor={blob.color} stopOpacity="0.9" />
-                <Stop offset="100%" stopColor={blob.color} stopOpacity="0" />
-              </RadialGradient>
-            </Defs>
-            <Circle cx="50" cy="50" r="50" fill={`url(#g${i})`} />
-          </Svg>
-        </Reanimated.View>
-      ))}
-    </View>
-  )
-}
+import { MeshBackground } from '../../components/MeshBackground'
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('')
@@ -161,13 +104,6 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#1A1953' },
-  blobWrap: {
-    position: 'absolute',
-    width: BLOB_SIZE,
-    height: BLOB_SIZE,
-    marginLeft: -BLOB_SIZE / 2,
-    marginTop: -BLOB_SIZE / 2,
-  },
   center: {
     flex: 1,
     justifyContent: 'center',

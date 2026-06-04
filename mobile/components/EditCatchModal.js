@@ -6,26 +6,10 @@ import {
 } from 'react-native'
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist'
 import { supabase } from '../lib/supabase'
+import { C } from '../lib/theme'
+import { photoUrl } from '../lib/storage'
 import { useAuthStore } from '../store/useAuthStore'
 import { usePhotoStore } from '../store/usePhotoStore'
-
-const C = {
-  bg: '#202020',
-  surface: '#2c2c2e',
-  border: '#3a3a3c',
-  text: '#f4f4f5',
-  muted: '#8d8d8d',
-  accent: '#2563eb',
-}
-
-function storageKey(filename) {
-  return filename.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
-}
-
-function photoUrl(userId, filename, storagePath) {
-  const path = storagePath ?? `${userId}/${storageKey(filename)}`
-  return supabase.storage.from('catches').getPublicUrl(path).data.publicUrl
-}
 
 function selectFromActionSheet(title, options, onSelect) {
   if (Platform.OS === 'ios') {
@@ -75,22 +59,41 @@ export function EditCatchModal({ visible, group, onClose, onSaved }) {
     try {
       const updatedMeta = { ...lead.meta, rod: rod || undefined, fly: fly || undefined }
 
-      let photoQuery = supabase.from('photos').update({ species: species || null, meta: updatedMeta })
-      photoQuery = lead.id
-        ? photoQuery.eq('id', lead.id)
-        : photoQuery.eq('filename', lead.filename).eq('user_id', user.id)
-      const { error } = await photoQuery
-      if (error) throw error
-
       if (lead.catchId) {
+        // Bulk-update species for all photos in the catch, then update lead meta
+        const { error: speciesErr } = await supabase.from('photos')
+          .update({ species: species || null })
+          .eq('catch_id', lead.catchId)
+        if (speciesErr) throw speciesErr
+
+        let metaQuery = supabase.from('photos').update({ meta: updatedMeta })
+        metaQuery = lead.id
+          ? metaQuery.eq('id', lead.id)
+          : metaQuery.eq('filename', lead.filename).eq('user_id', user.id)
+        const { error: metaErr } = await metaQuery
+        if (metaErr) throw metaErr
+
         const { error: catchErr } = await supabase.from('catches')
           .update({ species: species || null, rod: rod || null, fly: fly || null })
           .eq('id', lead.catchId)
           .eq('user_id', user.id)
         if (catchErr) throw catchErr
+      } else {
+        let photoQuery = supabase.from('photos').update({ species: species || null, meta: updatedMeta })
+        photoQuery = lead.id
+          ? photoQuery.eq('id', lead.id)
+          : photoQuery.eq('filename', lead.filename).eq('user_id', user.id)
+        const { error } = await photoQuery
+        if (error) throw error
       }
 
-      updatePhoto({ ...lead, species: species || undefined, meta: updatedMeta })
+      // Update all group photos in the store
+      group.forEach((p, i) => {
+        updatePhoto(i === 0
+          ? { ...p, species: species || undefined, meta: updatedMeta }
+          : { ...p, species: species || undefined }
+        )
+      })
 
       const currentOrder = localPhotos.map(p => p.id ?? p.filename)
       const orderChanged = localPhotos.length > 1 &&

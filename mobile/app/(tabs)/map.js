@@ -8,6 +8,8 @@ import { EditPencil, Trash, Xmark, Map as MapIcon, Plus } from 'iconoir-react-na
 import Constants from 'expo-constants'
 import * as ImagePicker from 'expo-image-picker'
 import { supabase } from '../../lib/supabase'
+import { C } from '../../lib/theme'
+import { storageKey, photoUrl } from '../../lib/storage'
 import { addPhotosToGroup } from '../../lib/upload'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
@@ -21,23 +23,6 @@ const MAP_STYLE = 'mapbox://styles/derrellwilliams/cmoc96j0y000i01r90nqr62du'
 
 const BOUNDS_PADDING_DEG = 0.008
 const BOUNDS_SUBSET_FRACTION = 0.8
-
-const C = {
-  bg: '#202020',
-  surface: '#2c2c2e',
-  border: '#3a3a3c',
-  text: '#f4f4f5',
-  muted: '#8d8d8d',
-}
-
-function storageKey(filename) {
-  return filename.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
-}
-
-function photoUrl(userId, filename, storagePath) {
-  const path = storagePath ?? `${userId}/${storageKey(filename)}`
-  return supabase.storage.from('catches').getPublicUrl(path).data.publicUrl
-}
 
 function AnglerRow({ user, profile }) {
   const avatarUrl = profile?.avatar_url

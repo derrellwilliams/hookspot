@@ -13,18 +13,9 @@ import { useAuthStore } from '../store/useAuthStore'
 import { usePhotoStore } from '../store/usePhotoStore'
 import { uploadCatch, parseGpsFromAsset } from '../lib/upload'
 import { supabase } from '../lib/supabase'
+import { C } from '../lib/theme'
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
-
-const C = {
-  bg: '#202020',
-  surface: '#2c2c2e',
-  border: '#3a3a3c',
-  text: '#f4f4f5',
-  muted: '#8d8d8d',
-  accent: '#2563eb',
-  danger: '#ef4444',
-}
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const THUMB_SIZE = 72

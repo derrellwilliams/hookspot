@@ -1,8 +1,5 @@
 import { supabase } from './supabase'
-
-function storageKey(filename) {
-  return filename.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
-}
+import { storageKey } from './storage'
 
 // expo-image-picker v56 returns GPS in asset.exif with various key formats
 // depending on platform and iOS photo authorization level.
