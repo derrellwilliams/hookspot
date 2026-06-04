@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   // List
   listContent: { paddingBottom: 32, paddingHorizontal: 20 },
   listHeader: { paddingVertical: 14 },
-  listHeaderText: { fontFamily: 'RobotoCondensed_500Medium', fontSize: 15, color: C.text },
+  listHeaderText: { fontFamily: 'RobotoCondensed_500Medium', fontSize: 16, color: C.text },
   loadMoreSpinner: { paddingVertical: 20 },
 
   item: {
@@ -434,13 +434,13 @@ const styles = StyleSheet.create({
     backgroundColor: C.border,
     alignItems: 'center', justifyContent: 'center',
   },
-  anglerInitial: { color: C.muted, fontSize: 8, fontWeight: '700' },
-  anglerName: { fontFamily: 'RobotoCondensed_400Regular', fontSize: 15, color: C.muted },
+  anglerInitial: { color: C.muted, fontSize: 10, fontWeight: '700' },
+  anglerName: { fontFamily: 'RobotoCondensed_400Regular', fontSize: 16, color: C.muted },
 
   species: { fontFamily: 'Roboto_700Bold', fontSize: 22, color: C.text },
   speciesEmpty: { fontFamily: 'Roboto_400Regular', fontSize: 22, color: C.muted, fontStyle: 'italic' },
-  datetime: { fontFamily: 'RobotoMono_400Regular', fontSize: 12, color: C.muted },
-  location: { fontFamily: 'RobotoMono_400Regular', fontSize: 12, color: C.muted },
+  datetime: { fontFamily: 'RobotoMono_400Regular', fontSize: 14, color: C.muted },
+  location: { fontFamily: 'RobotoMono_400Regular', fontSize: 14, color: C.muted },
 
   // Detail
   detailContainer: { paddingBottom: 40 },
@@ -459,8 +459,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   detailBody: { paddingHorizontal: 20, paddingTop: 14, gap: 4 },
-  detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 26, color: C.text },
-  detailMeta: { fontFamily: 'RobotoMono_400Regular', fontSize: 14, color: C.muted },
+  detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 28, color: C.text },
+  detailMeta: { fontFamily: 'RobotoMono_400Regular', fontSize: 16, color: C.muted },
   addPhotosBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   addPhotosBtnDisabled: { opacity: 0.4 },
-  addPhotosBtnText: { fontFamily: 'Roboto_400Regular', fontSize: 14, color: C.muted },
+  addPhotosBtnText: { fontFamily: 'Roboto_400Regular', fontSize: 16, color: C.muted },
 
   // Floating map button
   mapFloatWrap: {
@@ -497,5 +497,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 12,
   },
-  mapFloatBtnText: { fontFamily: 'Roboto_700Bold', fontSize: 14, color: '#fff' },
+  mapFloatBtnText: { fontFamily: 'Roboto_700Bold', fontSize: 16, color: '#fff' },
 })

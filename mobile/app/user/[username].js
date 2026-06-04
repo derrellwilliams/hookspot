@@ -274,7 +274,7 @@ export default function UserProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   centered: { flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
-  errorText: { color: C.muted, fontSize: 15 },
+  errorText: { color: C.muted, fontSize: 16 },
 
   profileHeader: { paddingHorizontal: GRID_PADDING, paddingTop: 24, paddingBottom: 16, alignItems: 'center' },
 
@@ -283,15 +283,15 @@ const styles = StyleSheet.create({
     width: 80, height: 80, borderRadius: 40,
     backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  avatarInitial: { fontSize: 32, fontWeight: '600', color: C.text },
+  avatarInitial: { fontSize: 36, fontWeight: '600', color: C.text },
 
-  displayName: { fontSize: 20, fontWeight: '700', color: C.text, marginBottom: 4 },
-  bio: { fontSize: 14, color: C.muted, textAlign: 'center', lineHeight: 20, marginBottom: 16 },
+  displayName: { fontSize: 22, fontWeight: '700', color: C.text, marginBottom: 4 },
+  bio: { fontSize: 16, color: C.muted, textAlign: 'center', lineHeight: 22, marginBottom: 16 },
 
   statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   statBox: { alignItems: 'center', paddingHorizontal: 16 },
-  statValue: { fontSize: 20, fontWeight: '700', color: C.text },
-  statLabel: { fontSize: 11, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
+  statValue: { fontSize: 22, fontWeight: '700', color: C.text },
+  statLabel: { fontSize: 12, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
   statDivider: { width: 1, height: 28, backgroundColor: C.border },
 
   followBtn: {
@@ -305,11 +305,11 @@ const styles = StyleSheet.create({
   },
   followBtnFollowing: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   followBtnDisabled: { opacity: 0.6 },
-  followBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  followBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
   followBtnTextFollowing: { color: C.muted },
 
   sectionLabel: {
-    fontSize: 13, fontWeight: '600', color: C.muted,
+    fontSize: 14, fontWeight: '600', color: C.muted,
     textTransform: 'uppercase', letterSpacing: 0.8,
     alignSelf: 'flex-start', width: '100%', marginBottom: 10,
   },
@@ -318,9 +318,9 @@ const styles = StyleSheet.create({
   catchCard: { width: CARD_W, borderRadius: 10, overflow: 'hidden', backgroundColor: C.surface },
   catchImg: { width: CARD_W, height: CARD_W * 0.75, backgroundColor: C.border },
   catchMeta: { padding: 8 },
-  catchSpecies: { fontSize: 13, fontWeight: '600', color: C.text, marginBottom: 2 },
-  catchDate: { fontSize: 11, color: C.muted },
+  catchSpecies: { fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 2 },
+  catchDate: { fontSize: 12, color: C.muted },
 
   emptyState: { alignItems: 'center', paddingTop: 40 },
-  emptyText: { color: C.muted, fontSize: 15 },
+  emptyText: { color: C.muted, fontSize: 16 },
 })

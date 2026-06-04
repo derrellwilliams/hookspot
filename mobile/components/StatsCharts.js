@@ -141,7 +141,7 @@ function BarChartSvg({ data, width, height = 160, color = BLUES[0] }) {
           {i > 0 && (
             <Line x1={PAD_L} y1={y} x2={width} y2={y} stroke={C.rule} strokeDasharray="3,3" />
           )}
-          <SvgText x={PAD_L - 4} y={y + 4} textAnchor="end" fill={C.muted} fontSize={9}>
+          <SvgText x={PAD_L - 4} y={y + 4} textAnchor="end" fill={C.muted} fontSize={10}>
             {value}
           </SvgText>
         </G>
@@ -164,7 +164,7 @@ function BarChartSvg({ data, width, height = 160, color = BLUES[0] }) {
                 y={height - 4}
                 textAnchor="middle"
                 fill={C.muted}
-                fontSize={9}
+                fontSize={10}
               >
                 {label}
               </SvgText>
@@ -196,10 +196,10 @@ function DonutChart({ data, radius = 84, innerRadius = 52, size = 180, totalLabe
   return (
     <Svg width={size} height={size}>
       {slices.map((s, i) => <Path key={i} d={s.d} fill={s.color} />)}
-      <SvgText x={cx} y={cy - 6} textAnchor="middle" fill={C.text} fontSize={20} fontWeight="700">
+      <SvgText x={cx} y={cy - 6} textAnchor="middle" fill={C.text} fontSize={22} fontWeight="700">
         {total}
       </SvgText>
-      <SvgText x={cx} y={cy + 12} textAnchor="middle" fill={C.muted} fontSize={11}>
+      <SvgText x={cx} y={cy + 12} textAnchor="middle" fill={C.muted} fontSize={12}>
         {totalLabel ?? 'total'}
       </SvgText>
     </Svg>
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: C.muted,
     textTransform: 'uppercase',
@@ -304,10 +304,10 @@ const styles = StyleSheet.create({
   legend: { flex: 1, gap: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   legendDot: { width: 8, height: 8, borderRadius: 4, flexShrink: 0 },
-  legendLabel: { flex: 1, color: C.text, fontSize: 13 },
-  legendValue: { color: C.muted, fontSize: 13 },
+  legendLabel: { flex: 1, color: C.text, fontSize: 14 },
+  legendValue: { color: C.muted, fontSize: 14 },
 
   // Empty
   empty: { alignItems: 'center', paddingVertical: 32 },
-  emptyText: { color: C.muted, fontSize: 14 },
+  emptyText: { color: C.muted, fontSize: 16 },
 })

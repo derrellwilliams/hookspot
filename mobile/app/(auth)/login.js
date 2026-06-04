@@ -5,6 +5,18 @@ import {
 } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { MeshBackground } from '../../components/MeshBackground'
+import { C } from '../../lib/theme'
+
+const BLOBS = [
+  { x: 58, y: 33, color: '#2563eb', dx: 0.8,  dy: 0.6,  offset: 0.0 },
+  { x: 27, y: 45, color: '#64748b', dx: 0.7,  dy: -0.8, offset: 1.3 },
+  { x: 74, y: 66, color: '#1A1953', dx: -0.6, dy: 0.5,  offset: 2.6 },
+  { x: 35, y: 67, color: '#a1a1aa', dx: 0.9,  dy: -0.7, offset: 3.9 },
+  { x: 18, y: 40, color: '#f4f4f5', dx: 0.5,  dy: 0.4,  offset: 5.2 },
+  { x: 31, y: 18, color: '#2c2c2e', dx: 0.6,  dy: 0.8,  offset: 6.5 },
+  { x: 72, y: 88, color: '#2563eb', dx: -0.7, dy: 0.5,  offset: 7.8 },
+  { x: 18, y: 82, color: '#64748b', dx: 0.6,  dy: -0.6, offset: 9.1 },
+]
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('')
@@ -32,7 +44,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.page}>
-      <MeshBackground />
+      <MeshBackground blobs={BLOBS} bgColor="#1A1953" />
       <KeyboardAvoidingView
         style={styles.center}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -42,7 +54,6 @@ export default function LoginScreen() {
         <View style={styles.form}>
           {!sent ? (
             <>
-              <Text style={styles.label}>Email</Text>
               <TextInput
                 style={styles.input}
                 placeholder="your@email.com"
@@ -66,7 +77,6 @@ export default function LoginScreen() {
           ) : (
             <>
               <Text style={styles.sent}>Check your email for a 6-digit code.</Text>
-              <Text style={styles.label}>Code</Text>
               <TextInput
                 style={styles.input}
                 placeholder="123456"
@@ -112,7 +122,7 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     fontFamily: 'SpaceMono_700Bold',
-    fontSize: 26,
+    fontSize: 36,
     color: '#ffffff',
     textAlign: 'center',
   },
@@ -121,7 +131,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: 'Roboto_700Bold',
-    fontSize: 11,
+    fontSize: 12,
     color: 'rgba(255,255,255,0.5)',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -133,9 +143,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 14,
-    fontSize: 15,
+    fontSize: 16,
     color: '#ffffff',
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: 'RobotoMono_400Regular',
   },
   button: {
     height: 48,
@@ -148,23 +158,23 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.5 },
   buttonText: {
     fontFamily: 'Roboto_700Bold',
-    fontSize: 14,
+    fontSize: 16,
     color: '#ffffff',
   },
   sent: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 15,
+    fontSize: 16,
     color: 'rgba(255,255,255,0.7)',
     textAlign: 'center',
   },
   error: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 13,
+    fontSize: 14,
     color: '#f87171',
   },
   resend: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 13,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
     marginTop: 4,

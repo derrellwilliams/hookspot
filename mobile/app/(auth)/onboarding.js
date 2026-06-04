@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     fontFamily: 'SpaceMono_700Bold',
-    fontSize: 26,
+    fontSize: 28,
     color: '#ffffff',
     textAlign: 'center',
   },
@@ -256,13 +256,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontFamily: 'Roboto_700Bold',
-    fontSize: 18,
+    fontSize: 22,
     color: '#ffffff',
     marginBottom: 12,
   },
   label: {
     fontFamily: 'Roboto_700Bold',
-    fontSize: 11,
+    fontSize: 12,
     color: 'rgba(255,255,255,0.5)',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholderText: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 11,
+    fontSize: 12,
     color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
   },
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 14,
-    fontSize: 15,
+    fontSize: 16,
     color: '#ffffff',
     fontFamily: 'Roboto_400Regular',
     marginTop: 6,
@@ -312,19 +312,19 @@ const styles = StyleSheet.create({
   inputMultiline: { height: 80, paddingTop: 12 },
   fieldError: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 12,
+    fontSize: 14,
     color: '#f87171',
     marginTop: 3,
   },
   fieldHint: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 12,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.4)',
     marginTop: 3,
   },
   fieldOk: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 12,
+    fontSize: 14,
     color: '#4ade80',
     marginTop: 3,
   },
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.45 },
   buttonText: {
     fontFamily: 'Roboto_700Bold',
-    fontSize: 14,
+    fontSize: 16,
     color: '#ffffff',
   },
 })

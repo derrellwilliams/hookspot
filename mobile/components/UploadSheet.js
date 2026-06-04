@@ -430,8 +430,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: C.border,
   },
-  headerCancel: { color: C.muted, fontSize: 16, width: 56 },
-  headerTitle: { color: C.text, fontSize: 17, fontWeight: '600' },
+  headerCancel: { color: C.muted, fontSize: 18, width: 56 },
+  headerTitle: { color: C.text, fontSize: 18, fontWeight: '600' },
   dimmed: { opacity: 0.4 },
 
   // Location step
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     borderBottomColor: C.border,
   },
   locatingRow: { flexDirection: 'row', alignItems: 'center' },
-  locationBannerText: { color: C.muted, fontSize: 13 },
+  locationBannerText: { color: C.muted, fontSize: 14 },
   pin: {
     width: 16,
     height: 16,
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
   },
-  skipBtnText: { color: C.muted, fontSize: 15, fontWeight: '600' },
+  skipBtnText: { color: C.muted, fontSize: 16, fontWeight: '600' },
   nextBtn: {
     flex: 2,
     backgroundColor: C.accent,
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   nextBtnDisabled: { opacity: 0.4 },
-  nextBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  nextBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 
   // Details step
   detailsContent: { paddingBottom: 32 },
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  thumbRemoveText: { color: '#fff', fontSize: 9, lineHeight: 14 },
+  thumbRemoveText: { color: '#fff', fontSize: 10, lineHeight: 14 },
 
   form: { padding: 16 },
   identifyBtn: {
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
   identifyBtnDisabled: { opacity: 0.5 },
-  identifyBtnText: { color: C.muted, fontSize: 13 },
+  identifyBtnText: { color: C.muted, fontSize: 14 },
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 15,
+    fontSize: 16,
     borderWidth: 1,
     borderColor: C.border,
   },
@@ -547,9 +547,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  pickerText: { flex: 1, fontSize: 15, color: C.text },
+  pickerText: { flex: 1, fontSize: 16, color: C.text },
   pickerPlaceholder: { color: C.muted },
-  pickerChevron: { color: C.muted, fontSize: 20, lineHeight: 24 },
+  pickerChevron: { color: C.muted, fontSize: 22, lineHeight: 26 },
 
   submitBtn: {
     marginTop: 24,
@@ -559,5 +559,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  submitBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 })

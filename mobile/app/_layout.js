@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { Stack } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, LogBox } from 'react-native'
+
+LogBox.ignoreLogs(['AuthApiError'])
 import { useFonts } from 'expo-font'
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { RobotoCondensed_400Regular, RobotoCondensed_500Medium } from '@expo-google-fonts/roboto-condensed'

@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: 'RobotoCondensed_500Medium',
-    fontSize: 10,
+    fontSize: 12,
     letterSpacing: 0.4,
     color: 'rgba(255,255,255,0.38)',
   },

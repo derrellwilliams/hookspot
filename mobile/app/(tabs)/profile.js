@@ -500,22 +500,22 @@ const styles = StyleSheet.create({
     width: 80, height: 80, borderRadius: 40,
     backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center',
   },
-  avatarInitial: { fontSize: 32, fontWeight: '600', color: C.text },
+  avatarInitial: { fontSize: 36, fontWeight: '600', color: C.text },
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject, borderRadius: 40,
     backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
   },
-  displayName: { fontSize: 20, fontWeight: '700', color: C.text, textAlign: 'center', marginBottom: 4 },
-  bio: { fontSize: 14, color: C.muted, textAlign: 'center', lineHeight: 20, marginBottom: 16 },
+  displayName: { fontSize: 22, fontWeight: '700', color: C.text, textAlign: 'center', marginBottom: 4 },
+  bio: { fontSize: 16, color: C.muted, textAlign: 'center', lineHeight: 22, marginBottom: 16 },
 
   // Stats
   statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   statBox: { alignItems: 'center', paddingHorizontal: 16 },
-  statValue: { fontSize: 20, fontWeight: '700', color: C.text },
-  statLabel: { fontSize: 11, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
+  statValue: { fontSize: 22, fontWeight: '700', color: C.text },
+  statLabel: { fontSize: 12, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
   statDivider: { width: 1, height: 28, backgroundColor: C.border },
   sectionLabel: {
-    fontSize: 13, fontWeight: '600', color: C.muted,
+    fontSize: 14, fontWeight: '600', color: C.muted,
     textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10,
   },
 
@@ -524,12 +524,12 @@ const styles = StyleSheet.create({
   catchCard: { width: CARD_W, borderRadius: 10, overflow: 'hidden', backgroundColor: C.surface },
   catchImg: { width: CARD_W, height: CARD_W * 0.75, backgroundColor: C.border },
   catchMeta: { padding: 8 },
-  catchSpecies: { fontSize: 13, fontWeight: '600', color: C.text, marginBottom: 2 },
-  catchDate: { fontSize: 11, color: C.muted },
+  catchSpecies: { fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 2 },
+  catchDate: { fontSize: 12, color: C.muted },
 
   // Empty
   emptyState: { alignItems: 'center', paddingTop: 40 },
-  emptyText: { color: C.muted, fontSize: 15 },
+  emptyText: { color: C.muted, fontSize: 16 },
 
   // Modal
   modalContainer: { flex: 1, backgroundColor: C.bg },
@@ -538,9 +538,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: C.border,
   },
-  modalCancel: { color: C.muted, fontSize: 16 },
-  modalTitle: { color: C.text, fontSize: 17, fontWeight: '600' },
-  modalSave: { color: C.accent, fontSize: 16, fontWeight: '600' },
+  modalCancel: { color: C.muted, fontSize: 18 },
+  modalTitle: { color: C.text, fontSize: 18, fontWeight: '600' },
+  modalSave: { color: C.accent, fontSize: 18, fontWeight: '600' },
   disabledText: { opacity: 0.5 },
   modalBody: { padding: 16 },
   fieldLabel: {
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: C.surface, color: C.text, borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 16,
     borderWidth: 1, borderColor: C.border,
   },
   inputMultiline: { height: 100 },
@@ -560,12 +560,12 @@ const styles = StyleSheet.create({
     borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
     marginBottom: 6, borderWidth: 1, borderColor: C.border,
   },
-  gearItemText: { flex: 1, color: C.text, fontSize: 14 },
-  gearRemove: { color: C.muted, fontSize: 16, paddingLeft: 8 },
-  gearEmpty: { color: C.muted, fontSize: 14, marginBottom: 8, fontStyle: 'italic' },
+  gearItemText: { flex: 1, color: C.text, fontSize: 16 },
+  gearRemove: { color: C.muted, fontSize: 18, paddingLeft: 8 },
+  gearEmpty: { color: C.muted, fontSize: 16, marginBottom: 8, fontStyle: 'italic' },
   gearAddRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   addBtn: { backgroundColor: C.accent, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 12, justifyContent: 'center' },
-  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
 
   // Tab selector
   tabRow: {
@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3a3a3c',
   },
   tabPillText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
     color: C.muted,
   },

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { View, StyleSheet, useWindowDimensions } from 'react-native'
 import Reanimated, {
   useSharedValue, useAnimatedStyle,
   withRepeat, withTiming, Easing,
@@ -15,9 +15,7 @@ const DEFAULT_BLOBS = [
   { x: 48, y: 14, color: '#38bdf8', dx: 0.6,  dy: 0.8,  offset: 6.5 },
 ]
 
-const BLOB_SIZE = 500
-
-function BlobView({ blob, index, t }) {
+function BlobView({ blob, index, t, size }) {
   const animStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: Math.sin(t.value * blob.dx + (blob.offset ?? 0)) * 30 },
@@ -27,9 +25,17 @@ function BlobView({ blob, index, t }) {
 
   return (
     <Reanimated.View
-      style={[styles.blobWrap, { left: `${blob.x}%`, top: `${blob.y}%` }, animStyle]}
+      style={[{
+        position: 'absolute',
+        width: size,
+        height: size,
+        marginLeft: -size / 2,
+        marginTop: -size / 2,
+        left: `${blob.x}%`,
+        top: `${blob.y}%`,
+      }, animStyle]}
     >
-      <Svg width={BLOB_SIZE} height={BLOB_SIZE} viewBox="0 0 100 100">
+      <Svg width={size} height={size} viewBox="0 0 100 100">
         <Defs>
           <RadialGradient id={`g${index}`} cx="50%" cy="50%" r="50%">
             <Stop offset="0%" stopColor={blob.color} stopOpacity="0.9" />
@@ -46,6 +52,9 @@ export function MeshBackground({
   blobs = DEFAULT_BLOBS,
   bgColor = '#1A1953',
 }) {
+  const { width, height } = useWindowDimensions()
+  // match desktop: each blob covers ~50% of the viewport in each direction
+  const blobSize = Math.max(width, height) * 1.1
   const t = useSharedValue(0)
 
   useEffect(() => {
@@ -59,18 +68,10 @@ export function MeshBackground({
     <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
       <View style={[StyleSheet.absoluteFillObject, { backgroundColor: bgColor }]} />
       {blobs.map((blob, i) => (
-        <BlobView key={i} blob={blob} index={i} t={t} />
+        <BlobView key={i} blob={blob} index={i} t={t} size={blobSize} />
       ))}
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  blobWrap: {
-    position: 'absolute',
-    width: BLOB_SIZE,
-    height: BLOB_SIZE,
-    marginLeft: -BLOB_SIZE / 2,
-    marginTop: -BLOB_SIZE / 2,
-  },
-})
+const styles = StyleSheet.create({})
