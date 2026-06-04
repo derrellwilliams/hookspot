@@ -291,18 +291,9 @@ export default function MapScreen() {
               />
               <View style={styles.imgBtns}>
                 {selected.user_id === user?.id && (
-                  <>
-                    <TouchableOpacity style={styles.imgBtn} onPress={() => setEditOpen(true)} hitSlop={4}>
-                      <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.imgBtn}
-                      onPress={() => selectedGroup && handleDelete(selectedGroup)}
-                      hitSlop={4}
-                    >
-                      <Trash width={16} height={16} color="#f87171" strokeWidth={2} />
-                    </TouchableOpacity>
-                  </>
+                  <TouchableOpacity style={styles.imgBtn} onPress={() => setEditOpen(true)} hitSlop={4}>
+                    <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
+                  </TouchableOpacity>
                 )}
                 <TouchableOpacity style={styles.imgBtn} onPress={clearSelected} hitSlop={4}>
                   <Xmark width={16} height={16} color="#fff" strokeWidth={2} />
@@ -334,22 +325,6 @@ export default function MapScreen() {
               )}
               {selectedFly && (
                 <Text style={styles.detailMeta}>{selectedFly}</Text>
-              )}
-              {selected.user_id === user?.id && (
-                <TouchableOpacity
-                  style={[styles.addPhotosBtn, addingPhotos && styles.addPhotosBtnDisabled]}
-                  onPress={() => handleAddPhotos(selected)}
-                  disabled={addingPhotos}
-                  activeOpacity={0.8}
-                >
-                  {addingPhotos
-                    ? <ActivityIndicator size="small" color={C.muted} />
-                    : <>
-                        <Plus width={14} height={14} color={C.muted} strokeWidth={2} />
-                        <Text style={styles.addPhotosBtnText}>Add photos</Text>
-                      </>
-                  }
-                </TouchableOpacity>
               )}
             </View>
           </BottomSheetScrollView>
@@ -398,8 +373,12 @@ export default function MapScreen() {
         visible={editOpen}
         group={selectedGroup}
         onClose={() => setEditOpen(false)}
-        onSaved={() => {
-          // selected stays open; the store update refreshes the detail view
+        onSaved={() => {}}
+        onAddPhotos={() => handleAddPhotos(selected)}
+        addingPhotos={addingPhotos}
+        onDelete={() => {
+          setEditOpen(false)
+          selectedGroup && handleDelete(selectedGroup)
         }}
       />
 

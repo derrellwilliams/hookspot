@@ -25,7 +25,7 @@ function selectFromActionSheet(title, options, onSelect) {
   }
 }
 
-export function EditCatchModal({ visible, group, onClose, onSaved }) {
+export function EditCatchModal({ visible, group, onClose, onSaved, onAddPhotos, addingPhotos, onDelete }) {
   const user = useAuthStore(s => s.user)
   const updatePhoto = usePhotoStore(s => s.updatePhoto)
   const reorderGroup = usePhotoStore(s => s.reorderGroup)
@@ -177,6 +177,27 @@ export function EditCatchModal({ visible, group, onClose, onSaved }) {
             </View>
           )}
 
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.actionBtn, addingPhotos && styles.actionBtnDisabled]}
+              onPress={onAddPhotos}
+              disabled={addingPhotos}
+              activeOpacity={0.8}
+            >
+              {addingPhotos
+                ? <ActivityIndicator size="small" color={C.muted} />
+                : <Text style={styles.actionBtnText}>Add photos</Text>
+              }
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.actionBtnDestructive]}
+              onPress={onDelete}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.actionBtnText, styles.actionBtnDestructiveText]}>Delete post</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.form}>
             <Text style={styles.fieldLabel}>Species</Text>
             <TextInput
@@ -268,6 +289,28 @@ const styles = StyleSheet.create({
     backgroundColor: C.surface,
   },
   photoThumbImg: { width: 80, height: 80 },
+
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnDisabled: { opacity: 0.4 },
+  actionBtnDestructive: { borderColor: '#f87171' },
+  actionBtnText: { fontSize: 15, color: C.muted },
+  actionBtnDestructiveText: { color: '#f87171' },
 
   form: { padding: 16 },
   fieldLabel: {
