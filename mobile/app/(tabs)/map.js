@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
+import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator, Alert, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import MapboxGL from '@rnmapbox/maps'
@@ -52,6 +52,7 @@ export default function MapScreen() {
   const removePhotos = usePhotoStore(s => s.removePhotos)
   const reset = usePhotoStore(s => s.reset)
   const insets = useSafeAreaInsets()
+  const { height: screenHeight } = useWindowDimensions()
   const tabBarInset = insets.bottom + TAB_BAR_HEIGHT + 20
   const cameraRef = useRef(null)
   const sheetRef = useRef(null)
@@ -108,6 +109,15 @@ export default function MapScreen() {
     }),
   }), [groups])
 
+  const flyToWithSheet = useCallback((lng, lat) => {
+    const sheetHeight = screenHeight * 0.50
+    cameraRef.current?.setCamera({
+      centerCoordinate: [lng, lat],
+      animationDuration: 400,
+      padding: { paddingBottom: sheetHeight, paddingTop: 0, paddingLeft: 0, paddingRight: 0 },
+    })
+  }, [screenHeight])
+
   const handleMarkerPress = useCallback((e) => {
     const props = e.features?.[0]?.properties
     if (!props) return
@@ -116,9 +126,10 @@ export default function MapScreen() {
       : groups.find(g => g[0].filename === props.filename && g[0].user_id === props.userId)
     if (group) {
       setSelected(group[0])
+      flyToWithSheet(group[0].lng, group[0].lat)
       sheetRef.current?.snapToIndex(1)
     }
-  }, [groups])
+  }, [groups, flyToWithSheet])
 
   const handleMapPress = useCallback(() => {
     setSelected(null)
@@ -128,9 +139,9 @@ export default function MapScreen() {
   const selectFromList = useCallback((group) => {
     const lead = group[0]
     setSelected(lead)
-    cameraRef.current?.setCamera({ centerCoordinate: [lead.lng, lead.lat], animationDuration: 500 })
+    flyToWithSheet(lead.lng, lead.lat)
     sheetRef.current?.snapToIndex(1)
-  }, [])
+  }, [flyToWithSheet])
 
   const clearSelected = useCallback(() => {
     setSelected(null)
@@ -248,7 +259,7 @@ export default function MapScreen() {
       >
         <MapboxGL.Camera
           ref={cameraRef}
-          defaultSettings={{ centerCoordinate: [-111.1, 39.5], zoomLevel: 6 }}
+          defaultSettings={{ centerCoordinate: [-111.891, 40.760], zoomLevel: 11 }}
         />
 
         {!loading && (
