@@ -27,6 +27,10 @@ export function createIdentifyHandler(anthropic, env) {
     const buf = await readBody(req, res, MAX_BODY_SIZE)
     if (buf === null) return
     const mediaType = (req.headers['content-type'] || 'image/jpeg').split(';')[0]
+    // Mobile clients send pre-encoded base64 (avoids Blob API incompatibility in React Native)
+    const base64Data = req.headers['x-content-encoding'] === 'base64'
+      ? buf.toString('utf8').trim()
+      : buf.toString('base64')
     try {
       const response = await anthropic.messages.create({
         model: IDENTIFY_MODEL,
@@ -34,7 +38,7 @@ export function createIdentifyHandler(anthropic, env) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: buf.toString('base64') } },
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
             { type: 'text', text: IDENTIFY_PROMPT },
           ],
         }],

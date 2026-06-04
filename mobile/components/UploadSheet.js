@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity, Modal, ScrollView,
-  Image, FlatList, StyleSheet, Alert, ActivityIndicator,
+  Image, StyleSheet, Alert, ActivityIndicator,
   Platform, ActionSheetIOS, KeyboardAvoidingView, Dimensions,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -101,6 +101,7 @@ export function UploadSheet() {
       allowsMultipleSelection: true,
       quality: 0.85,
       exif: true,
+      base64: true,
     })
     if (result.canceled) {
       setUploadOpen(false)
@@ -108,6 +109,11 @@ export function UploadSheet() {
     }
     const picked = result.assets
     setAssets(picked)
+
+    // Auto-identify using pre-decoded base64 — avoids React Native Blob API incompatibility
+    if (identifyUrl && picked[0]?.base64) {
+      runIdentify(picked[0].base64)
+    }
 
     const hasGps = parseGpsFromAsset(picked[0]) != null
     if (hasGps) {
@@ -145,20 +151,21 @@ export function UploadSheet() {
     setUploadOpen(false)
   }
 
-  async function onIdentify() {
-    if (!assets.length || !identifyUrl) return
+  async function runIdentify(base64Data) {
+    if (!base64Data || !identifyUrl) return
     setIdentifying(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const blob = await fetch(assets[0].uri).then(r => r.blob())
       const res = await fetch(identifyUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'image/jpeg',
+          'X-Content-Encoding': 'base64',
           'Authorization': `Bearer ${session?.access_token}`,
         },
-        body: blob,
+        body: base64Data,
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const { species: identified } = await res.json()
       if (identified && identified !== 'none') setSpecies(identified)
     } catch (e) {
@@ -233,9 +240,7 @@ export function UploadSheet() {
             gearFlies={gearFlies}
             uploading={uploading}
             onSubmit={submit}
-            canIdentify={!!identifyUrl}
             identifying={identifying}
-            onIdentify={onIdentify}
           />
         )}
       </KeyboardAvoidingView>
@@ -309,7 +314,7 @@ function LocationStep({ locating, pin, onPin, onNext, onSkip }) {
   )
 }
 
-function DetailsStep({ assets, onRemoveAsset, species, onSpeciesChange, rod, onRodChange, fly, onFlyChange, gearRods, gearFlies, uploading, onSubmit, canIdentify, identifying, onIdentify }) {
+function DetailsStep({ assets, onRemoveAsset, species, onSpeciesChange, rod, onRodChange, fly, onFlyChange, gearRods, gearFlies, uploading, onSubmit, identifying }) {
   const insets = useSafeAreaInsets()
 
   function pickRod() {
@@ -340,28 +345,20 @@ function DetailsStep({ assets, onRemoveAsset, species, onSpeciesChange, rod, onR
       {/* Form */}
       <View style={styles.form}>
         <Text style={styles.fieldLabel}>Species</Text>
-        <TextInput
-          style={styles.input}
-          value={species}
-          onChangeText={onSpeciesChange}
-          placeholder="e.g. Brown Trout"
-          placeholderTextColor={C.muted}
-          autoCapitalize="words"
-          returnKeyType="next"
-        />
-        {canIdentify && (
-          <TouchableOpacity
-            style={[styles.identifyBtn, identifying && styles.identifyBtnDisabled]}
-            onPress={onIdentify}
-            disabled={identifying || !assets.length}
-            activeOpacity={0.7}
-          >
-            {identifying
-              ? <ActivityIndicator size="small" color={C.muted} />
-              : <Text style={styles.identifyBtnText}>Identify species</Text>
-            }
-          </TouchableOpacity>
-        )}
+        <View style={styles.speciesRow}>
+          <TextInput
+            style={[styles.input, styles.speciesInput]}
+            value={species}
+            onChangeText={onSpeciesChange}
+            placeholder={identifying ? 'Identifying…' : 'e.g. Brown Trout'}
+            placeholderTextColor={C.muted}
+            autoCapitalize="words"
+            returnKeyType="next"
+          />
+          {identifying && (
+            <ActivityIndicator size="small" color={C.muted} style={styles.speciesSpinner} />
+          )}
+        </View>
 
         <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Rod</Text>
         {gearRods.length > 0 ? (
@@ -506,19 +503,9 @@ const styles = StyleSheet.create({
   thumbRemoveText: { color: '#fff', fontSize: 10, lineHeight: 14 },
 
   form: { padding: 16 },
-  identifyBtn: {
-    marginTop: 8,
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: C.border,
-    alignSelf: 'flex-start',
-    alignItems: 'center',
-    minWidth: 120,
-  },
-  identifyBtnDisabled: { opacity: 0.5 },
-  identifyBtnText: { color: C.muted, fontSize: 14 },
+  speciesRow: { flexDirection: 'row', alignItems: 'center' },
+  speciesInput: { flex: 1 },
+  speciesSpinner: { marginLeft: 10 },
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',
