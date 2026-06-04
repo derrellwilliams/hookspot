@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import MapboxGL from '@rnmapbox/maps'
 import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
-import { EditPencil, Trash, Xmark, Map as MapIcon, Plus } from 'iconoir-react-native'
+import { EditPencil, Trash, ArrowLeft, Map as MapIcon, Plus } from 'iconoir-react-native'
 import Constants from 'expo-constants'
 import * as ImagePicker from 'expo-image-picker'
 import { supabase } from '../../lib/supabase'
@@ -289,16 +289,14 @@ export default function MapScreen() {
                 style={styles.detailImage}
                 resizeMode="cover"
               />
-              <View style={styles.imgBtns}>
-                {selected.user_id === user?.id && (
-                  <TouchableOpacity style={styles.imgBtn} onPress={() => setEditOpen(true)} hitSlop={4}>
-                    <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity style={styles.imgBtn} onPress={clearSelected} hitSlop={4}>
-                  <Xmark width={16} height={16} color="#fff" strokeWidth={2} />
+              <TouchableOpacity style={styles.imgBtnBack} onPress={clearSelected} hitSlop={4}>
+                <ArrowLeft width={16} height={16} color="#fff" strokeWidth={2} />
+              </TouchableOpacity>
+              {selected.user_id === user?.id && (
+                <TouchableOpacity style={styles.imgBtnEdit} onPress={() => setEditOpen(true)} hitSlop={4}>
+                  <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
                 </TouchableOpacity>
-              </View>
+              )}
             </View>
             <View style={styles.detailBody}>
               {selected.user_id !== user?.id ? (
@@ -437,8 +435,14 @@ const styles = StyleSheet.create({
   detailContainer: { paddingBottom: 40 },
   detailImgWrap: { marginHorizontal: 16, borderRadius: 10, overflow: 'hidden' },
   detailImage: { aspectRatio: 4 / 3, width: '100%' },
-  imgBtns: { position: 'absolute', top: 10, right: 10, flexDirection: 'row', gap: 6 },
-  imgBtn: {
+  imgBtnBack: {
+    position: 'absolute', top: 10, left: 10,
+    width: 44, height: 44, borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  imgBtnEdit: {
+    position: 'absolute', top: 10, right: 10,
     width: 44, height: 44, borderRadius: 8,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center', justifyContent: 'center',
