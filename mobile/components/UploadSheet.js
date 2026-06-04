@@ -12,6 +12,7 @@ import Constants from 'expo-constants'
 import { useAuthStore } from '../store/useAuthStore'
 import { usePhotoStore } from '../store/usePhotoStore'
 import { uploadCatch, parseGpsFromAsset } from '../lib/upload'
+import { supabase } from '../lib/supabase'
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
@@ -74,6 +75,9 @@ export function UploadSheet() {
   const [rod, setRod] = useState('')
   const [fly, setFly] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [identifying, setIdentifying] = useState(false)
+
+  const identifyUrl = Constants.expoConfig?.extra?.identifyUrl
 
   const gearRods = user?.user_metadata?.gear_rods ?? []
   const gearFlies = user?.user_metadata?.gear_flies ?? []
@@ -90,6 +94,7 @@ export function UploadSheet() {
       setSpecies('')
       setRod('')
       setFly('')
+      setIdentifying(false)
     }
   }, [uploadOpen])
 
@@ -147,6 +152,29 @@ export function UploadSheet() {
 
   function close() {
     setUploadOpen(false)
+  }
+
+  async function onIdentify() {
+    if (!assets.length || !identifyUrl) return
+    setIdentifying(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const blob = await fetch(assets[0].uri).then(r => r.blob())
+      const res = await fetch(identifyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'image/jpeg',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: blob,
+      })
+      const { species: identified } = await res.json()
+      if (identified && identified !== 'none') setSpecies(identified)
+    } catch (e) {
+      console.error('[identify]', e)
+    } finally {
+      setIdentifying(false)
+    }
   }
 
   async function submit() {
@@ -214,6 +242,9 @@ export function UploadSheet() {
             gearFlies={gearFlies}
             uploading={uploading}
             onSubmit={submit}
+            canIdentify={!!identifyUrl}
+            identifying={identifying}
+            onIdentify={onIdentify}
           />
         )}
       </KeyboardAvoidingView>
@@ -287,7 +318,7 @@ function LocationStep({ locating, pin, onPin, onNext, onSkip }) {
   )
 }
 
-function DetailsStep({ assets, onRemoveAsset, species, onSpeciesChange, rod, onRodChange, fly, onFlyChange, gearRods, gearFlies, uploading, onSubmit }) {
+function DetailsStep({ assets, onRemoveAsset, species, onSpeciesChange, rod, onRodChange, fly, onFlyChange, gearRods, gearFlies, uploading, onSubmit, canIdentify, identifying, onIdentify }) {
   const insets = useSafeAreaInsets()
 
   function pickRod() {
@@ -327,6 +358,19 @@ function DetailsStep({ assets, onRemoveAsset, species, onSpeciesChange, rod, onR
           autoCapitalize="words"
           returnKeyType="next"
         />
+        {canIdentify && (
+          <TouchableOpacity
+            style={[styles.identifyBtn, identifying && styles.identifyBtnDisabled]}
+            onPress={onIdentify}
+            disabled={identifying || !assets.length}
+            activeOpacity={0.7}
+          >
+            {identifying
+              ? <ActivityIndicator size="small" color={C.muted} />
+              : <Text style={styles.identifyBtnText}>Identify species</Text>
+            }
+          </TouchableOpacity>
+        )}
 
         <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Rod</Text>
         {gearRods.length > 0 ? (
@@ -471,6 +515,19 @@ const styles = StyleSheet.create({
   thumbRemoveText: { color: '#fff', fontSize: 9, lineHeight: 14 },
 
   form: { padding: 16 },
+  identifyBtn: {
+    marginTop: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: C.border,
+    alignSelf: 'flex-start',
+    alignItems: 'center',
+    minWidth: 120,
+  },
+  identifyBtnDisabled: { opacity: 0.5 },
+  identifyBtnText: { color: C.muted, fontSize: 13 },
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',

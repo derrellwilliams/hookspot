@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { router } from 'expo-router'
 import MapboxGL from '@rnmapbox/maps'
 import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
 import { EditPencil, Trash, Xmark, Map as MapIcon, Plus } from 'iconoir-react-native'
@@ -10,6 +11,7 @@ import { supabase } from '../../lib/supabase'
 import { addPhotosToGroup } from '../../lib/upload'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
+import { EditCatchModal } from '../../components/EditCatchModal'
 import { TAB_BAR_HEIGHT } from './_layout'
 import { formatDateFull, formatLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
 
@@ -71,6 +73,7 @@ export default function MapScreen() {
   const [selected, setSelected] = useState(null)
   const [sheetIndex, setSheetIndex] = useState(1)
   const [addingPhotos, setAddingPhotos] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const fitted = useRef(false)
 
   const snapPoints = useMemo(() => ['8%', '65%', '92%'], [])
@@ -238,16 +241,18 @@ export default function MapScreen() {
 
   const keyExtractor = useCallback((group) => group[0].catchId ?? `${group[0].user_id}/${group[0].filename}`, [])
 
-  const selectedSpecies = selected ? cleanSpecies(selected.species) : null
-  const selectedWeatherLocation = selected ? (() => {
-    const w = selected.meta?.weather
-    const loc = formatLocation(selected.meta?.location)
+  // Derive display values from selectedGroup[0] so they update after edits via the store
+  const selectedLead = selectedGroup?.[0] ?? selected
+  const selectedSpecies = selectedLead ? cleanSpecies(selectedLead.species) : null
+  const selectedWeatherLocation = selectedLead ? (() => {
+    const w = selectedLead.meta?.weather
+    const loc = formatLocation(selectedLead.meta?.location)
     const weatherStr = w?.temp != null && w?.condition ? `${w.temp}°F · ${w.condition}` : ''
     if (weatherStr && loc) return `${weatherStr} · ${loc}`
     return weatherStr || loc || null
   })() : null
-  const selectedRod = selected?.meta?.rod || null
-  const selectedFly = selected?.meta?.fly || null
+  const selectedRod = selectedLead?.meta?.rod || null
+  const selectedFly = selectedLead?.meta?.fly || null
 
   return (
     <View style={styles.container}>
@@ -302,7 +307,7 @@ export default function MapScreen() {
               <View style={styles.imgBtns}>
                 {selected.user_id === user?.id && (
                   <>
-                    <TouchableOpacity style={styles.imgBtn} hitSlop={4}>
+                    <TouchableOpacity style={styles.imgBtn} onPress={() => setEditOpen(true)} hitSlop={4}>
                       <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -320,7 +325,16 @@ export default function MapScreen() {
               </View>
             </View>
             <View style={styles.detailBody}>
-              <AnglerRow user={user} profile={profile} />
+              {selected.user_id !== user?.id ? (
+                <TouchableOpacity activeOpacity={0.7} onPress={async () => {
+                  const { data } = await supabase.from('profiles').select('username').eq('id', selected.user_id).single()
+                  if (data?.username) router.push(`/user/${data.username}`)
+                }}>
+                  <AnglerRow user={user} profile={profile} />
+                </TouchableOpacity>
+              ) : (
+                <AnglerRow user={user} profile={profile} />
+              )}
               <Text style={styles.detailTitle} numberOfLines={1}>
                 {selectedSpecies || '—'}
               </Text>
@@ -394,6 +408,15 @@ export default function MapScreen() {
           </View>
         )}
       </BottomSheet>
+
+      <EditCatchModal
+        visible={editOpen}
+        group={selectedGroup}
+        onClose={() => setEditOpen(false)}
+        onSaved={() => {
+          // selected stays open; the store update refreshes the detail view
+        }}
+      />
 
     </View>
   )

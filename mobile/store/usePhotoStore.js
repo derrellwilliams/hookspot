@@ -82,6 +82,26 @@ export const usePhotoStore = create((set, get) => ({
     set({ photos, groups: groupPhotos(photos) })
   },
 
+  updatePhoto(updatedPhoto) {
+    const match = p =>
+      updatedPhoto.id && p.id ? p.id === updatedPhoto.id
+      : p.filename === updatedPhoto.filename && p.user_id === updatedPhoto.user_id
+    const photos = get().photos.map(p => match(p) ? updatedPhoto : p)
+    set({ photos, groups: groupPhotos(photos) })
+  },
+
+  reorderGroup(newOrderedPhotos) {
+    const updated = newOrderedPhotos.map((p, i) => ({ ...p, meta: { ...p.meta, order: i } }))
+    const idMap = new Map(updated.filter(p => p.id).map(p => [p.id, p]))
+    const photos = get().photos.map(p => idMap.has(p.id) ? idMap.get(p.id) : p)
+    set({ photos, groups: groupPhotos(photos) })
+  },
+
+  removeUserPhotos(userId) {
+    const photos = get().photos.filter(p => p.user_id !== userId)
+    set({ photos, groups: groupPhotos(photos) })
+  },
+
   reset() {
     set({ photos: [], groups: [], loading: false, loadingMore: false, hasMore: true, uploadOpen: false })
   },
