@@ -1,37 +1,47 @@
 import React from 'react'
-import { Redirect, Tabs } from 'expo-router'
+import { Redirect, Tabs, router, useSegments } from 'expo-router'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { BlurView } from 'expo-blur'
 import { Map, User, Plus } from 'iconoir-react-native'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
 import { UploadSheet } from '../../components/UploadSheet'
 
-export const TAB_BAR_HEIGHT = 56 // content height, excluding safe area
+export const FLOAT_INSET = 10
+export const TAB_BAR_HEIGHT = 56
+export const TAB_BAR_PAD_TOP = 10
+export const TAB_BAR_TOTAL = TAB_BAR_HEIGHT + TAB_BAR_PAD_TOP
+export const CARD_RADIUS = 28
 
-function CustomTabBar({ state, descriptors, navigation }) {
-  const insets = useSafeAreaInsets()
+const TABS = [
+  { name: 'map', label: 'Catches', Icon: Map },
+  { name: 'profile', label: 'Profile', Icon: User },
+]
+
+function ConnectedTabBar() {
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
+  const segments = useSegments()
+  const activeTab = segments[segments.length - 1]
 
   return (
-    <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
-      {state.routes.map((route, index) => {
-        const isFocused = state.index === index
-        const color = isFocused ? '#fff' : 'rgba(255,255,255,0.38)'
-
-        const onPress = () => {
-          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
-          if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name)
-        }
-
-        const Icon = route.name === 'map' ? Map : User
-        const label = route.name === 'map' ? 'Catches' : 'Profile'
+    <BlurView
+      tint="systemMaterialDark"
+      intensity={100}
+      style={[styles.bar, { bottom: FLOAT_INSET }]}
+    >
+      {TABS.map((tab, index) => {
+        const isFocused = activeTab === tab.name
+        const color = isFocused ? '#fff' : 'rgba(255,255,255,0.45)'
 
         return (
-          <React.Fragment key={route.key}>
-            <TouchableOpacity style={styles.tab} onPress={onPress} activeOpacity={0.7}>
-              <Icon color={color} width={22} height={22} strokeWidth={isFocused ? 2 : 1.5} />
-              <Text style={[styles.label, isFocused && styles.labelActive]}>{label}</Text>
+          <React.Fragment key={tab.name}>
+            <TouchableOpacity
+              style={styles.tab}
+              onPress={() => router.navigate(`/(tabs)/${tab.name}`)}
+              activeOpacity={0.7}
+            >
+              <tab.Icon color={color} width={22} height={22} strokeWidth={isFocused ? 2 : 1.5} />
+              <Text style={[styles.label, isFocused && styles.labelActive]}>{tab.label}</Text>
             </TouchableOpacity>
             {index === 0 && (
               <TouchableOpacity style={styles.addBtn} activeOpacity={0.8} onPress={() => setUploadOpen(true)}>
@@ -41,7 +51,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
           </React.Fragment>
         )
       })}
-    </View>
+    </BlurView>
   )
 }
 
@@ -55,28 +65,38 @@ export default function TabsLayout() {
   if (!username) return <Redirect href="/(auth)/onboarding" />
 
   return (
-    <>
-      <Tabs
-        tabBar={props => <CustomTabBar {...props} />}
-        screenOptions={{ headerShown: false }}
-      >
+    <View style={styles.root}>
+      <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
         <Tabs.Screen name="map" />
         <Tabs.Screen name="profile" />
       </Tabs>
+      <ConnectedTabBar />
       <UploadSheet />
-    </>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   bar: {
+    position: 'absolute',
+    left: FLOAT_INSET,
+    right: FLOAT_INSET,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(22, 22, 24, 0.97)',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden',
     paddingHorizontal: 8,
-    paddingTop: 10,
+    paddingTop: TAB_BAR_PAD_TOP,
+    borderBottomLeftRadius: CARD_RADIUS,
+    borderBottomRightRadius: CARD_RADIUS,
+    // Specular highlight — hairline border simulates glass edge
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.18)',
+    // Shadow for depth
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
   },
   tab: {
     flex: 1,
@@ -88,7 +108,7 @@ const styles = StyleSheet.create({
     fontFamily: 'RobotoCondensed_500Medium',
     fontSize: 12,
     letterSpacing: 0.4,
-    color: 'rgba(255,255,255,0.38)',
+    color: 'rgba(255,255,255,0.45)',
   },
   labelActive: {
     color: '#fff',
@@ -102,5 +122,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginHorizontal: 20,
     marginTop: 1,
+    shadowColor: '#2563eb',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
   },
 })

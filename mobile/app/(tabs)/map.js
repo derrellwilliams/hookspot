@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import MapboxGL from '@rnmapbox/maps'
 import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
+import { BlurView } from 'expo-blur'
 import { EditPencil, Trash, ArrowLeft, Map as MapIcon, Plus } from 'iconoir-react-native'
 import Constants from 'expo-constants'
 import * as ImagePicker from 'expo-image-picker'
@@ -14,8 +15,8 @@ import { addPhotosToGroup } from '../../lib/upload'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
 import { EditCatchModal } from '../../components/EditCatchModal'
-import { TAB_BAR_HEIGHT } from './_layout'
-import { formatDateFull, formatLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
+import { FLOAT_INSET, TAB_BAR_TOTAL, CARD_RADIUS } from './_layout'
+import { formatDateFull, formatDateShort, formatLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
@@ -40,6 +41,16 @@ function AnglerRow({ user, profile }) {
   )
 }
 
+function SheetBackground({ style }) {
+  return (
+    <BlurView
+      tint="systemMaterialDark"
+      intensity={85}
+      style={[style, styles.sheetBg]}
+    />
+  )
+}
+
 export default function MapScreen() {
   const user = useAuthStore(s => s.user)
   const profile = useAuthStore(s => s.profile)
@@ -53,7 +64,10 @@ export default function MapScreen() {
   const reset = usePhotoStore(s => s.reset)
   const insets = useSafeAreaInsets()
   const { height: screenHeight } = useWindowDimensions()
-  const tabBarInset = insets.bottom + TAB_BAR_HEIGHT + 20
+  // Sheet container bottom = nav bar bottom edge (sheet slides *behind* the nav bar)
+  const sheetBottomInset = FLOAT_INSET
+  // Content padding so items don't hide behind the nav bar
+  const tabBarInset = TAB_BAR_TOTAL + 20
   const cameraRef = useRef(null)
   const sheetRef = useRef(null)
   const [selected, setSelected] = useState(null)
@@ -62,7 +76,15 @@ export default function MapScreen() {
   const [editOpen, setEditOpen] = useState(false)
   const fitted = useRef(false)
 
-  const snapPoints = useMemo(() => ['8%', '65%', '92%'], [])
+  // Snap heights measured from container bottom (= nav bar bottom edge)
+  const snapPoints = useMemo(
+    () => [
+      TAB_BAR_TOTAL + 20,  // handle peeks just above nav bar top
+      Math.max(100, Math.round(screenHeight * 0.65) - sheetBottomInset),
+      Math.max(100, Math.round(screenHeight * 0.90) - sheetBottomInset),
+    ],
+    [screenHeight, sheetBottomInset],
+  )
 
   useEffect(() => {
     if (!user) {
@@ -228,7 +250,7 @@ export default function MapScreen() {
             ? <Text style={styles.species} numberOfLines={1}>{species}</Text>
             : <Text style={styles.speciesEmpty} numberOfLines={1}>Unknown</Text>
           }
-          {lead.time && <Text style={styles.datetime}>{formatDateFull(lead.time)}</Text>}
+          {lead.time && <Text style={styles.datetime}>{formatDateShort(lead.time)}</Text>}
           {locationStr && <Text style={styles.location}>{locationStr}</Text>}
         </View>
       </TouchableOpacity>
@@ -283,11 +305,16 @@ export default function MapScreen() {
         </View>
       )}
 
+      {/* Wrapper clips the sheet so it never renders below the nav bar */}
+      <View
+        style={[styles.sheetClip, { bottom: sheetBottomInset }]}
+        pointerEvents="box-none"
+      >
       <BottomSheet
         ref={sheetRef}
         index={1}
         snapPoints={snapPoints}
-        backgroundStyle={styles.sheetBg}
+        backgroundComponent={SheetBackground}
         handleIndicatorStyle={styles.sheetHandle}
         onChange={(i) => { if (i >= 0) setSheetIndex(i) }}
         enableOverDrag={false}
@@ -344,13 +371,6 @@ export default function MapScreen() {
             renderItem={renderCatchItem}
             onEndReached={() => { if (user) loadMore(user.id) }}
             onEndReachedThreshold={0.3}
-            ListHeaderComponent={
-              <View style={styles.listHeader}>
-                <Text style={styles.listHeaderText}>
-                  {groups.length} {groups.length === 1 ? 'catch' : 'catches'}
-                </Text>
-              </View>
-            }
             ListFooterComponent={loadingMore
               ? <ActivityIndicator size="small" color={C.muted} style={styles.loadMoreSpinner} />
               : null
@@ -364,7 +384,7 @@ export default function MapScreen() {
         {sheetIndex > 1 && !selected && (
           <View
             pointerEvents="box-none"
-            style={[styles.mapFloatWrap, { bottom: insets.bottom + TAB_BAR_HEIGHT + 24 }]}
+            style={[styles.mapFloatWrap, { bottom: TAB_BAR_TOTAL + 24 }]}
           >
             <TouchableOpacity
               style={styles.mapFloatBtn}
@@ -377,6 +397,7 @@ export default function MapScreen() {
           </View>
         )}
       </BottomSheet>
+      </View>
 
       <EditCatchModal
         visible={editOpen}
@@ -405,14 +426,33 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
 
-  sheetBg: { backgroundColor: C.bg, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
+  sheetClip: {
+    position: 'absolute',
+    top: 0,
+    left: FLOAT_INSET,
+    right: FLOAT_INSET,
+    // bottom set dynamically
+    overflow: 'hidden',
+    borderBottomLeftRadius: CARD_RADIUS,
+    borderBottomRightRadius: CARD_RADIUS,
+    // Specular highlight + shadow
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.18)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+  },
+  sheetBg: {
+    overflow: 'hidden',
+    borderTopLeftRadius: CARD_RADIUS,
+    borderTopRightRadius: CARD_RADIUS,
+  },
   sheetHandle: { backgroundColor: 'rgba(255,255,255,0.2)', width: 40 },
 
   // List
   listContent: { paddingBottom: 32, paddingHorizontal: 20 },
-  listHeader: { paddingVertical: 14 },
-  listHeaderText: { fontFamily: 'RobotoCondensed_500Medium', fontSize: 16, color: C.text },
-  loadMoreSpinner: { paddingVertical: 20 },
+loadMoreSpinner: { paddingVertical: 20 },
 
   item: {
     flexDirection: 'row',

@@ -17,6 +17,18 @@ function ordinal(n) {
   return n + (s[(v - 20) % 10] || s[v] || s[0])
 }
 
+export function formatDateShort(ts) {
+  const d = new Date(ts)
+  if (isNaN(d.getTime())) return null
+  const month = d.toLocaleDateString('en-US', { month: 'long' })
+  const day = ordinal(d.getDate())
+  const h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
+  const ampm = h >= 12 ? 'pm' : 'am'
+  const h12 = h % 12 || 12
+  return `${month} ${day} · ${h12}:${m}${ampm}`
+}
+
 export function formatDateFull(ts) {
   const d = new Date(ts)
   if (isNaN(d.getTime())) return 'Unknown date'
