@@ -1,12 +1,15 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import {
-  View, Text, Image, TouchableOpacity, FlatList, Modal,
+  View, Text, Image, TouchableOpacity, Modal,
   TextInput, ScrollView, StyleSheet, Alert, ActionSheetIOS,
   Platform, Dimensions, ActivityIndicator, KeyboardAvoidingView,
+  useWindowDimensions,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import { Settings } from 'iconoir-react-native'
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet'
+import { BlurView } from 'expo-blur'
 import { supabase } from '../../lib/supabase'
 import { C } from '../../lib/theme'
 import { photoUrl } from '../../lib/storage'
@@ -15,7 +18,7 @@ import { MeshBackground } from '../../components/MeshBackground'
 import { StatsCharts } from '../../components/StatsCharts'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
-import { TAB_BAR_HEIGHT } from './_layout'
+import { FLOAT_INSET, TAB_BAR_TOTAL, CARD_RADIUS } from './_layout'
 import { formatDateFull, cleanSpecies, getDisplayName } from '../../lib/formatters'
 
 const PROFILE_BLOBS = [
@@ -28,9 +31,9 @@ const PROFILE_BLOBS = [
 ]
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const GRID_PADDING = 12
+const GRID_PAD = 16
 const GRID_GAP = 8
-const CARD_W = (SCREEN_W - GRID_PADDING * 2 - GRID_GAP) / 2
+const CARD_W = Math.floor((SCREEN_W - FLOAT_INSET * 2 - GRID_PAD * 2 - GRID_GAP) / 2)
 
 function StatBox({ label, value }) {
   return (
@@ -46,7 +49,6 @@ function CatchCard({ group }) {
   const uri = photoUrl(lead.user_id, lead.filename, lead.storage_path)
   const species = cleanSpecies(lead.species)
   const dateStr = lead.time ? formatDateFull(lead.time).split(' ·')[0] : null
-
   return (
     <View style={styles.catchCard}>
       <Image source={{ uri }} style={styles.catchImg} resizeMode="cover" />
@@ -58,6 +60,16 @@ function CatchCard({ group }) {
   )
 }
 
+function SheetBackground({ style }) {
+  return (
+    <BlurView
+      tint="systemMaterialDark"
+      intensity={85}
+      style={[style, styles.sheetBg]}
+    />
+  )
+}
+
 export default function ProfileScreen() {
   const user = useAuthStore(s => s.user)
   const setUser = useAuthStore(s => s.setUser)
@@ -66,22 +78,32 @@ export default function ProfileScreen() {
   const setProfile = useAuthStore(s => s.setProfile)
   const groups = usePhotoStore(s => s.groups)
   const insets = useSafeAreaInsets()
+  const { height: screenHeight } = useWindowDimensions()
+
+  const sheetRef = useRef(null)
+  const tabBarInset = TAB_BAR_TOTAL + 20
+
+  const snapPoints = useMemo(
+    () => [
+      TAB_BAR_TOTAL + 20,
+      Math.max(100, Math.round(screenHeight * 0.65) - FLOAT_INSET),
+      Math.max(100, Math.round(screenHeight * 0.90) - FLOAT_INSET),
+    ],
+    [screenHeight],
+  )
 
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? null)
   const [uploading, setUploading] = useState(false)
-
   const [editProfileOpen, setEditProfileOpen] = useState(false)
   const [editName, setEditName] = useState('')
   const [editBio, setEditBio] = useState('')
   const [saving, setSaving] = useState(false)
-
   const [editGearOpen, setEditGearOpen] = useState(false)
   const [rods, setRods] = useState([])
   const [flies, setFlies] = useState([])
   const [newRod, setNewRod] = useState('')
   const [newFly, setNewFly] = useState('')
   const [gearSaving, setGearSaving] = useState(false)
-
   const [activeTab, setActiveTab] = useState('catches')
 
   const ownGroups = useMemo(() =>
@@ -237,43 +259,8 @@ export default function ProfileScreen() {
     setNewFly('')
   }
 
-  const renderHeader = useCallback(() => (
-    <View style={styles.header}>
-      <View style={styles.heroSection}>
-        <MeshBackground blobs={PROFILE_BLOBS} bgColor={C.bg} />
-        <TouchableOpacity style={styles.settingsBtn} onPress={openSettings} hitSlop={12}>
-          <Settings width={20} height={20} color={C.text} strokeWidth={1.5} />
-        </TouchableOpacity>
-        <View style={styles.heroContent}>
-          <TouchableOpacity style={styles.avatarWrap} onPress={pickAvatar} disabled={uploading}>
-            {avatarUrl
-              ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-              : (
-                <View style={styles.avatarFallback}>
-                  <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
-                </View>
-              )
-            }
-            {uploading && (
-              <View style={styles.avatarOverlay}>
-                <ActivityIndicator color={C.text} size="small" />
-              </View>
-            )}
-          </TouchableOpacity>
-          <Text style={styles.displayName}>{displayName}</Text>
-          {bio ? <Text style={styles.bio}>{bio}</Text> : null}
-          <View style={styles.statsRow}>
-            <StatBox label="All" value={statsAll} />
-            <View style={styles.statDivider} />
-            <StatBox label="Year" value={statsYear} />
-            <View style={styles.statDivider} />
-            <StatBox label="Month" value={statsMonth} />
-            <View style={styles.statDivider} />
-            <StatBox label="Species" value={statsSpecies} />
-          </View>
-        </View>
-      </View>
-
+  const TabHeader = useCallback(() => (
+    <View style={styles.sheetHeader}>
       <View style={styles.tabRow}>
         <TouchableOpacity
           style={[styles.tabPill, activeTab === 'catches' && styles.tabPillActive]}
@@ -294,47 +281,94 @@ export default function ProfileScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-
       {activeTab === 'catches' && ownGroups.length > 0 && (
         <Text style={styles.sectionLabel}>Recent Catches</Text>
       )}
     </View>
-  ), [avatarUrl, uploading, displayName, bio, statsAll, statsYear, statsMonth, statsSpecies, ownGroups.length, openSettings, pickAvatar, activeTab])
-
-  const renderItem = useCallback(({ item }) => <CatchCard group={item} />, [])
-  const keyExtractor = useCallback(item => item[0].catchId ?? item[0].filename, [])
-
-  const statsBottomPad = insets.bottom + TAB_BAR_HEIGHT + 16
+  ), [activeTab, ownGroups.length])
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {activeTab === 'catches' ? (
-        <FlatList
-          data={ownGroups}
-          numColumns={2}
-          keyExtractor={keyExtractor}
-          renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No catches yet</Text>
-            </View>
+    <View style={styles.container}>
+      {/* Full-screen animated mesh background */}
+      <MeshBackground blobs={PROFILE_BLOBS} bgColor={C.bg} />
+
+      {/* Settings button */}
+      <TouchableOpacity
+        style={[styles.settingsBtn, { top: insets.top + 12 }]}
+        onPress={openSettings}
+        hitSlop={12}
+      >
+        <Settings width={20} height={20} color={C.text} strokeWidth={1.5} />
+      </TouchableOpacity>
+
+      {/* Avatar, name, bio, stats — visible behind the sheet */}
+      <View style={[styles.profileContent, { paddingTop: insets.top + 56 }]}>
+        <TouchableOpacity style={styles.avatarWrap} onPress={pickAvatar} disabled={uploading}>
+          {avatarUrl
+            ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+            : (
+              <View style={styles.avatarFallback}>
+                <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
+              </View>
+            )
           }
-          columnWrapperStyle={styles.columnWrapper}
-          contentContainerStyle={{ paddingBottom: statsBottomPad }}
-          showsVerticalScrollIndicator={false}
-        />
-      ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: statsBottomPad }}
+          {uploading && (
+            <View style={styles.avatarOverlay}>
+              <ActivityIndicator color={C.text} size="small" />
+            </View>
+          )}
+        </TouchableOpacity>
+        <Text style={styles.displayName}>{displayName}</Text>
+        {bio ? <Text style={styles.bio}>{bio}</Text> : null}
+        <View style={styles.statsRow}>
+          <StatBox label="All" value={statsAll} />
+          <View style={styles.statDivider} />
+          <StatBox label="Year" value={statsYear} />
+          <View style={styles.statDivider} />
+          <StatBox label="Month" value={statsMonth} />
+          <View style={styles.statDivider} />
+          <StatBox label="Species" value={statsSpecies} />
+        </View>
+      </View>
+
+      {/* Glass sheet — same structure as map tab */}
+      <View
+        style={[styles.sheetClip, { bottom: FLOAT_INSET }]}
+        pointerEvents="box-none"
+      >
+        <BottomSheet
+          ref={sheetRef}
+          index={1}
+          snapPoints={snapPoints}
+          backgroundComponent={SheetBackground}
+          handleIndicatorStyle={styles.sheetHandle}
+          enableOverDrag={false}
         >
-          {renderHeader()}
-          <View style={styles.statsSection}>
-            <StatsCharts groups={ownGroups} />
-          </View>
-        </ScrollView>
-      )}
+          <BottomSheetScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: tabBarInset }}
+          >
+            <TabHeader />
+            {activeTab === 'catches' ? (
+              ownGroups.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyText}>No catches yet</Text>
+                </View>
+              ) : (
+                <View style={styles.grid}>
+                  {ownGroups.map(group => (
+                    <CatchCard key={group[0].catchId ?? group[0].filename} group={group} />
+                  ))}
+                </View>
+              )
+            ) : (
+              <View style={{ paddingHorizontal: GRID_PAD }}>
+                <StatsCharts groups={ownGroups} />
+              </View>
+            )}
+          </BottomSheetScrollView>
+        </BottomSheet>
+      </View>
 
       {/* Edit Profile */}
       <Modal
@@ -464,55 +498,88 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
 
-  // Header
-  header: { paddingHorizontal: GRID_PADDING, paddingBottom: 16 },
-  heroSection: {
-    overflow: 'hidden',
-    borderRadius: 16,
-    marginBottom: 16,
-  },
-  heroContent: {
-    paddingHorizontal: GRID_PADDING,
-    paddingTop: 32,
-    paddingBottom: 28,
+  // Settings button (top-right, over background)
+  settingsBtn: { position: 'absolute', right: 16, zIndex: 10, padding: 4 },
+
+  // Profile hero (behind the sheet)
+  profileContent: {
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  settingsBtn: { position: 'absolute', top: 16, right: 16, zIndex: 1, padding: 4 },
-  avatarWrap: { width: 80, height: 80, borderRadius: 40, alignSelf: 'center', marginBottom: 12 },
-  avatar: { width: 80, height: 80, borderRadius: 40 },
+  avatarWrap: { width: 88, height: 88, borderRadius: 44, marginBottom: 14 },
+  avatar: { width: 88, height: 88, borderRadius: 44 },
   avatarFallback: {
-    width: 80, height: 80, borderRadius: 40,
+    width: 88, height: 88, borderRadius: 44,
     backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center',
   },
-  avatarInitial: { fontSize: 36, fontWeight: '600', color: C.text },
+  avatarInitial: { fontSize: 38, fontWeight: '600', color: C.text },
   avatarOverlay: {
-    ...StyleSheet.absoluteFillObject, borderRadius: 40,
+    ...StyleSheet.absoluteFillObject, borderRadius: 44,
     backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
   },
-  displayName: { fontSize: 22, fontWeight: '700', color: C.text, textAlign: 'center', marginBottom: 4 },
-  bio: { fontSize: 16, color: C.muted, textAlign: 'center', lineHeight: 22, marginBottom: 16 },
+  displayName: { fontSize: 24, fontWeight: '700', color: C.text, textAlign: 'center', marginBottom: 6 },
+  bio: { fontSize: 15, color: C.muted, textAlign: 'center', lineHeight: 21, marginBottom: 18 },
 
-  // Stats
-  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  statBox: { alignItems: 'center', paddingHorizontal: 16 },
+  // Stats row
+  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  statBox: { alignItems: 'center', paddingHorizontal: 18 },
   statValue: { fontSize: 22, fontWeight: '700', color: C.text },
-  statLabel: { fontSize: 12, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
+  statLabel: { fontSize: 11, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
   statDivider: { width: 1, height: 28, backgroundColor: C.border },
+
+  // Sheet container (same as map)
+  sheetClip: {
+    position: 'absolute',
+    top: 0,
+    left: FLOAT_INSET,
+    right: FLOAT_INSET,
+    overflow: 'hidden',
+    borderBottomLeftRadius: CARD_RADIUS,
+    borderBottomRightRadius: CARD_RADIUS,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.18)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+  },
+  sheetBg: {
+    overflow: 'hidden',
+    borderTopLeftRadius: CARD_RADIUS,
+    borderTopRightRadius: CARD_RADIUS,
+  },
+  sheetHandle: { backgroundColor: 'rgba(255,255,255,0.2)', width: 40 },
+
+  // Sheet header (tab switcher)
+  sheetHeader: { paddingHorizontal: GRID_PAD, paddingTop: 4, paddingBottom: 4 },
+  tabRow: {
+    flexDirection: 'row',
+    backgroundColor: C.surface,
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  tabPill: { flex: 1, paddingVertical: 7, borderRadius: 8, alignItems: 'center' },
+  tabPillActive: { backgroundColor: '#3a3a3c' },
+  tabPillText: { fontSize: 15, fontWeight: '500', color: C.muted },
+  tabPillTextActive: { color: C.text, fontWeight: '600' },
   sectionLabel: {
-    fontSize: 14, fontWeight: '600', color: C.muted,
+    fontSize: 13, fontWeight: '600', color: C.muted,
     textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10,
   },
 
-  // Grid
-  columnWrapper: { paddingHorizontal: GRID_PADDING, gap: GRID_GAP, marginBottom: GRID_GAP },
+  // Catch grid
+  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: GRID_PAD, gap: GRID_GAP },
   catchCard: { width: CARD_W, borderRadius: 10, overflow: 'hidden', backgroundColor: C.surface },
   catchImg: { width: CARD_W, height: CARD_W * 0.75, backgroundColor: C.border },
   catchMeta: { padding: 8 },
   catchSpecies: { fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 2 },
   catchDate: { fontSize: 12, color: C.muted },
 
-  // Empty
-  emptyState: { alignItems: 'center', paddingTop: 40 },
+  // Empty state
+  emptyState: { alignItems: 'center', paddingTop: 32 },
   emptyText: { color: C.muted, fontSize: 16 },
 
   // Modal
@@ -550,36 +617,4 @@ const styles = StyleSheet.create({
   gearAddRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   addBtn: { backgroundColor: C.accent, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 12, justifyContent: 'center' },
   addBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-
-  // Tab selector
-  tabRow: {
-    flexDirection: 'row',
-    backgroundColor: C.surface,
-    borderRadius: 10,
-    padding: 3,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  tabPill: {
-    flex: 1,
-    paddingVertical: 7,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  tabPillActive: {
-    backgroundColor: '#3a3a3c',
-  },
-  tabPillText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: C.muted,
-  },
-  tabPillTextActive: {
-    color: C.text,
-    fontWeight: '600',
-  },
-
-  // Stats section
-  statsSection: { paddingHorizontal: GRID_PADDING },
 })
