@@ -438,10 +438,11 @@ export function UserProfilePage() {
         <div className={styles.profileHeader}>
           <div ref={headerMeshRef} className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
+          <div className={styles.headerBtns}>
           {isOwnProfile ? (
             <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
               <DropdownMenu.Trigger asChild>
-                <Button variant="icon-sm" className={styles.editProfileBtn} aria-label="Profile settings">
+                <Button variant="icon-sm" aria-label="Profile settings">
                   <Settings width={16} height={16} />
                 </Button>
               </DropdownMenu.Trigger>
@@ -482,14 +483,14 @@ export function UserProfilePage() {
               variant="secondary"
               onClick={isFollowing ? handleUnfollow : handleFollow}
               disabled={followLoading}
-              className={styles.followBtn}
             >
               {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
             </Button>
           )}
-          <Button variant="icon-sm" className={styles.searchBtn} aria-label="Search users" onClick={() => setSearchOpen(true)}>
+          <Button variant="icon-sm" aria-label="Search users" onClick={() => setSearchOpen(true)}>
             <Group width={16} height={16} />
           </Button>
+          </div>
           <div className={styles.headerLeft}>
             <div className={styles.avatarWrap}>
               {isOwnProfile ? (
