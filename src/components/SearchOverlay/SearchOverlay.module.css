@@ -54,12 +54,27 @@
   position: relative;
 }
 
-.input {
+.inputWrap {
+  position: relative;
   flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  color: var(--dark-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.input {
+  width: 100%;
   background: var(--dark-surface);
   border: 1px solid var(--dark-border);
   border-radius: 10px;
-  padding: 16px 16px;
+  padding: 16px 16px 16px 42px;
   font-size: 18px;
   font-family: var(--font-sans);
   color: var(--dark-text);
@@ -230,6 +245,6 @@
 
 .userUsername {
   font-size: 12px;
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   color: var(--dark-muted);
 }

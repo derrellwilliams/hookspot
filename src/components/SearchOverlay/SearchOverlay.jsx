@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
+import { Search } from 'iconoir-react'
 import { supabase } from '../../lib/supabase.js'
 import styles from './SearchOverlay.module.css'
 
@@ -95,18 +96,20 @@ export function SearchOverlay({ open, onClose, profileId }) {
           <Dialog.Title className={styles.srOnly}>Search users</Dialog.Title>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
           <div className={styles.inner}>
-            <div className={styles.searchLabel}>Search</div>
             <div className={styles.header}>
+              <div className={styles.inputWrap}>
+                <Search className={styles.inputIcon} width={18} height={18} />
               <input
                 ref={inputRef}
                 className={styles.input}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search for fellow anglers"
+                placeholder="Search by name or @username"
                 autoFocus
                 autoComplete="off"
                 spellCheck={false}
               />
+              </div>
             </div>
 
             <div className={styles.body}>
