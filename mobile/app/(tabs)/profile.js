@@ -7,7 +7,7 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
-import { Settings } from 'iconoir-react-native'
+import { Group, Settings } from 'iconoir-react-native'
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { BlurView } from 'expo-blur'
 import { supabase } from '../../lib/supabase'
@@ -15,6 +15,8 @@ import { C } from '../../lib/theme'
 import { photoUrl } from '../../lib/storage'
 import { uploadAvatar } from '../../lib/upload'
 import { MeshBackground } from '../../components/MeshBackground'
+import { SearchModal } from '../../components/SearchModal'
+import { FollowListSheet } from '../../components/FollowListSheet'
 import { StatsCharts } from '../../components/StatsCharts'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
@@ -105,6 +107,11 @@ export default function ProfileScreen() {
   const [newFly, setNewFly] = useState('')
   const [gearSaving, setGearSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('catches')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [followerCount, setFollowerCount] = useState(null)
+  const [followingCount, setFollowingCount] = useState(null)
+  const [followListOpen, setFollowListOpen] = useState(false)
+  const [followListTab, setFollowListTab] = useState('followers')
 
   const ownGroups = useMemo(() =>
     groups
@@ -138,6 +145,17 @@ export default function ProfileScreen() {
 
   const displayName = getDisplayName(user?.user_metadata) || 'Angler'
   const bio = user?.user_metadata?.bio ?? null
+
+  useEffect(() => {
+    if (!user?.id) return
+    Promise.all([
+      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
+      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id),
+    ]).then(([followerRes, followingRes]) => {
+      setFollowerCount(followerRes.count ?? 0)
+      setFollowingCount(followingRes.count ?? 0)
+    })
+  }, [user?.id])
 
   const pickAvatar = useCallback(async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -292,6 +310,15 @@ export default function ProfileScreen() {
       {/* Full-screen animated mesh background */}
       <MeshBackground blobs={PROFILE_BLOBS} bgColor={C.bg} />
 
+      {/* Search button */}
+      <TouchableOpacity
+        style={[styles.searchBtn, { top: insets.top + 12 }]}
+        onPress={() => setSearchOpen(true)}
+        hitSlop={12}
+      >
+        <Group width={20} height={20} color={C.text} strokeWidth={1.5} />
+      </TouchableOpacity>
+
       {/* Settings button */}
       <TouchableOpacity
         style={[styles.settingsBtn, { top: insets.top + 12 }]}
@@ -321,7 +348,7 @@ export default function ProfileScreen() {
         <Text style={styles.displayName}>{displayName}</Text>
         {bio ? <Text style={styles.bio}>{bio}</Text> : null}
         <View style={styles.statsRow}>
-          <StatBox label="All" value={statsAll} />
+          <StatBox label="Catches" value={statsAll} />
           <View style={styles.statDivider} />
           <StatBox label="Year" value={statsYear} />
           <View style={styles.statDivider} />
@@ -491,6 +518,14 @@ export default function ProfileScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      <SearchModal visible={searchOpen} onClose={() => setSearchOpen(false)} />
+      <FollowListSheet
+        visible={followListOpen}
+        onClose={() => setFollowListOpen(false)}
+        profileId={user?.id}
+        initialTab={followListTab}
+      />
     </View>
   )
 }
@@ -498,8 +533,9 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
 
-  // Settings button (top-right, over background)
+  // Header icon buttons (top-right, over background)
   settingsBtn: { position: 'absolute', right: 16, zIndex: 10, padding: 4 },
+  searchBtn: { position: 'absolute', right: 52, zIndex: 10, padding: 4 },
 
   // Profile hero (behind the sheet)
   profileContent: {

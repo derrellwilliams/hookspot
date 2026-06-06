@@ -212,8 +212,7 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 10px 0;
-  width: 72px;
+  padding: 12px 28px;
 }
 
 .headerStatNum {
@@ -234,9 +233,9 @@
 }
 
 .headerStatDivider {
-  width: 0;
-  flex-shrink: 0;
+  display: none;
 }
+
 
 .editProfileBtn,
 .followBtn {
@@ -247,6 +246,14 @@
 }
 
 .editProfileBtn {
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.searchBtn {
+  position: absolute !important;
+  top: 12px;
+  left: 54px;
+  z-index: 2;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
 }
 

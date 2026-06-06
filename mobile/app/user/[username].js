@@ -7,6 +7,9 @@ import { Stack, useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../lib/supabase'
 import { C } from '../../lib/theme'
+import { Group } from 'iconoir-react-native'
+import { SearchModal } from '../../components/SearchModal'
+import { FollowListSheet } from '../../components/FollowListSheet'
 import { photoUrl } from '../../lib/storage'
 import { groupPhotos } from '../../lib/groupPhotos'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -63,6 +66,11 @@ export default function UserProfileScreen() {
   const [loading, setLoading] = useState(true)
   const [followLoading, setFollowLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [followerCount, setFollowerCount] = useState(null)
+  const [followingCount, setFollowingCount] = useState(null)
+  const [followListOpen, setFollowListOpen] = useState(false)
+  const [followListTab, setFollowListTab] = useState('followers')
 
   useEffect(() => {
     if (!username || !myUser) return
@@ -77,7 +85,7 @@ export default function UserProfileScreen() {
         if (profileErr || !profileData) { setError('Profile not found'); return }
         if (!cancelled) setProfile(profileData)
 
-        const [followRes, photosRes] = await Promise.all([
+        const [followRes, photosRes, followerRes, followingRes] = await Promise.all([
           supabase.from('follows')
             .select('follower_id')
             .eq('follower_id', myUser.id)
@@ -90,11 +98,15 @@ export default function UserProfileScreen() {
             .not('lng', 'is', null)
             .order('time', { ascending: false })
             .limit(200),
+          supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
+          supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
         ])
 
         if (!cancelled) {
           setIsFollowing(!!followRes.data)
           setPhotos((photosRes.data ?? []).map(normalize))
+          setFollowerCount(followerRes.count ?? 0)
+          setFollowingCount(followingRes.count ?? 0)
         }
       } catch (err) {
         if (!cancelled) setError('Failed to load profile')
@@ -141,6 +153,7 @@ export default function UserProfileScreen() {
         .insert({ follower_id: myUser.id, following_id: profile.id })
       if (error) throw error
       setIsFollowing(true)
+      setFollowerCount(c => c !== null ? c + 1 : c)
       addPhotos(photos)
     } catch (err) {
       console.error('[follow]', err)
@@ -160,6 +173,7 @@ export default function UserProfileScreen() {
         .eq('following_id', profile.id)
       if (error) throw error
       setIsFollowing(false)
+      setFollowerCount(c => c !== null ? Math.max(0, c - 1) : c)
       removeUserPhotos(profile.id)
     } catch (err) {
       console.error('[unfollow]', err)
@@ -187,9 +201,8 @@ export default function UserProfileScreen() {
         }
         <Text style={styles.displayName}>{displayName}</Text>
         {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
-
         <View style={styles.statsRow}>
-          <StatBox label="All" value={statsAll} />
+          <StatBox label="Catches" value={statsAll} />
           <View style={styles.statDivider} />
           <StatBox label="Year" value={statsYear} />
           <View style={styles.statDivider} />
@@ -217,7 +230,7 @@ export default function UserProfileScreen() {
         )}
       </View>
     )
-  }, [profile, statsAll, statsYear, statsMonth, statsSpecies, isFollowing, followLoading, handleFollow, handleUnfollow])
+  }, [profile, statsAll, statsYear, statsMonth, statsSpecies, isFollowing, followLoading, handleFollow, handleUnfollow, followerCount, followingCount])
 
   const renderItem = useCallback(({ item }) => <CatchCard group={item} />, [])
   const keyExtractor = useCallback(item => item[0].catchId ?? item[0].filename, [])
@@ -225,7 +238,11 @@ export default function UserProfileScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <Stack.Screen options={{ title: username, headerShown: true, headerStyle: { backgroundColor: C.bg }, headerTintColor: C.text, headerBackTitle: '' }} />
+        <Stack.Screen options={{ title: username, headerShown: true, headerStyle: { backgroundColor: C.bg }, headerTintColor: C.text, headerBackTitle: '', headerRight: () => (
+          <TouchableOpacity onPress={() => setSearchOpen(true)} hitSlop={12} style={{ paddingHorizontal: 4 }}>
+            <Group width={20} height={20} color={C.text} strokeWidth={1.5} />
+          </TouchableOpacity>
+        ) }} />
         <ActivityIndicator size="large" color={C.accent} />
       </View>
     )
@@ -234,7 +251,11 @@ export default function UserProfileScreen() {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Stack.Screen options={{ title: username, headerShown: true, headerStyle: { backgroundColor: C.bg }, headerTintColor: C.text, headerBackTitle: '' }} />
+        <Stack.Screen options={{ title: username, headerShown: true, headerStyle: { backgroundColor: C.bg }, headerTintColor: C.text, headerBackTitle: '', headerRight: () => (
+          <TouchableOpacity onPress={() => setSearchOpen(true)} hitSlop={12} style={{ paddingHorizontal: 4 }}>
+            <Group width={20} height={20} color={C.text} strokeWidth={1.5} />
+          </TouchableOpacity>
+        ) }} />
         <Text style={styles.errorText}>{error}</Text>
       </View>
     )
@@ -250,6 +271,11 @@ export default function UserProfileScreen() {
           headerTintColor: C.text,
           headerBackTitle: '',
           headerShadowVisible: false,
+          headerRight: () => (
+            <TouchableOpacity onPress={() => setSearchOpen(true)} hitSlop={12} style={{ paddingHorizontal: 4 }}>
+              <Group width={20} height={20} color={C.text} strokeWidth={1.5} />
+            </TouchableOpacity>
+          ),
         }}
       />
       <FlatList
@@ -266,6 +292,13 @@ export default function UserProfileScreen() {
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}
+      />
+      <SearchModal visible={searchOpen} onClose={() => setSearchOpen(false)} />
+      <FollowListSheet
+        visible={followListOpen}
+        onClose={() => setFollowListOpen(false)}
+        profileId={profile?.id}
+        initialTab={followListTab}
       />
     </View>
   )

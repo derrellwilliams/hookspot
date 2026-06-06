@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { EditPencil, Settings, UserCircle } from 'iconoir-react'
+import { EditPencil, Group, Settings, UserCircle } from 'iconoir-react'
 import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
@@ -22,6 +22,8 @@ const PROFILE_BLOBS = [
 ]
 import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
+import { SearchOverlay } from '../components/SearchOverlay/SearchOverlay.jsx'
+import { FollowListDialog } from '../components/FollowListDialog/FollowListDialog.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
 import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'
@@ -88,6 +90,11 @@ export function UserProfilePage() {
   }, [])
 
   const [activeTab, setActiveTab] = useState('profile')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [followerCount, setFollowerCount] = useState(null)
+  const [followingCount, setFollowingCount] = useState(null)
+  const [followListOpen, setFollowListOpen] = useState(false)
+  const [followListTab, setFollowListTab] = useState('followers')
 
   const monthlyRef = useRef(null)
   const hourlyRef = useRef(null)
@@ -125,10 +132,14 @@ export function UserProfilePage() {
           .from('profiles').select('*').eq('username', urlUsername).single()
         if (profileError || !profileData) { setError('Profile not found'); return }
         setFetchedProfile(profileData)
-        const [followResult, photosRes] = await Promise.all([
+        const [followResult, photosRes, followerRes, followingRes] = await Promise.all([
           supabase.from('follows').select('follower_id').eq('follower_id', myUser.id).eq('following_id', profileData.id).maybeSingle(),
           fetch(`/api/photos?userId=${profileData.id}&ownOnly=true`),
+          supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
+          supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
         ])
+        setFollowerCount(followerRes.count ?? 0)
+        setFollowingCount(followingRes.count ?? 0)
         setIsFollowing(!!followResult.data)
         const { rows = [] } = await photosRes.json()
         setOtherPhotos(rows.map(row => ({
@@ -161,6 +172,13 @@ export function UserProfilePage() {
           cacheFavorites(favs)
         }
       })
+    Promise.all([
+      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', myUser.id),
+      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', myUser.id),
+    ]).then(([followerRes, followingRes]) => {
+      setFollowerCount(followerRes.count ?? 0)
+      setFollowingCount(followingRes.count ?? 0)
+    })
   }, [isOwnProfile, myUser?.id])
 
   const effectivePhotos = useMemo(
@@ -243,6 +261,7 @@ export function UserProfilePage() {
       const { error } = await supabase.from('follows').insert({ follower_id: myUser.id, following_id: profile.id })
       if (error) throw error
       setIsFollowing(true)
+      setFollowerCount(c => c !== null ? c + 1 : c)
       initPhotos()
     } catch (err) {
       console.error('[user-profile] follow failed', err)
@@ -259,6 +278,7 @@ export function UserProfilePage() {
       const { error } = await supabase.from('follows').delete().eq('follower_id', myUser.id).eq('following_id', profile.id)
       if (error) throw error
       setIsFollowing(false)
+      setFollowerCount(c => c !== null ? Math.max(0, c - 1) : c)
       removeUserPhotos(profile.id)
     } catch (err) {
       console.error('[user-profile] unfollow failed', err)
@@ -467,6 +487,9 @@ export function UserProfilePage() {
               {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
             </Button>
           )}
+          <Button variant="icon-sm" className={styles.searchBtn} aria-label="Search users" onClick={() => setSearchOpen(true)}>
+            <Group width={16} height={16} />
+          </Button>
           <div className={styles.headerLeft}>
             <div className={styles.avatarWrap}>
               {isOwnProfile ? (
@@ -501,7 +524,7 @@ export function UserProfilePage() {
               <div className={styles.headerStats}>
                 <div className={styles.headerStat}>
                   <span className={styles.headerStatNum}>{catchGroups.length}</span>
-                  <span className={styles.headerStatLabel}>All</span>
+                  <span className={styles.headerStatLabel}>Catches</span>
                 </div>
                 <div className={styles.headerStatDivider} />
                 <div className={styles.headerStat}>
@@ -756,6 +779,18 @@ export function UserProfilePage() {
           </Dialog.Root>
         </>
       )}
+
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        profileId={profile?.id}
+      />
+      <FollowListDialog
+        open={followListOpen}
+        onClose={() => setFollowListOpen(false)}
+        profileId={profile?.id}
+        initialTab={followListTab}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { createCheckUsernameHandler } from './check-username-handler.js'
 import { createSaveProfileHandler } from './save-profile-handler.js'
 import { createProfileHandler } from './profile-handler.js'
 import { createPhotosHandler } from './photos-handler.js'
+import { createSearchUsersHandler } from './search-users-handler.js'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -22,6 +23,7 @@ export default defineConfig(({ mode }) => {
           server.middlewares.use('/api/save-profile', createSaveProfileHandler(env))
           server.middlewares.use('/api/profile', createProfileHandler(env))
           server.middlewares.use('/api/photos', createPhotosHandler(env))
+          server.middlewares.use('/api/search-users', createSearchUsersHandler(env))
         },
       },
     ],
