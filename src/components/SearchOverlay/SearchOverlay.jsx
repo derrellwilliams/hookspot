@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { supabase } from '../../lib/supabase.js'
 import styles from './SearchOverlay.module.css'
-
-const spring = { type: 'spring', stiffness: 400, damping: 35 }
 
 function UserRow({ user, onClick }) {
   const initial = (user.display_name || user.username || '?')[0].toUpperCase()
@@ -94,17 +91,18 @@ export function SearchOverlay({ open, onClose, profileId }) {
     <Dialog.Root open={open} onOpenChange={o => { if (!o) onClose() }}>
       <Dialog.Portal>
         <Dialog.Overlay className={styles.backdrop} />
-        <Dialog.Content className={styles.panel} aria-describedby={undefined} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+        <Dialog.Content className={styles.panel} aria-describedby={undefined} onClick={e => { if (e.target === e.currentTarget) onClose() }} onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.focus() }}>
           <Dialog.Title className={styles.srOnly}>Search users</Dialog.Title>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
           <div className={styles.inner}>
+            <div className={styles.searchLabel}>Search</div>
             <div className={styles.header}>
               <input
                 ref={inputRef}
                 className={styles.input}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search anglers…"
+                placeholder="Search for fellow anglers"
                 autoFocus
                 autoComplete="off"
                 spellCheck={false}
@@ -124,29 +122,19 @@ export function SearchOverlay({ open, onClose, profileId }) {
               ) : (
                 <>
                   <div className={styles.tabBar}>
-                    {[{ id: 'following', label: 'Following' }, { id: 'followers', label: 'Followers' }].map(({ id, label }) => {
-                      const isActive = activeTab === id
-                      return (
-                        <motion.button
-                          key={id}
-                          className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                          onClick={() => setActiveTab(id)}
-                          whileHover={{ scale: 1.007 }}
-                          whileTap={{ scale: 0.975 }}
-                          transition={spring}
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="search-tab-highlight"
-                              className={styles.tabHighlight}
-                              initial={false}
-                              transition={spring}
-                            />
-                          )}
-                          <span className={styles.tabLabel}>{label}</span>
-                        </motion.button>
-                      )
-                    })}
+                    <div
+                      className={styles.tabSlider}
+                      style={{ left: activeTab === 'following' ? 6 : 'calc(50% + 1px)' }}
+                    />
+                    {[{ id: 'following', label: 'Following' }, { id: 'followers', label: 'Followers' }].map(({ id, label }) => (
+                      <button
+                        key={id}
+                        className={`${styles.tab} ${activeTab === id ? styles.tabActive : ''}`}
+                        onClick={() => setActiveTab(id)}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                   {listLoading && <div className={styles.emptyState}>Loading…</div>}
                   {!listLoading && list.length === 0 && (

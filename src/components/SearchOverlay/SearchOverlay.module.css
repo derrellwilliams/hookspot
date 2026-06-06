@@ -26,9 +26,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 15%;
   outline: none;
-  padding-bottom: 10vh;
 }
 
 .inner {
@@ -36,6 +36,14 @@
   display: flex;
   flex-direction: column;
   max-height: 72vh;
+}
+
+.searchLabel {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--dark-text);
+  margin-bottom: 14px;
 }
 
 .header {
@@ -51,7 +59,7 @@
   background: var(--dark-surface);
   border: 1px solid var(--dark-border);
   border-radius: 10px;
-  padding: 11px 16px;
+  padding: 16px 16px;
   font-size: 18px;
   font-family: var(--font-sans);
   color: var(--dark-text);
@@ -66,6 +74,8 @@
 
 .input::placeholder {
   color: var(--dark-muted);
+  font-family: var(--font-mono);
+  font-size: 14px;
 }
 
 .closeBtn {
@@ -104,11 +114,24 @@
 
 /* ── Tab bar ── */
 .tabBar {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 6px 6px 2px;
   gap: 2px;
   flex-shrink: 0;
+}
+
+/* CSS-only sliding indicator — no JS animation, no mount flash */
+.tabSlider {
+  position: absolute;
+  top: 6px;
+  bottom: 2px;
+  width: calc(50% - 7px);
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  transition: left 0.18s ease;
+  pointer-events: none;
 }
 
 .tab {
@@ -129,6 +152,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   transition: color 0.15s;
+  z-index: 1;
 }
 
 .tab:hover {
@@ -137,18 +161,6 @@
 
 .tabActive {
   color: var(--dark-text);
-}
-
-.tabHighlight {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.09);
-  border-radius: 7px;
-}
-
-.tabLabel {
-  position: relative;
-  z-index: 1;
 }
 
 .emptyState {
