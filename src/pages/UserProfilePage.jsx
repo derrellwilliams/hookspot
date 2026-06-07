@@ -247,6 +247,8 @@ export function UserProfilePage() {
   useEffect(() => {
     if (catchPopupIdx === null) return
     function handleKey(e) {
+      const tag = e.target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       if (e.key === 'ArrowLeft') setCatchPopupIdx(i => Math.max(0, i - 1))
       else if (e.key === 'ArrowRight') setCatchPopupIdx(i => Math.min(recentCatches.length - 1, i + 1))
     }
