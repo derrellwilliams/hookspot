@@ -787,15 +787,43 @@
   transform: translate(-50%, -50%);
   z-index: 2001;
   outline: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .catchDialogContent {
-  width: 460px;
-  max-width: calc(100vw - 32px);
+  width: 580px;
+  max-width: calc(100vw - 120px);
   background: rgba(0, 0, 0, 0.85);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.catchNavArrow {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.catchNavArrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.catchNavArrow:disabled {
+  opacity: 0.2;
+  cursor: default;
 }
 
 /* ── Footer ── */

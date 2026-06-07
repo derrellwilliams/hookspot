@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { EditPencil, Group, Settings, UserCircle } from 'iconoir-react'
+import { EditPencil, Group, NavArrowLeft, NavArrowRight, Settings, UserCircle } from 'iconoir-react'
 import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
@@ -81,7 +81,7 @@ export function UserProfilePage() {
   const [gearSaving, setGearSaving] = useState(false)
   const [favorites, setFavorites] = useState(loadFavoritesCache)
   const [pickerSlot, setPickerSlot] = useState(null)
-  const [catchPopupGroup, setCatchPopupGroup] = useState(null)
+  const [catchPopupIdx, setCatchPopupIdx] = useState(null)
   const fileInputRef = useRef(null)
   const meshCleanupRef = useRef(null)
   const headerMeshRef = useCallback((el) => {
@@ -229,6 +229,8 @@ export function UserProfilePage() {
     [recentCatches, visibleCount]
   )
 
+  const catchPopupGroup = catchPopupIdx !== null ? (recentCatches[catchPopupIdx] ?? null) : null
+
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
   }, [effectivePhotos])
@@ -241,6 +243,16 @@ export function UserProfilePage() {
     observer.observe(sentinelRef.current)
     return () => observer.disconnect()
   }, [recentCatches.length, activeTab])
+
+  useEffect(() => {
+    if (catchPopupIdx === null) return
+    function handleKey(e) {
+      if (e.key === 'ArrowLeft') setCatchPopupIdx(i => Math.max(0, i - 1))
+      else if (e.key === 'ArrowRight') setCatchPopupIdx(i => Math.min(recentCatches.length - 1, i + 1))
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [catchPopupIdx, recentCatches.length])
 
   useEffect(() => {
     if (activeTab !== 'stats') return
@@ -407,7 +419,7 @@ export function UserProfilePage() {
 
   async function handleCatchDelete(group) {
     await deletePhotos(group)
-    setCatchPopupGroup(null)
+    setCatchPopupIdx(null)
   }
 
   if (isLoading) return <div className={styles.page}><div className={styles.loading}>Loading…</div></div>
@@ -590,14 +602,14 @@ export function UserProfilePage() {
           </div>
         ) : recentCatches.length > 0 ? (
           <div className={styles.catchesGrid}>
-            {visibleCatches.map(group => {
+            {visibleCatches.map((group, i) => {
               const photo = group[0]
               const species = cleanSpecies(photo.species)
               return (
                 <motion.button
                   key={photo.name}
                   className={styles.catchThumb}
-                  onClick={() => setCatchPopupGroup(group)}
+                  onClick={() => setCatchPopupIdx(i)}
                   initial="rest"
                   whileHover="hover"
                   whileTap={{ scale: 0.99 }}
@@ -645,7 +657,7 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      <Dialog.Root open={!!catchPopupGroup} onOpenChange={o => { if (!o) setCatchPopupGroup(null) }}>
+      <Dialog.Root open={!!catchPopupGroup} onOpenChange={o => { if (!o) setCatchPopupIdx(null) }}>
         <Dialog.Portal forceMount>
           <AnimatePresence>
             {catchPopupGroup && (
@@ -661,6 +673,14 @@ export function UserProfilePage() {
                 </Dialog.Overlay>
                 <Dialog.Content className={styles.catchDialogPositioner} aria-describedby={undefined}>
                   <Dialog.Title className={styles.srOnly}>Catch details</Dialog.Title>
+                  <button
+                    className={styles.catchNavArrow}
+                    onClick={() => setCatchPopupIdx(i => Math.max(0, i - 1))}
+                    disabled={catchPopupIdx === 0}
+                    aria-label="Previous catch"
+                  >
+                    <NavArrowLeft width={18} height={18} />
+                  </button>
                   <motion.div
                     className={styles.catchDialogContent}
                     initial={{ opacity: 0, scale: 0.97, y: 4 }}
@@ -669,11 +689,20 @@ export function UserProfilePage() {
                     transition={{ delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
                   >
                     <PopupCarousel
+                      key={catchPopupIdx}
                       initialGroup={catchPopupGroup}
-                      onClose={() => setCatchPopupGroup(null)}
+                      onClose={() => setCatchPopupIdx(null)}
                       onDelete={handleCatchDelete}
                     />
                   </motion.div>
+                  <button
+                    className={styles.catchNavArrow}
+                    onClick={() => setCatchPopupIdx(i => Math.min(recentCatches.length - 1, i + 1))}
+                    disabled={catchPopupIdx >= recentCatches.length - 1}
+                    aria-label="Next catch"
+                  >
+                    <NavArrowRight width={18} height={18} />
+                  </button>
                 </Dialog.Content>
               </>
             )}
