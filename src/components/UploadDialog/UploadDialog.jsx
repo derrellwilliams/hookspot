@@ -33,6 +33,7 @@ export function UploadDialog() {
   const showToast = usePhotoStore(s => s.showToast)
   const setPendingUploadFiles = usePhotoStore(s => s.setPendingUploadFiles)
   const user = useAuthStore(s => s.user)
+  const setUser = useAuthStore(s => s.setUser)
   const gearRods = useAuthStore(useShallow(s => s.user?.user_metadata?.gear_rods ?? []))
   const gearFlies = useAuthStore(useShallow(s => s.user?.user_metadata?.gear_flies ?? []))
   const prevRods = gearRods
@@ -226,11 +227,23 @@ export function UploadDialog() {
         showToast('Failed to add catch.')
       } else {
         showToast('Catch added!')
+        await saveNewGear(fly, rod)
       }
     } catch {
       await supabase.from('catches').delete().eq('id', catchId)
       showToast('Failed to add catch.')
     }
+  }
+
+  async function saveNewGear(newFly, newRod) {
+    const updatedFlies = newFly && !gearFlies.includes(newFly) ? [...gearFlies, newFly] : null
+    const updatedRods = newRod && !gearRods.includes(newRod) ? [...gearRods, newRod] : null
+    if (!updatedFlies && !updatedRods) return
+    const data = {}
+    if (updatedFlies) data.gear_flies = updatedFlies
+    if (updatedRods) data.gear_rods = updatedRods
+    const { data: updated } = await supabase.auth.updateUser({ data })
+    if (updated?.user) setUser(updated.user)
   }
 
   function onFileChange(e) {
