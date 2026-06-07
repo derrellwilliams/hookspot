@@ -15,7 +15,7 @@ const POPUP_MAX_WIDTH = '484px'
 const MIN_FLY_ZOOM = 13
 const POPUP_PAN_FACTOR = 0.65
 const BOUNDS_PADDING_DEGREES = 0.008  // ~0.55 miles
-const INITIAL_FIT_COUNT = 15
+const INITIAL_FIT_COUNT = 10
 const DEFAULT_SIDEBAR_RIGHT = 260
 
 function avg(arr) {
@@ -217,7 +217,7 @@ export function MapView({ active }) {
       [Math.max(...lngs) + BOUNDS_PADDING_DEGREES, Math.max(...lats) + BOUNDS_PADDING_DEGREES]
     )
     map.fitBounds(bounds, {
-      padding: { top: 80, bottom: 60, left: 320, right: 60 },
+      padding: { top: 80, bottom: 60, left: 376, right: 60 },
       maxZoom: 16,
       duration: 0,
     })

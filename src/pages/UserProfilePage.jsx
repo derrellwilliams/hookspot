@@ -195,11 +195,12 @@ export function UserProfilePage() {
 
   const uniqueSpecies = useMemo(() => {
     const seen = new Set()
-    for (const p of effectivePhotos) {
-      if (p.species) seen.add(p.species.toLowerCase())
+    for (const g of catchGroups) {
+      const lead = g.find(p => p.species) ?? g[0]
+      if (lead.species) seen.add(lead.species.toLowerCase())
     }
     return seen.size
-  }, [effectivePhotos])
+  }, [catchGroups])
 
   const catchesThisMonth = useMemo(() => {
     const now = new Date()
