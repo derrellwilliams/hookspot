@@ -1,8 +1,10 @@
 import exifr from 'exifr'
 import heic2any from 'heic2any'
 
-const STORAGE_MAX_PX = 2048
-const STORAGE_QUALITY = 0.85
+const STORAGE_MAX_PX = 1200
+const STORAGE_QUALITY = 0.80
+const THUMB_MAX_PX = 400
+const THUMB_QUALITY = 0.72
 
 export async function extractExif(file) {
   try {
@@ -55,4 +57,8 @@ export async function resizeBlob(blob, maxPx, quality = 0.85) {
 
 export function resizeForStorage(blob) {
   return resizeBlob(blob, STORAGE_MAX_PX, STORAGE_QUALITY)
+}
+
+export function resizeForThumbnail(blob) {
+  return resizeBlob(blob, THUMB_MAX_PX, THUMB_QUALITY)
 }
