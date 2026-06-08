@@ -247,6 +247,13 @@
   gap: 6px;
 }
 
+.headerIconBtn {
+  width: 40px;
+  height: 40px;
+  background: var(--dark-surface);
+  border-color: var(--dark-surface);
+}
+
 .dropdownContent {
   min-width: 140px;
   background: var(--dark-surface);

@@ -458,7 +458,7 @@ export function UserProfilePage() {
           {isOwnProfile ? (
             <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
               <DropdownMenu.Trigger asChild>
-                <Button variant="icon-sm" aria-label="Profile settings">
+                <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Profile settings">
                   <Settings width={16} height={16} />
                 </Button>
               </DropdownMenu.Trigger>
@@ -503,7 +503,7 @@ export function UserProfilePage() {
               {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
             </Button>
           )}
-          <Button variant="icon-sm" aria-label="Search users" onClick={() => setSearchOpen(true)}>
+          <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Search users" onClick={() => setSearchOpen(true)}>
             <Group width={16} height={16} />
           </Button>
           </div>
