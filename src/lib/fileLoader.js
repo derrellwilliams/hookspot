@@ -252,7 +252,7 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     filename: file.name,
     storage_path: storagePath,
     url: publicUrl,
-    thumb_url: thumbUrl,
+    ...(thumbUrl !== null && { thumb_url: thumbUrl }),
     species: uploadMeta.species || null,
     lat: exif?.latitude ?? uploadMeta.manualLat ?? null,
     lng: exif?.longitude ?? uploadMeta.manualLng ?? null,
@@ -309,8 +309,9 @@ export async function uploadPhotoToGroup(file, groupLead) {
 
   // Thumbnail is best-effort — failure must never block the catch from saving
   let thumbUrl = null
+  let thumbPath = null
   try {
-    const thumbPath = `${user.id}/thumbs/${storageKey(file.name)}`
+    thumbPath = `${user.id}/thumbs/${storageKey(file.name)}`
     const { error: thumbError } = await supabase.storage
       .from('catches')
       .upload(thumbPath, thumbBlob, { upsert: false, contentType: 'image/jpeg' })
@@ -325,7 +326,7 @@ export async function uploadPhotoToGroup(file, groupLead) {
     filename: file.name,
     storage_path: storagePath,
     url: publicUrl,
-    thumb_url: thumbUrl,
+    ...(thumbUrl !== null && { thumb_url: thumbUrl }),
     species: null,
     lat: groupLead.exif?.latitude ?? null,
     lng: groupLead.exif?.longitude ?? null,
@@ -335,7 +336,8 @@ export async function uploadPhotoToGroup(file, groupLead) {
 
   const { data: insertedRow, error: dbError } = await supabase.from('photos').insert(row).select('id').single()
   if (dbError) {
-    await supabase.storage.from('catches').remove([storagePath, thumbPath])
+    const toRemove = thumbPath ? [storagePath, thumbPath] : [storagePath]
+    await supabase.storage.from('catches').remove(toRemove)
     throw new Error('DB: ' + dbError.message)
   }
   row.id = insertedRow?.id ?? null

@@ -58,6 +58,7 @@ create table photos (
   filename text not null,
   storage_path text not null,
   url text not null,
+  thumb_url text,
   species text,
   lat double precision,
   lng double precision,
