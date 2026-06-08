@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useShallow } from 'zustand/react/shallow'
 import * as Dialog from '@radix-ui/react-dialog'
@@ -51,34 +51,24 @@ export function UploadDialog() {
   const [loading, setLoading] = useState(false)
   const [dropOver, setDropOver] = useState(false)
   const fileInputRef = useRef(null)
-  const locationMapRef = useRef(null)
   const locationMapInstanceRef = useRef(null)
   const locationMarkerRef = useRef(null)
   const mapCenterRef = useRef(null)
 
-  useEffect(() => {
-    if (!uploadOpen) return
-    const files = usePhotoStore.getState().pendingUploadFiles
-    if (!files.length) return
-    setPendingUploadFiles([])
-    goToNextStep(files)
-  }, [uploadOpen])
-
-  // Initialize / destroy the location-picker map when entering/leaving step 2
-  useEffect(() => {
-    if (step !== 2 || !locationMapRef.current) return
-
+  // Callback ref: initializes the map as soon as the container mounts, and cleans up on unmount.
+  // A plain useEffect(fn, [step]) fires before AnimatePresence mode="wait" has mounted the new
+  // step's DOM node, so locationMapRef.current would be null and the map would never initialize.
+  const locationMapRef = useCallback((node) => {
+    if (!node) {
+      if (locationMarkerRef.current) { locationMarkerRef.current.remove(); locationMarkerRef.current = null }
+      if (locationMapInstanceRef.current) { locationMapInstanceRef.current.remove(); locationMapInstanceRef.current = null }
+      return
+    }
     mapboxgl.accessToken = MAPBOX_TOKEN
     const { center = [-98, 39], zoom = 3 } = mapCenterRef.current ?? {}
-    const map = new mapboxgl.Map({
-      container: locationMapRef.current,
-      style: MAP_STYLE,
-      center,
-      zoom,
-    })
+    const map = new mapboxgl.Map({ container: node, style: MAP_STYLE, center, zoom })
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right')
     locationMapInstanceRef.current = map
-
     map.on('click', e => {
       const { lng, lat } = e.lngLat
       setManualPin({ lat, lng })
@@ -95,13 +85,15 @@ export function UploadDialog() {
         locationMarkerRef.current = marker
       }
     })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    return () => {
-      if (locationMarkerRef.current) { locationMarkerRef.current.remove(); locationMarkerRef.current = null }
-      map.remove()
-      locationMapInstanceRef.current = null
-    }
-  }, [step])
+  useEffect(() => {
+    if (!uploadOpen) return
+    const files = usePhotoStore.getState().pendingUploadFiles
+    if (!files.length) return
+    setPendingUploadFiles([])
+    goToNextStep(files)
+  }, [uploadOpen])
 
   function revokeUrls(urls) { urls.forEach(u => URL.revokeObjectURL(u)) }
 
