@@ -220,16 +220,24 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     resizeForThumbnail(blob).catch(() => blob),
   ])
 
-  const thumbPath = `${user.id}/thumbs/${storageKey(file.name)}`
-  const [uploadResult] = await Promise.all([
-    supabase.storage.from('catches').upload(storagePath, storageBlob, { upsert: false, contentType: 'image/jpeg' }),
-    supabase.storage.from('catches').upload(thumbPath, thumbBlob, { upsert: false, contentType: 'image/jpeg' }),
-  ])
-  const { error: uploadError } = uploadResult
+  const { error: uploadError } = await supabase.storage
+    .from('catches')
+    .upload(storagePath, storageBlob, { upsert: false, contentType: 'image/jpeg' })
   if (uploadError) { console.error('[hookspot] storage upload failed', uploadError); return false }
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
-  const { data: { publicUrl: thumbUrl } } = supabase.storage.from('catches').getPublicUrl(thumbPath)
+
+  // Thumbnail is best-effort — failure must never block the catch from saving
+  let thumbUrl = null
+  try {
+    const thumbPath = `${user.id}/thumbs/${storageKey(file.name)}`
+    const { error: thumbError } = await supabase.storage
+      .from('catches')
+      .upload(thumbPath, thumbBlob, { upsert: false, contentType: 'image/jpeg' })
+    if (!thumbError) {
+      thumbUrl = supabase.storage.from('catches').getPublicUrl(thumbPath).data.publicUrl
+    }
+  } catch { /* thumbnail is optional */ }
 
   const exifTime = exif?.DateTimeOriginal instanceof Date
     ? exif.DateTimeOriginal.getTime()
@@ -292,16 +300,24 @@ export async function uploadPhotoToGroup(file, groupLead) {
     resizeForThumbnail(blob).catch(() => blob),
   ])
 
-  const thumbPath = `${user.id}/thumbs/${storageKey(file.name)}`
-  const [uploadResult] = await Promise.all([
-    supabase.storage.from('catches').upload(storagePath, storageBlob, { upsert: false, contentType: 'image/jpeg' }),
-    supabase.storage.from('catches').upload(thumbPath, thumbBlob, { upsert: false, contentType: 'image/jpeg' }),
-  ])
-  const { error: uploadError } = uploadResult
+  const { error: uploadError } = await supabase.storage
+    .from('catches')
+    .upload(storagePath, storageBlob, { upsert: false, contentType: 'image/jpeg' })
   if (uploadError && uploadError.statusCode !== '409') throw new Error('Storage: ' + uploadError.message)
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
-  const { data: { publicUrl: thumbUrl } } = supabase.storage.from('catches').getPublicUrl(thumbPath)
+
+  // Thumbnail is best-effort — failure must never block the catch from saving
+  let thumbUrl = null
+  try {
+    const thumbPath = `${user.id}/thumbs/${storageKey(file.name)}`
+    const { error: thumbError } = await supabase.storage
+      .from('catches')
+      .upload(thumbPath, thumbBlob, { upsert: false, contentType: 'image/jpeg' })
+    if (!thumbError) {
+      thumbUrl = supabase.storage.from('catches').getPublicUrl(thumbPath).data.publicUrl
+    }
+  } catch { /* thumbnail is optional */ }
 
   const row = {
     user_id: user.id,
