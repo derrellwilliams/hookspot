@@ -39,3 +39,12 @@
 - **Zustand selectors**: Select only what's needed (`usePhotoStore(s => s.photos)`) — no whole-store subscriptions
 - **Marker lifecycle**: Call `rebuildMarkers` only when necessary; use `identify.js` for batch processing outside React
 - **Design tokens**: Use CSS custom properties from `src/tokens.js` — no hardcoded hex values in `.module.css`
+
+## Supabase Constraints
+- **`user_metadata` must stay small** — it is embedded in the JWT on every request. Never store blobs, base64 data URLs, or large arrays here. Scalars only (display_name, bio, gear lists). Violations bloat the JWT past nginx's header buffer limit on the Storage API, causing silent 400 rejections on photo uploads while REST calls continue to work.
+- **`avatar_url` lives in the `profiles` table only** — never write it to `user_metadata` via `supabase.auth.updateUser`. `useAuthStore.setUser` preserves it in local state across token refreshes; App.jsx syncs it from the profiles table on login.
+- **JWT size warning** — App.jsx logs a warning if `access_token.length > 4000`. If you see this, something large was written to `user_metadata`.
+
+## Test Fixtures
+- **Always test upload flows with an account that has a profile picture set** — a fresh account has no avatar and a tiny JWT; the upload bug described above only manifests with a real avatar. Test accounts should mirror realistic user state.
+- **Affected code paths to cover**: onboarding avatar upload → storage URL returned → `save-profile` API → `profiles` table (not `user_metadata`); photo upload → Supabase Storage PUT → catches insert → photo row insert.
