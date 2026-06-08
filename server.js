@@ -17,6 +17,7 @@ import { createSaveProfileHandler } from './save-profile-handler.js'
 import { createProfileHandler } from './profile-handler.js'
 import { createPhotosHandler } from './photos-handler.js'
 import { createCheckUsernameHandler } from './check-username-handler.js'
+import { createSearchUsersHandler } from './search-users-handler.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.join(__dirname, 'dist')
@@ -35,6 +36,7 @@ const handleSaveProfile = createSaveProfileHandler(env)
 const handleProfile = createProfileHandler(env)
 const handlePhotos = createPhotosHandler(env)
 const handleCheckUsername = createCheckUsernameHandler(env)
+const handleSearchUsers = createSearchUsersHandler(env)
 
 const MIME = {
   '.html':        'text/html; charset=utf-8',
@@ -63,6 +65,7 @@ const server = http.createServer(async (req, res) => {
   if (urlPath === '/api/profile') { handleProfile(req, res); return }
   if (urlPath === '/api/photos') { handlePhotos(req, res); return }
   if (urlPath === '/api/check-username') { handleCheckUsername(req, res); return }
+  if (urlPath === '/api/search-users') { handleSearchUsers(req, res); return }
 
   // Static file serving with SPA history fallback
   let filePath = path.resolve(DIST, '.' + urlPath)
