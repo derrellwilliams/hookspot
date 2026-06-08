@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { IconoirProvider, EditPencil, Xmark, Plus } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
@@ -34,16 +34,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const [rod, setRod] = useState('')
   const [fly, setFly] = useState('')
 
-  // Progressive loading: show thumbnail immediately, swap to full-res when loaded
-  const [mainSrc, setMainSrc] = useState(photo.supabaseUrl ?? photo.url)
-  useEffect(() => {
-    if (!photo.supabaseUrl) { setMainSrc(photo.url); return }
-    setMainSrc(photo.url) // show thumbnail while full-res loads
-    const img = new Image()
-    img.onload = () => setMainSrc(photo.supabaseUrl)
-    img.src = photo.supabaseUrl
-    return () => { img.onload = null }
-  }, [photo.name, photo.supabaseUrl, photo.url])
+  const mainSrc = photo.url
 
   function startEdit() {
     setSpecies(lead.species ?? '')
