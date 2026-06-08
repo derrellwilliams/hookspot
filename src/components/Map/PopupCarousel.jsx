@@ -237,7 +237,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
           <label>Fly</label>
           <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="Select your fly" suggestions={prevFlys} />
           <div className={styles.editActions}>
-            <Button variant="danger" onClick={handleDelete}>Delete entry</Button>
+            <Button variant="danger" onClick={handleDelete}>Delete</Button>
             <Button variant="secondary" onClick={cancelEdit}>Cancel</Button>
             <Button variant="primary" onClick={saveEdit}>Save</Button>
           </div>

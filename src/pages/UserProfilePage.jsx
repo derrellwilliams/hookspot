@@ -423,6 +423,7 @@ export function UserProfilePage() {
   async function handleCatchDelete(group) {
     await deletePhotos(group)
     setCatchPopupIdx(null)
+    showToast('Catch deleted')
   }
 
   if (isLoading) return <div className={styles.page}><div className={styles.loading}>Loading…</div></div>
