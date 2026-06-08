@@ -10,6 +10,7 @@ export function serviceHeaders(env, includeContentType = false) {
 export function sendJson(res, data, status = 200) {
   res.statusCode = status
   res.setHeader('content-type', 'application/json')
+  res.setHeader('cache-control', 'no-store')
   res.end(JSON.stringify(data))
 }
 

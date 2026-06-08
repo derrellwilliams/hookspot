@@ -72,8 +72,11 @@ export function SearchOverlay({ open, onClose, profileId }) {
       setSearchLoading(true)
       try {
         const res = await fetch(`/api/search-users?q=${encodeURIComponent(query.trim())}`)
-        const { results: data } = await res.json()
-        setResults(data || [])
+        const json = await res.json()
+        setResults(json.results || [])
+      } catch (err) {
+        console.error('[search] failed:', err)
+        setResults([])
       } finally {
         setSearchLoading(false)
       }

@@ -239,7 +239,7 @@ export function UploadDialog() {
     const updatedFlies = newFly && !gearFlies.includes(newFly) ? [...gearFlies, newFly] : null
     const updatedRods = newRod && !gearRods.includes(newRod) ? [...gearRods, newRod] : null
     if (!updatedFlies && !updatedRods) return
-    const data = {}
+    const data = { avatar_url: null }
     if (updatedFlies) data.gear_flies = updatedFlies
     if (updatedRods) data.gear_rods = updatedRods
     const { data: updated } = await supabase.auth.updateUser({ data })

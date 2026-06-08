@@ -332,7 +332,7 @@ export function UserProfilePage() {
     setSaving(true)
     try {
       const { data, error } = await supabase.auth.updateUser({
-        data: { display_name: editName.trim(), bio: editBio.trim() },
+        data: { display_name: editName.trim(), bio: editBio.trim(), avatar_url: null },
       })
       if (error) throw error
       await supabase.from('profiles').upsert({
@@ -389,7 +389,7 @@ export function UserProfilePage() {
     setGearSaving(true)
     try {
       const { data, error } = await supabase.auth.updateUser({
-        data: { gear_rods: editRods, gear_flies: editFlies },
+        data: { gear_rods: editRods, gear_flies: editFlies, avatar_url: null },
       })
       if (error) throw error
       setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, avatar_url: myUser?.user_metadata?.avatar_url } })
