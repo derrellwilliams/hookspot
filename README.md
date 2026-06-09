@@ -1,6 +1,6 @@
 # Hook Spot
 
-An in progress fishing log app — drop GPS-tagged photos onto a map, track species, gear, and catch stats over time. View your catches on a map, and explore other anglers' catches.
+This is an in progress fishing app I'm working on!  You can drop GPS-tagged photos onto a map, track species, gear, and catch stats over time. 
 
 <img width="1582" height="975" alt="Screenshot 2026-06-08 at 8 04 24 PM" src="https://github.com/user-attachments/assets/037ccc0e-b09d-4afa-811c-46390fac72f9" />
 <img width="1582" height="975" alt="Screenshot 2026-06-08 at 8 04 30 PM" src="https://github.com/user-attachments/assets/4fb905d5-417a-433b-8712-2dbb5021125f" />
