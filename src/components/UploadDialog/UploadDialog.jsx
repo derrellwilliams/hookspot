@@ -122,7 +122,7 @@ export function UploadDialog() {
     setPendingBlobs(blobs)
     setPendingUrls(urls)
 
-    const hasGps = !!(firstExif?.latitude && firstExif?.longitude)
+    const hasGps = firstExif?.latitude != null && firstExif?.longitude != null
     setManualPin(null)
     if (!hasGps) mapCenterRef.current = computeHomeCenter(usePhotoStore.getState().photos)
     setStep(hasGps ? 3 : 2)
@@ -231,7 +231,7 @@ export function UploadDialog() {
     const updatedFlies = newFly && !gearFlies.includes(newFly) ? [...gearFlies, newFly] : null
     const updatedRods = newRod && !gearRods.includes(newRod) ? [...gearRods, newRod] : null
     if (!updatedFlies && !updatedRods) return
-    const data = { avatar_url: null }
+    const data = {}
     if (updatedFlies) data.gear_flies = updatedFlies
     if (updatedRods) data.gear_rods = updatedRods
     const { data: updated } = await supabase.auth.updateUser({ data })

@@ -39,7 +39,7 @@ export function createPhotosHandler(env) {
       // Null lat/lng happens when a secondary photo had no EXIF GPS and the catch
       // coordinates weren't propagated (old data, fixed in upload flow).
       const needsCatchData = [...new Set(
-        rows.filter(r => (!r.time || !r.lat) && r.catch_id).map(r => r.catch_id)
+        rows.filter(r => (!r.time || r.lat == null) && r.catch_id).map(r => r.catch_id)
       )]
       if (needsCatchData.length > 0) {
         const catchesRes = await fetch(
@@ -55,7 +55,7 @@ export function createPhotosHandler(env) {
               const c = catchMap[r.catch_id]
               const patch = {}
               if (!r.time && c.time) patch.time = c.time
-              if (!r.lat && c.lat) { patch.lat = c.lat; patch.lng = c.lng }
+              if (r.lat == null && c.lat != null) { patch.lat = c.lat; patch.lng = c.lng }
               return Object.keys(patch).length ? { ...r, ...patch } : r
             })
           }

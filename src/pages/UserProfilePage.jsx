@@ -145,10 +145,11 @@ export function UserProfilePage() {
         setOtherPhotos(rows.map(row => ({
           name: row.filename,
           userId: row.user_id,
+          catchId: row.catch_id ?? null,
           url: row.url,
           time: row.time ? new Date(row.time).getTime() : null,
-          hasGps: !!(row.lat && row.lng),
-          exif: row.lat && row.lng ? { latitude: row.lat, longitude: row.lng } : null,
+          hasGps: row.lat != null && row.lng != null,
+          exif: row.lat != null && row.lng != null ? { latitude: row.lat, longitude: row.lng } : null,
           species: row.species || undefined,
           meta: row.meta || {},
           isOwn: false,
@@ -332,7 +333,7 @@ export function UserProfilePage() {
     setSaving(true)
     try {
       const { data, error } = await supabase.auth.updateUser({
-        data: { display_name: editName.trim(), bio: editBio.trim(), avatar_url: null },
+        data: { display_name: editName.trim(), bio: editBio.trim() },
       })
       if (error) throw error
       await supabase.from('profiles').upsert({
@@ -389,7 +390,7 @@ export function UserProfilePage() {
     setGearSaving(true)
     try {
       const { data, error } = await supabase.auth.updateUser({
-        data: { gear_rods: editRods, gear_flies: editFlies, avatar_url: null },
+        data: { gear_rods: editRods, gear_flies: editFlies },
       })
       if (error) throw error
       setUser({ ...data.user, user_metadata: { ...data.user.user_metadata, avatar_url: myUser?.user_metadata?.avatar_url } })

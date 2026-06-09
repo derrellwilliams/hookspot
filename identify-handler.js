@@ -26,7 +26,9 @@ export function createIdentifyHandler(anthropic, env) {
     // Read body with a hard size cap to prevent memory exhaustion
     const buf = await readBody(req, res, MAX_BODY_SIZE)
     if (buf === null) return
-    const mediaType = (req.headers['content-type'] || 'image/jpeg').split(';')[0]
+    const ALLOWED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    const rawMediaType = (req.headers['content-type'] || 'image/jpeg').split(';')[0].trim()
+    const mediaType = ALLOWED_MEDIA_TYPES.includes(rawMediaType) ? rawMediaType : 'image/jpeg'
     // Mobile clients send pre-encoded base64 (avoids Blob API incompatibility in React Native)
     const base64Data = req.headers['x-content-encoding'] === 'base64'
       ? buf.toString('utf8').trim()

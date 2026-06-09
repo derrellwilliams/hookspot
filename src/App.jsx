@@ -31,7 +31,6 @@ function AppInner() {
   const navigate = useNavigate()
   const setUser = useAuthStore(s => s.setUser)
   const setSession = useAuthStore(s => s.setSession)
-  const setUsername = useAuthStore(s => s.setUsername)
   const setUserAndUsername = useAuthStore(s => s.setUserAndUsername)
 
   const knownRoutes = ['/', '/login', '/onboarding', '/profile', '/design']
@@ -46,6 +45,7 @@ function AppInner() {
 
         try {
           const res = await fetch(`/api/profile?userId=${session.user.id}`)
+          if (!res.ok) throw new Error(`Profile fetch error: ${res.status}`)
           const { username, avatar_url, error: profileError } = await res.json()
           if (profileError) {
             console.error('[auth] profile check failed', profileError)
@@ -80,7 +80,7 @@ function AppInner() {
       }
     })
     return () => subscription.unsubscribe()
-  }, [setUser, setSession, setUsername])
+  }, [setUser, setSession, setUserAndUsername])
 
   const isMap = location.pathname === '/'
 

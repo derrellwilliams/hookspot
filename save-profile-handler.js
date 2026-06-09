@@ -14,6 +14,8 @@ export function createSaveProfileHandler(env) {
 
       if (!token) { sendJson(res, { error: 'Unauthorized' }, 401); return }
       if (!USERNAME_RE.test(username)) { sendJson(res, { error: 'Invalid username' }, 400); return }
+      if (displayName && displayName.length > 60) { sendJson(res, { error: 'Display name too long (max 60)' }, 400); return }
+      if (bio && bio.length > 200) { sendJson(res, { error: 'Bio too long (max 200)' }, 400); return }
 
       // Verify token and get user ID
       const userRes = await fetch(`${env.VITE_SUPABASE_URL}/auth/v1/user`, {

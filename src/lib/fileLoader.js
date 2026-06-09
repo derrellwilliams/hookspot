@@ -20,7 +20,7 @@ function storageKey(filename) {
 
 function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
   const time = row.time ? new Date(row.time).getTime() : null
-  const hasGps = !!(row.lat && row.lng)
+  const hasGps = row.lat != null && row.lng != null
   // Always ensure latitude/longitude are set when the DB has GPS coords.
   // Using ?? alone isn't enough — exif may be a non-null object without GPS fields.
   const effectiveExif = hasGps
@@ -73,7 +73,7 @@ async function saveMeta(photoName, key, value, userId) {
 function maybeFetchLocation(photo) {
   if (!photo.isOwn) return
   const user = getUser()
-  if (!photo.hasGps || !photo.exif?.latitude || !photo.exif?.longitude || photo.meta?.location || !user) return
+  if (!photo.hasGps || photo.exif?.latitude == null || photo.exif?.longitude == null || photo.meta?.location || !user) return
   runGeoTask(() => reverseGeocode(photo.exif.latitude, photo.exif.longitude)
     .then(loc => loc && saveMeta(photo.name, 'location', loc, user.id))
     .catch(() => {}))
@@ -82,7 +82,7 @@ function maybeFetchLocation(photo) {
 function maybeFetchWeather(photo) {
   if (!photo.isOwn) return
   const user = getUser()
-  if (!photo.hasGps || !photo.time || !photo.exif?.latitude || !photo.exif?.longitude || photo.meta?.weather || !user) return
+  if (!photo.hasGps || !photo.time || photo.exif?.latitude == null || photo.exif?.longitude == null || photo.meta?.weather || !user) return
   runGeoTask(() => fetchWeather(photo.exif.latitude, photo.exif.longitude, photo.time)
     .then(weather => weather && saveMeta(photo.name, 'weather', weather, user.id))
     .catch(() => {}))
@@ -111,6 +111,7 @@ export async function initPhotos() {
 
     fetchAttempted = true
     const res = await fetch(`/api/photos?userId=${user.id}`)
+    if (!res.ok) throw new Error(`Photos fetch error: ${res.status}`)
     const { rows, profiles: profileRows, error } = await res.json()
 
     if (error || !rows?.length) return

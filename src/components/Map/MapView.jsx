@@ -76,7 +76,11 @@ export function MapView({ active }) {
       setMapReady(true)
     })
     mapRef.current = map
-    return () => map.remove()
+    return () => {
+      markersRef.current.forEach(({ root }) => root.unmount())
+      markersRef.current = []
+      map.remove()
+    }
   }, [setFlyToPhoto])
 
   // Rebuild markers when groups or filter change
@@ -104,7 +108,7 @@ export function MapView({ active }) {
 
     // Remove markers for deleted/hidden groups
     markersRef.current.forEach(({ key, marker, popup, root }) => {
-      if (!newKeySet.has(key)) { popup.remove(); setTimeout(() => root.unmount()); marker.remove() }
+      if (!newKeySet.has(key)) { root.unmount(); popup.remove(); marker.remove() }
     })
     markersRef.current = markersRef.current.filter(m => newKeySet.has(m.key))
 

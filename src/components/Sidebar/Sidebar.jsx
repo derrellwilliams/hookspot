@@ -94,7 +94,7 @@ export function Sidebar() {
               {items.map(item =>
                 item.type === 'header'
                   ? <div key={item.key} className={styles.monthHeader}>{item.label}</div>
-                  : <SidebarItem key={item.group[0].name} group={item.group} />
+                  : <SidebarItem key={`${item.group[0].userId}/${item.group[0].name}`} group={item.group} />
               )}
               {!hasPhotos && (
                 <div className={styles.empty}>
