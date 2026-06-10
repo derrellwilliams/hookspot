@@ -11,6 +11,13 @@ export function cleanSpecies(s) {
   return s.replace(/\s*\(.*?\)/g, '').trim()
 }
 
+// Canonical species label for counting/charting — one formula everywhere
+// so the profile header and the stats donut can never disagree.
+export function speciesLabel(photo) {
+  const s = cleanSpecies(photo?.species)
+  return s ? s.replace(/\b\w/g, c => c.toUpperCase()) : null
+}
+
 function ordinal(n) {
   const s = ['th', 'st', 'nd', 'rd']
   const v = n % 100

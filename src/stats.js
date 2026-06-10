@@ -1,5 +1,6 @@
 import ApexCharts from 'apexcharts'
 import { tokens } from './tokens.js'
+import { speciesLabel } from './lib/formatters.js'
 
 let charts = []
 
@@ -36,16 +37,6 @@ function make(el, opts) {
   const chart = new ApexCharts(el, opts)
   charts.push(chart)
   chart.render()
-}
-
-function toTitleCase(str) {
-  return str.replace(/\b\w/g, c => c.toUpperCase())
-}
-
-function speciesLabel(p) {
-  return p.species && p.species !== 'none'
-    ? toTitleCase(p.species.replace(/\s*\(.*?\)/g, '').trim())
-    : null
 }
 
 function monthWindow(n = 12) {
@@ -136,7 +127,13 @@ export function renderStats(groups, refs = {}) {
           size: '62%',
           labels: {
             show: true,
-            total: { show: true, label: 'Total', color: '#a1a1aa', fontFamily: tokens.fontSans },
+            total: {
+              show: true,
+              label: 'Species',
+              color: '#a1a1aa',
+              fontFamily: tokens.fontSans,
+              formatter: () => String(spEntries.length),
+            },
           },
         },
       },
@@ -173,6 +170,31 @@ export function renderStats(groups, refs = {}) {
       fontFamily: tokens.fontSans,
     },
   })
+
+  // ── Gear breakdowns (only when data available) ─────────────────────────────
+  // rod/fly live in meta on the upload's photos; find whichever photo has it
+  const gearEntries = key => {
+    const counts = {}
+    groups.forEach(g => {
+      const val = g.find(p => p.meta?.[key])?.meta[key]
+      if (!val) return
+      counts[val] = (counts[val] ?? 0) + 1
+    })
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])
+  }
+
+  for (const [ref, key] of [[refs.rods, 'rod'], [refs.flies, 'fly']]) {
+    const entries = gearEntries(key)
+    if (!entries.length) continue
+    make(ref, {
+      ...BASE,
+      chart: { ...BASE_CHART, type: 'bar', height: 220 },
+      series: [{ name: 'Catches', data: entries.map(([, v]) => v) }],
+      xaxis: { ...BASE.xaxis, categories: entries.map(([k]) => k) },
+      colors: [BLUES[1]],
+      plotOptions: { bar: { borderRadius: 4, barHeight: '55%', horizontal: true } },
+    })
+  }
 
   // ── Weather charts (only when data available) ──────────────────────────────
   const withWeather = leadsForWeather.filter(p => p.meta?.weather)

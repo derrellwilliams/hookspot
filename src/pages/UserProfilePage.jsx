@@ -25,7 +25,7 @@ import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePicke
 import { SearchOverlay } from '../components/SearchOverlay/SearchOverlay.jsx'
 import { FollowListDialog } from '../components/FollowListDialog/FollowListDialog.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
-import { formatDateFull, cleanSpecies } from '../lib/formatters.js'
+import { formatDateFull, cleanSpecies, speciesLabel } from '../lib/formatters.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'
 import styles from './UserProfilePage.module.css'
 
@@ -100,6 +100,8 @@ export function UserProfilePage() {
   const hourlyRef = useRef(null)
   const speciesRef = useRef(null)
   const speciesMonthlyRef = useRef(null)
+  const rodsRef = useRef(null)
+  const fliesRef = useRef(null)
   const weatherCondRef = useRef(null)
   const weatherTempRef = useRef(null)
 
@@ -198,7 +200,8 @@ export function UserProfilePage() {
     const seen = new Set()
     for (const g of catchGroups) {
       const lead = g.find(p => p.species) ?? g[0]
-      if (lead.species) seen.add(lead.species.toLowerCase())
+      const label = speciesLabel(lead)
+      if (label) seen.add(label)
     }
     return seen.size
   }, [catchGroups])
@@ -211,11 +214,6 @@ export function UserProfilePage() {
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
     }).length
   }, [catchGroups])
-
-  const userGroups = useMemo(
-    () => groupPhotos(effectivePhotos.filter(p => p.hasGps)),
-    [effectivePhotos]
-  )
 
   const PAGE_SIZE = 24
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -260,15 +258,17 @@ export function UserProfilePage() {
 
   useEffect(() => {
     if (activeTab !== 'stats') return
-    renderStats(userGroups, {
+    renderStats(catchGroups, {
       monthly: monthlyRef.current,
       hourly: hourlyRef.current,
       species: speciesRef.current,
       speciesMonthly: speciesMonthlyRef.current,
+      rods: rodsRef.current,
+      flies: fliesRef.current,
       weatherCond: weatherCondRef.current,
       weatherTemp: weatherTempRef.current,
     })
-  }, [userGroups, activeTab])
+  }, [catchGroups, activeTab])
 
   async function handleFollow() {
     if (followLoading || !profile) return
@@ -639,7 +639,7 @@ export function UserProfilePage() {
 
         {/* Stats tab */}
         {activeTab === 'stats' && (
-          userGroups.length > 0 ? (
+          catchGroups.length > 0 ? (
             <>
               <div className={styles.grid}>
                 <div className={styles.card}><div className={styles.cardLabel}>Catches per Month</div><div ref={monthlyRef} /></div>
@@ -649,13 +649,17 @@ export function UserProfilePage() {
                   <div className={styles.card}><div className={styles.cardLabel}>Species by Month</div><div ref={speciesMonthlyRef} /></div>
                 </div>
                 <div className={styles.row2}>
+                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Rod</div><div ref={rodsRef} /></div>
+                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Fly</div><div ref={fliesRef} /></div>
+                </div>
+                <div className={styles.row2}>
                   <div className={styles.card}><div className={styles.cardLabel}>Catches by Condition</div><div ref={weatherCondRef} /></div>
                   <div className={styles.card}><div className={styles.cardLabel}>Catches by Temperature</div><div ref={weatherTempRef} /></div>
                 </div>
               </div>
             </>
           ) : (
-            <div className={styles.emptyStats}>No catch data with GPS yet.</div>
+            <div className={styles.emptyStats}>No catch data yet.</div>
           )
         )}
 
