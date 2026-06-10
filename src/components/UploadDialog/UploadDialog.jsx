@@ -11,7 +11,7 @@ import { useAuthStore } from '../../store/useAuthStore.js'
 import { handleFiles } from '../../lib/fileLoader.js'
 import { extractExif, toDisplayBlob } from '../../exif.js'
 import { supabase } from '../../lib/supabase.js'
-import { parseExifDate } from '../../lib/formatters.js'
+import { parseExifDate, cleanGear } from '../../lib/formatters.js'
 import { identifySpecies } from '../../identify.js'
 import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
@@ -173,6 +173,8 @@ export function UploadDialog() {
     if (!user) return
     const files = pendingFiles.slice()
     const blobs = pendingBlobs.slice()
+    const rodVal = cleanGear(rod)
+    const flyVal = cleanGear(fly)
 
     // Resolve catch coordinates: manual pin → EXIF from first file → null
     let catchLat = manualPin?.lat ?? null
@@ -194,8 +196,8 @@ export function UploadDialog() {
       .insert({
         user_id: user.id,
         species: species || null,
-        rod: rod || null,
-        fly: fly || null,
+        rod: rodVal,
+        fly: flyVal,
         lat: catchLat,
         lng: catchLng,
         time: catchTime,
@@ -209,7 +211,7 @@ export function UploadDialog() {
     }
 
     const catchId = catchRow.id
-    const meta = { species, rod, fly, identified: true, catchId }
+    const meta = { species, rod: rodVal, fly: flyVal, identified: true, catchId }
     if (catchLat != null && catchLng != null) { meta.manualLat = catchLat; meta.manualLng = catchLng }
     close()
     try {
@@ -219,7 +221,7 @@ export function UploadDialog() {
         showToast('Failed to add catch.')
       } else {
         showToast('Catch added!')
-        await saveNewGear(fly, rod)
+        await saveNewGear(flyVal, rodVal)
       }
     } catch {
       await supabase.from('catches').delete().eq('id', catchId)

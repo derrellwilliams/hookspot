@@ -6,7 +6,7 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
-import { formatDateFull, cleanSpecies, formatLocation } from '../../lib/formatters.js'
+import { formatDateFull, cleanSpecies, cleanGear, formatLocation } from '../../lib/formatters.js'
 import styles from './Map.module.css'
 
 export function PopupCarousel({ initialGroup, onClose, onDelete }) {
@@ -17,8 +17,8 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   const updatePhoto = usePhotoStore(s => s.updatePhoto)
   const reorderGroup = usePhotoStore(s => s.reorderGroup)
   const showToast = usePhotoStore(s => s.showToast)
-  const prevRods = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.rod).filter(Boolean))]))
-  const prevFlys = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => p.meta?.fly).filter(Boolean))]))
+  const prevRods = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => cleanGear(p.meta?.rod)).filter(Boolean))]))
+  const prevFlys = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => cleanGear(p.meta?.fly)).filter(Boolean))]))
 
   const group = groups.find(g => g.some(p => p.name === leadName)) ?? initialGroup
 
@@ -50,7 +50,9 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
   async function saveEdit() {
     const user = useAuthStore.getState().user
     if (!user) return
-    const updatedMeta = { ...lead.meta, rod, fly, species: species || undefined }
+    const rodVal = cleanGear(rod)
+    const flyVal = cleanGear(fly)
+    const updatedMeta = { ...lead.meta, rod: rodVal, fly: flyVal, species: species || undefined }
     const updatedPhoto = { ...lead, species: species || undefined, meta: updatedMeta }
     try {
       const { error } = await supabase.from('photos')
@@ -60,7 +62,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
       if (error) throw error
       if (lead.catchId) {
         const { error: catchError } = await supabase.from('catches')
-          .update({ species: species || null, rod: rod || null, fly: fly || null })
+          .update({ species: species || null, rod: rodVal, fly: flyVal })
           .eq('id', lead.catchId)
           .eq('user_id', user.id)
         if (catchError) throw catchError

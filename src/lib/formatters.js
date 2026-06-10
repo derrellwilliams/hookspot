@@ -11,6 +11,13 @@ export function cleanSpecies(s) {
   return s.replace(/\s*\(.*?\)/g, '').trim()
 }
 
+// Normalize free-text gear names (rod/fly) before saving or counting:
+// stray/doubled/non-breaking spaces otherwise create phantom duplicates.
+export function cleanGear(s) {
+  const t = s?.replace(/\s+/g, ' ').trim()
+  return t || null
+}
+
 // Canonical species label for counting/charting — one formula everywhere
 // so the profile header and the stats donut can never disagree.
 export function speciesLabel(photo) {

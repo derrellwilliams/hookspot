@@ -1,6 +1,6 @@
 import ApexCharts from 'apexcharts'
 import { tokens } from './tokens.js'
-import { speciesLabel } from './lib/formatters.js'
+import { speciesLabel, cleanGear } from './lib/formatters.js'
 
 let charts = []
 
@@ -174,13 +174,17 @@ export function renderStats(groups, refs = {}) {
   // ── Gear breakdowns (only when data available) ─────────────────────────────
   // rod/fly live in meta on the upload's photos; find whichever photo has it
   const gearEntries = key => {
-    const counts = {}
+    // Dedupe case-insensitively on the normalized name; show first-seen casing
+    const counts = new Map()
     groups.forEach(g => {
-      const val = g.find(p => p.meta?.[key])?.meta[key]
+      const val = cleanGear(g.find(p => p.meta?.[key])?.meta[key])
       if (!val) return
-      counts[val] = (counts[val] ?? 0) + 1
+      const k = val.toLowerCase()
+      const entry = counts.get(k)
+      if (entry) entry[1]++
+      else counts.set(k, [val, 1])
     })
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])
+    return [...counts.values()].sort((a, b) => b[1] - a[1])
   }
 
   for (const [ref, key] of [[refs.rods, 'rod'], [refs.flies, 'fly']]) {
