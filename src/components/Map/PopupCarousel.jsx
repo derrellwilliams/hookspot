@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { useShallow } from 'zustand/react/shallow'
 import { IconoirProvider, EditPencil, Xmark, Plus } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
@@ -7,9 +9,34 @@ import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
 import { formatDateFull, cleanSpecies, cleanGear, formatLocation } from '../../lib/formatters.js'
+import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 import styles from './Map.module.css'
 
-export function PopupCarousel({ initialGroup, onClose, onDelete }) {
+// Static Images API can't render the Standard-based Hook Spot style,
+// so the dialog mini-map is a live (non-interactive) GL map instead.
+function MiniMap({ lat, lng }) {
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    mapboxgl.accessToken = MAPBOX_TOKEN
+    const map = new mapboxgl.Map({
+      container: containerRef.current,
+      style: MAP_STYLE,
+      center: [lng, lat],
+      zoom: 11,
+      interactive: false,
+      attributionControl: false,
+    })
+    const marker = new mapboxgl.Marker({ color: '#000000' })
+      .setLngLat([lng, lat])
+      .addTo(map)
+    return () => { marker.remove(); map.remove() }
+  }, [lat, lng])
+
+  return <div ref={containerRef} className={styles.miniMap} />
+}
+
+export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false }) {
   const leadName = initialGroup[0].name
   const isOwn = initialGroup[0]?.isOwn ?? true
   const ownerProfile = initialGroup[0]?.ownerProfile
@@ -158,23 +185,16 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
 
   const d = photo.time ? new Date(photo.time) : null
 
+  const mapLat = lead.exif?.latitude
+  const mapLng = lead.exif?.longitude
+  const hasCoords = mapLat != null && mapLng != null
+
   return (
     <IconoirProvider iconProps={{ strokeWidth: 2 }}>
     <div className={styles.popup}>
+      <div className={styles.mediaRow}>
       <div className={styles.imgWrapper}>
         <img className={styles.popupImg} src={mainSrc} alt={photo.name} />
-        <div className={styles.imgBtns}>
-          {isOwn && (
-            <Button variant="icon-sm" onClick={() => editing ? cancelEdit() : startEdit()} title={editing ? 'Cancel' : 'Edit'}>
-              {editing ? <Xmark width={20} height={20} /> : <EditPencil width={20} height={20} />}
-            </Button>
-          )}
-          {!editing && (
-            <Button variant="icon-sm" onClick={onClose} title="Close">
-              <Xmark width={20} height={20} />
-            </Button>
-          )}
-        </div>
         {((isOwn && editing) || orderedGroup.length > 1) && (
           <div className={styles.stripRow}>
             {orderedGroup.map((p, i) => (
@@ -219,6 +239,26 @@ export function PopupCarousel({ initialGroup, onClose, onDelete }) {
           style={{ display: 'none' }}
           onChange={handleAddFile}
         />
+      </div>
+      {showMap && (
+        <div className={styles.mapWrapper}>
+          {hasCoords
+            ? <MiniMap lat={mapLat} lng={mapLng} />
+            : <div className={styles.miniMapEmpty}>No location</div>}
+        </div>
+      )}
+      <div className={styles.imgBtns}>
+        {isOwn && (
+          <Button variant="icon-sm" onClick={() => editing ? cancelEdit() : startEdit()} title={editing ? 'Cancel' : 'Edit'}>
+            {editing ? <Xmark width={20} height={20} /> : <EditPencil width={20} height={20} />}
+          </Button>
+        )}
+        {!editing && (
+          <Button variant="icon-sm" onClick={onClose} title="Close">
+            <Xmark width={20} height={20} />
+          </Button>
+        )}
+      </div>
       </div>
 
       {isOwn && editing ? (

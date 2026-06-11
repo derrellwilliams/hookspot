@@ -699,6 +699,7 @@ export function UserProfilePage() {
                   >
                     <PopupCarousel
                       key={catchPopupIdx}
+                      showMap
                       initialGroup={catchPopupGroup}
                       onClose={() => setCatchPopupIdx(null)}
                       onDelete={handleCatchDelete}

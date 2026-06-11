@@ -9,8 +9,42 @@
   color: var(--dark-text);
 }
 
+.mediaRow {
+  position: relative;
+  display: flex;
+}
+
 .imgWrapper {
   position: relative;
+  flex: 5 1 0;
+  min-width: 0;
+}
+
+/* map is 40% of the image width: flex 2 vs 5 */
+.mapWrapper {
+  position: relative;
+  flex: 2 1 0;
+  min-width: 0;
+}
+
+.miniMap {
+  position: absolute;
+  inset: 0;
+}
+
+.miniMap :global(.mapboxgl-ctrl-logo) {
+  display: none;
+}
+
+.miniMapEmpty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
 }
 
 .popupImg {
