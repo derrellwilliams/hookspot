@@ -8,6 +8,7 @@ import { Xmark, MediaImage } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
+import { useCanHover } from '../../hooks/useIsMobile.js'
 import { handleFiles } from '../../lib/fileLoader.js'
 import { extractExif, toDisplayBlob } from '../../exif.js'
 import { supabase } from '../../lib/supabase.js'
@@ -50,7 +51,9 @@ export function UploadDialog() {
   const [identifying, setIdentifying] = useState(false)
   const [loading, setLoading] = useState(false)
   const [dropOver, setDropOver] = useState(false)
+  const canHover = useCanHover()
   const fileInputRef = useRef(null)
+  const cameraInputRef = useRef(null)
   const locationMapInstanceRef = useRef(null)
   const locationMarkerRef = useRef(null)
   const mapCenterRef = useRef(null)
@@ -296,7 +299,7 @@ export function UploadDialog() {
                         >
                           {loading ? (
                             <div className={styles.spinner} />
-                          ) : (
+                          ) : canHover ? (
                             <>
                               <MediaImage width={24} height={24} style={{ opacity: 0.4 }} />
                               <div className={styles.dropLabel}>Drop photos here</div>
@@ -308,6 +311,22 @@ export function UploadDialog() {
                                 whileTap={{ scale: 0.975 }}
                                 transition={spring}
                               >Browse</motion.button>
+                            </>
+                          ) : (
+                            <>
+                              <MediaImage width={24} height={24} style={{ opacity: 0.4 }} />
+                              <motion.button
+                                className={`${styles.browseBtn} ${styles.touchBtn} ${styles.touchBtnPrimary}`}
+                                onClick={() => fileInputRef.current?.click()}
+                                whileTap={{ scale: 0.975 }}
+                                transition={spring}
+                              >Choose photos</motion.button>
+                              <motion.button
+                                className={`${styles.browseBtn} ${styles.touchBtn}`}
+                                onClick={() => cameraInputRef.current?.click()}
+                                whileTap={{ scale: 0.975 }}
+                                transition={spring}
+                              >Take photo</motion.button>
                             </>
                           )}
                         </div>
@@ -377,6 +396,14 @@ export function UploadDialog() {
                     type="file"
                     accept="image/*"
                     multiple
+                    style={{ display: 'none' }}
+                    onChange={onFileChange}
+                  />
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
                     style={{ display: 'none' }}
                     onChange={onFileChange}
                   />

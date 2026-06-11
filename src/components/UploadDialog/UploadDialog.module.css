@@ -18,6 +18,7 @@
 
 .content {
   width: 420px;
+  max-width: calc(100vw - 24px);
   background: rgba(0, 0, 0, 0.85);
   border-radius: 16px;
   overflow: hidden;
@@ -89,6 +90,18 @@
 
 .browseBtn:hover {
   background: rgba(255,255,255,0.15);
+}
+
+/* Touch devices: no drag-drop, so the buttons are the whole flow */
+.touchBtn {
+  width: 100%;
+  padding: 12px 20px;
+  font-weight: 600;
+}
+
+.touchBtnPrimary {
+  background: var(--accent);
+  border-color: transparent;
 }
 
 .previewWrap {

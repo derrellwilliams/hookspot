@@ -37,7 +37,7 @@ body {
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  width: 460px;
+  width: min(460px, calc(100vw - 24px));
   background: rgba(0, 0, 0, 0.85) !important;
   animation: mapPopupIn 0.2s ease-out;
 }

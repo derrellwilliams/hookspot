@@ -38,6 +38,12 @@
   max-height: 72vh;
 }
 
+@media (max-width: 600px) {
+  .inner {
+    width: calc(100vw - 32px);
+  }
+}
+
 .searchLabel {
   text-align: center;
   font-family: var(--font-display);

@@ -54,6 +54,12 @@
   display: block;
 }
 
+@media (max-width: 600px) {
+  .popupImg {
+    height: min(345px, 62vw);
+  }
+}
+
 .imgBtns {
   position: absolute;
   top: 10px;

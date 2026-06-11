@@ -11,7 +11,7 @@ import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 const MAP_CENTER = [-111.891, 40.760]
 const MAP_ZOOM = 11
 const MARKER_COLOR = '#000000'
-const POPUP_MAX_WIDTH = '484px'
+const POPUP_MAX_WIDTH = 'min(484px, calc(100vw - 24px))'
 const MIN_FLY_ZOOM = 13
 const POPUP_PAN_FACTOR = 0.65
 const BOUNDS_PADDING_DEGREES = 0.008  // ~0.55 miles
@@ -147,7 +147,13 @@ export function MapView({ active }) {
       const marker = new mapboxgl.Marker({ color: MARKER_COLOR })
         .setLngLat(lnglat)
         .addTo(map)
-      marker.getElement().style.cursor = 'pointer'
+      const markerEl = marker.getElement()
+      markerEl.style.cursor = 'pointer'
+      // Default pin is ~27×41 — pad the tap target to 44px for touch
+      const hitArea = document.createElement('div')
+      hitArea.style.cssText =
+        'position:absolute;left:50%;transform:translateX(-50%);bottom:-6px;width:44px;height:50px;'
+      markerEl.appendChild(hitArea)
 
       markersRef.current.push({ key, marker, popup, root })
     }

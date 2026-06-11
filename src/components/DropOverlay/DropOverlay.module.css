@@ -14,11 +14,13 @@
   background: white;
   border: 2px dashed var(--accent);
   border-radius: 16px;
-  padding: 48px 64px;
+  padding: clamp(24px, 6vw, 48px) clamp(28px, 9vw, 64px);
+  margin: 16px;
   font-size: 20px;
   font-weight: 600;
   color: var(--accent);
   display: flex;
   align-items: center;
+  text-align: center;
   gap: 16px;
 }
