@@ -10,7 +10,9 @@ import styles from './Sidebar.module.css'
 const spring = { type: 'spring', stiffness: 300, damping: 24 }
 const springTight = { type: 'spring', stiffness: 400, damping: 35 }
 
-export function Sidebar() {
+// Sidebar body without the positioned <aside> shell, so the mobile dock
+// sheet can render the same content inside its own container.
+export function SidebarContent() {
   const groups = usePhotoStore(s => s.groups)
   const hasPhotos = usePhotoStore(s => s.photos.length > 0)
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
@@ -43,7 +45,7 @@ export function Sidebar() {
   }, [groups, ownOnly])
 
   return (
-    <aside id="sidebar" className={styles.sidebar}>
+    <>
       <div className={styles.filterRow}>
         {hasPhotos && <span className={styles.filterTitle}>Latest Catches</span>}
         {hasOthers && (
@@ -122,6 +124,14 @@ export function Sidebar() {
           </ScrollArea.Scrollbar>
         </ScrollArea.Root>
       )}
+    </>
+  )
+}
+
+export function Sidebar() {
+  return (
+    <aside id="sidebar" className={styles.sidebar}>
+      <SidebarContent />
     </aside>
   )
 }

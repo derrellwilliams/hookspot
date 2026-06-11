@@ -7,7 +7,7 @@ import styles from './Nav.module.css'
 const spring = { type: 'spring', stiffness: 300, damping: 24 }
 const springTight = { type: 'spring', stiffness: 400, damping: 35 }
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { path: '/', label: 'Catches' },
   { path: '/profile', label: 'Profile' },
 ]
