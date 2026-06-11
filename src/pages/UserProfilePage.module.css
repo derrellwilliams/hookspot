@@ -893,15 +893,41 @@
     align-items: center;
   }
 
+  /* Constrain the header column to the card so name/bio/stats can't
+     push it wider than the viewport */
+  .headerLeft,
+  .headerMid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
   .headerUsername {
     font-size: clamp(20px, 7.5vw, 32px);
     text-align: center;
     overflow-wrap: anywhere;
   }
 
+  .headerBio {
+    overflow-wrap: anywhere;
+  }
+
+  .headerStats {
+    max-width: 100%;
+  }
+
+  .headerStat {
+    flex: 1;
+    padding: 12px 14px;
+  }
+
+  .headerStatMonth {
+    display: none;
+  }
+
   .scroll {
-    /* Nav pill sits at the bottom on mobile */
-    padding: 24px 16px calc(96px + env(safe-area-inset-bottom));
+    /* 16px gutter around the header card; clear the bottom nav pill */
+    padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
   }
 
   .catchesGrid {

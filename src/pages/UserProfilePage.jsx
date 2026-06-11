@@ -550,7 +550,7 @@ export function UserProfilePage() {
                   <span className={styles.headerStatLabel}>Year</span>
                 </div>
                 <div className={styles.headerStatDivider} />
-                <div className={styles.headerStat}>
+                <div className={`${styles.headerStat} ${styles.headerStatMonth}`}>
                   <span className={styles.headerStatNum}>{catchesThisMonth}</span>
                   <span className={styles.headerStatLabel}>Month</span>
                 </div>
