@@ -893,6 +893,12 @@
     align-items: center;
   }
 
+  .headerUsername {
+    font-size: clamp(20px, 7.5vw, 32px);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
   .scroll {
     /* Nav pill sits at the bottom on mobile */
     padding: 24px 16px calc(96px + env(safe-area-inset-bottom));

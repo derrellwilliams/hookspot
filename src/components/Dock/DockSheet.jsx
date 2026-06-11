@@ -68,14 +68,18 @@ export function DockSheet({ children }) {
 
   function onPointerDown(e) {
     dragRef.current = { startY: e.clientY, startH: h.get(), dragging: false }
-    e.currentTarget.setPointerCapture(e.pointerId)
   }
 
   function onPointerMove(e) {
     const s = dragRef.current
     if (!s) return
     const dy = e.clientY - s.startY
-    if (!s.dragging && Math.abs(dy) > DRAG_SLOP) s.dragging = true
+    if (!s.dragging && Math.abs(dy) > DRAG_SLOP) {
+      s.dragging = true
+      // Capture only once a drag starts — capturing on pointerdown would
+      // retarget the tap's click away from the tab buttons.
+      try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* stale/synthetic pointer */ }
+    }
     if (!s.dragging) return
     let next = s.startH - dy
     if (next > H_FULL) next = H_FULL + (next - H_FULL) * RUBBER_BAND
