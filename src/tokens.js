@@ -17,6 +17,7 @@ export const tokens = {
   // Layout
   sidebarWidth: 240,
   radius: 8,
+  navClearance: 96, // px before safe-area; CSS: --nav-clearance
 
   // Typography
   fontSans: '"Roboto", sans-serif',

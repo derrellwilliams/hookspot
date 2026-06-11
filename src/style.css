@@ -11,6 +11,10 @@
   /* Dark UI */
   --ui-bg: #202020;
   --dock-bg: rgba(20, 20, 22, 0.82);
+
+  /* Scroll-container bottom clearance for the fixed mobile nav pill / dock
+     (60px pill + 12px offset + breathing room; see Nav.module.css) */
+  --nav-clearance: calc(96px + env(safe-area-inset-bottom));
   --dark-surface: #2c2c2e;
   --dark-border: #3a3a3c;
   --dark-text: #f4f4f5;

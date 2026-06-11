@@ -70,6 +70,7 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  width: 100%;
 }
 
 .avatarWrap {
@@ -177,6 +178,10 @@
   align-items: center;
   text-align: center;
   gap: 10px;
+  /* Cap at the card width and wrap long unbroken tokens (URLs, handles)
+     at every width — the card's overflow:hidden would otherwise clip them */
+  width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .headerUsername {
@@ -201,6 +206,7 @@
   gap: 0;
   margin-top: 4px;
   margin-bottom: 8px;
+  max-width: 100%;
   background: rgba(0, 0, 0, 0.35);
   border-radius: 10px;
   overflow: hidden;
@@ -893,41 +899,28 @@
     align-items: center;
   }
 
-  /* Constrain the header column to the card so name/bio/stats can't
-     push it wider than the viewport */
-  .headerLeft,
-  .headerMid {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
   .headerUsername {
     font-size: clamp(20px, 7.5vw, 32px);
     text-align: center;
-    overflow-wrap: anywhere;
   }
 
-  .headerBio {
-    overflow-wrap: anywhere;
-  }
-
-  .headerStats {
-    max-width: 100%;
-  }
-
+  /* min-width: 0 lets flex: 1 compress cells below their label width
+     instead of clipping at the card edge */
   .headerStat {
     flex: 1;
+    min-width: 0;
     padding: 12px 14px;
   }
 
-  .headerStatMonth {
+  /* Hide Month (and its trailing divider) to give the rest room */
+  .headerStatMonth,
+  .headerStatMonth + .headerStatDivider {
     display: none;
   }
 
   .scroll {
     /* 16px gutter around the header card; clear the bottom nav pill */
-    padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
+    padding: 16px 16px var(--nav-clearance);
   }
 
   .catchesGrid {
