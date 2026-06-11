@@ -125,3 +125,10 @@
 .resend:hover {
   color: rgba(255, 255, 255, 0.6);
 }
+
+/* 16px minimum stops iOS Safari from auto-zooming focused fields */
+@media (max-width: 600px) {
+  .input {
+    font-size: 16px;
+  }
+}

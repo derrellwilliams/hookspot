@@ -907,3 +907,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* 16px minimum stops iOS Safari from auto-zooming focused fields */
+@media (max-width: 600px) {
+  .editBioInput,
+  .gearAddInput {
+    font-size: 16px;
+  }
+}

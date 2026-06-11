@@ -145,6 +145,13 @@
   opacity: 1;
 }
 
+/* No hover on touch devices — keep remove buttons visible */
+@media (hover: none) {
+  .thumbRemoveBtn {
+    opacity: 1;
+  }
+}
+
 .dragging {
   opacity: 0.25;
   border-style: dashed;

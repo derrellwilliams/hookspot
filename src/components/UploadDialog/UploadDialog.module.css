@@ -159,6 +159,13 @@
   opacity: 1;
 }
 
+/* No hover on touch devices — keep remove buttons visible */
+@media (hover: none) {
+  .thumbRemove {
+    opacity: 1;
+  }
+}
+
 .thumbAdd {
   display: flex;
   align-items: center;

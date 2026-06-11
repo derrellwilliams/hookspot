@@ -206,3 +206,11 @@
 .saveBtn {
   width: 100%;
 }
+
+/* 16px minimum stops iOS Safari from auto-zooming focused fields */
+@media (max-width: 600px) {
+  .input,
+  .textarea {
+    font-size: 16px;
+  }
+}

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
 import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
+import { useCanHover } from '../../hooks/useIsMobile.js'
 import { SidebarItem } from './SidebarItem.jsx'
 import styles from './Sidebar.module.css'
 
@@ -17,6 +18,8 @@ export function Sidebar() {
   const ownOnly = usePhotoStore(s => s.ownOnly)
   const setOwnOnly = usePhotoStore(s => s.setOwnOnly)
   const [hoveredTab, setHoveredTab] = useState(null)
+  // Touch devices fire mouseenter on tap with no mouseleave, stranding the indicator
+  const canHover = useCanHover()
 
   const hasOthers = useMemo(() => groups.some(g => g.some(p => !p.isOwn)), [groups])
 
@@ -55,7 +58,7 @@ export function Sidebar() {
                   key={label}
                   className={`${styles.filterTab} ${isActive ? styles.filterTabActive : ''}`}
                   onClick={() => setOwnOnly(value)}
-                  onMouseEnter={() => setHoveredTab(value)}
+                  onMouseEnter={() => canHover && setHoveredTab(value)}
                 >
                   <AnimatePresence>
                     {hoveredTab === value && !isActive && (

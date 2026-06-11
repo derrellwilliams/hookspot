@@ -145,3 +145,11 @@
   background: #1a1a1a;
   color: var(--dark-text);
 }
+
+/* 16px minimum stops iOS Safari from auto-zooming focused fields */
+@media (max-width: 600px) {
+  .input,
+  .select {
+    font-size: 16px;
+  }
+}
