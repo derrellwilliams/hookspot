@@ -10,6 +10,7 @@
 
   /* Dark UI */
   --ui-bg: #202020;
+  --dock-bg: rgba(20, 20, 22, 0.82);
   --dark-surface: #2c2c2e;
   --dark-border: #3a3a3c;
   --dark-text: #f4f4f5;
@@ -49,6 +50,14 @@ body {
 
 .mapboxgl-popup-close-button {
   display: none;
+}
+
+/* Mobile: lift zoom controls and attribution above the collapsed dock pill */
+@media (max-width: 600px) {
+  .mapboxgl-ctrl-bottom-right,
+  .mapboxgl-ctrl-bottom-left {
+    bottom: calc(98px + env(safe-area-inset-bottom));
+  }
 }
 
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,

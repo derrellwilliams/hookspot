@@ -8,6 +8,7 @@ export const tokens = {
   // Dark UI
   darkBg: '#1A1953',
   uiBg: '#202020',
+  dockBg: 'rgba(20, 20, 22, 0.82)',
   darkSurface: '#2c2c2e',
   darkBorder: '#3a3a3c',
   darkText: '#f4f4f5',

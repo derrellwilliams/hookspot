@@ -7,6 +7,7 @@ import { deletePhotos } from '../../lib/fileLoader.js'
 import { PopupCarousel } from './PopupCarousel.jsx'
 import styles from './Map.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
+import { MOBILE_QUERY } from '../../hooks/useIsMobile.js'
 
 const MAP_CENTER = [-111.891, 40.760]
 const MAP_ZOOM = 11
@@ -64,8 +65,11 @@ export function MapView({ active }) {
         markersRef.current.forEach(m => m.popup.remove())
         const lnglat = marker.getLngLat()
         const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
-        const sidebarRight = DEFAULT_SIDEBAR_RIGHT
-        map.jumpTo({ center: lnglat, zoom, padding: { left: sidebarRight, right: 0, top: 0, bottom: 0 } })
+        // Mobile: sidebar is a bottom dock (collapsed pill ~92px incl. gap), not a left panel
+        const padding = window.matchMedia(MOBILE_QUERY).matches
+          ? { left: 0, right: 0, top: 0, bottom: 110 }
+          : { left: DEFAULT_SIDEBAR_RIGHT, right: 0, top: 0, bottom: 0 }
+        map.jumpTo({ center: lnglat, zoom, padding })
         popup.addTo(map)
         requestAnimationFrame(() => {
           const popupEl = popup.getElement()
@@ -227,7 +231,9 @@ export function MapView({ active }) {
       [Math.max(...lngs) + BOUNDS_PADDING_DEGREES, Math.max(...lats) + BOUNDS_PADDING_DEGREES]
     )
     map.fitBounds(bounds, {
-      padding: { top: 80, bottom: 60, left: 376, right: 60 },
+      padding: window.matchMedia(MOBILE_QUERY).matches
+        ? { top: 60, bottom: 200, left: 40, right: 40 }
+        : { top: 80, bottom: 60, left: 376, right: 60 },
       maxZoom: 16,
       duration: 0,
     })

@@ -15,6 +15,7 @@ import { UserProfilePage } from './pages/UserProfilePage.jsx'
 import { RequireAuth } from './components/RequireAuth.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { supabase } from './lib/supabase.js'
+import { useIsMobile } from './hooks/useIsMobile.js'
 import { useAuthStore } from './store/useAuthStore.js'
 import { usePhotoStore } from './store/usePhotoStore.js'
 import { initPhotos, clearUploadingNames } from './lib/fileLoader.js'
@@ -83,10 +84,13 @@ function AppInner() {
   }, [setUser, setSession, setUserAndUsername])
 
   const isMap = location.pathname === '/'
+  // On the mobile map page the tabs live inside the dock sheet
+  const isMobile = useIsMobile()
+  const hideNav = isMobile && isMap
 
   return (
     <div className={styles.app}>
-      {!isPublicPage && <Nav />}
+      {!isPublicPage && !hideNav && <Nav />}
       <RequireAuth>
         <div style={{ display: isMap ? 'contents' : 'none' }}>
           <MapPage active={isMap} />
