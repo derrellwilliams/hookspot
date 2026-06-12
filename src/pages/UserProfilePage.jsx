@@ -58,6 +58,7 @@ export function UserProfilePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const myUser = useAuthStore(s => s.user)
   const myUsername = useAuthStore(s => s.username)
+  const authLoading = useAuthStore(s => s.loading)
   const setUser = useAuthStore(s => s.setUser)
   const signOut = useAuthStore(s => s.signOut)
   const removeUserPhotos = usePhotoStore(s => s.removeUserPhotos)
@@ -130,6 +131,11 @@ export function UserProfilePage() {
   const isLoading = isAuthResolving || isProfileLoading
 
   useEffect(() => {
+    // Wait for auth to settle (session restore, then username fetch) so a
+    // hard refresh doesn't fire a throwaway anonymous fetch — on your own
+    // profile isOwnProfile is still false until the username resolves, and on
+    // others' profiles the follow state would briefly render as "Follow".
+    if (authLoading || isAuthResolving) return
     if (isOwnProfile || !urlUsername) return
     setLoading(true)
     setError(null)
@@ -172,7 +178,7 @@ export function UserProfilePage() {
         setLoading(false)
       }
     })()
-  }, [urlUsername, myUser?.id, isOwnProfile])
+  }, [authLoading, isAuthResolving, urlUsername, myUser?.id, isOwnProfile])
 
   useEffect(() => {
     if (!isOwnProfile || !myUser) return
@@ -243,7 +249,20 @@ export function UserProfilePage() {
   // ?catch=<id> deep link: on first load with catches present, open the matching
   // dialog; afterwards keep the param in sync with the open dialog.
   const catchParamPhase = useRef('pending')
+
+  // Profile-to-profile navigation keeps this component mounted: close any open
+  // dialog (its index is meaningless on the new profile) and re-arm the deep
+  // link before the sync effect below runs.
   useEffect(() => {
+    setCatchPopupIdx(null)
+    catchParamPhase.current = 'pending'
+  }, [urlUsername])
+
+  useEffect(() => {
+    // After profile-to-profile navigation, recentCatches still reflects the
+    // previous profile for a few renders; acting on it would resolve the deep
+    // link against (or strip the param because of) the wrong catch list.
+    if (profile?.username !== urlUsername) return
     if (catchParamPhase.current === 'pending') {
       if (recentCatches.length === 0) return
       catchParamPhase.current = 'synced'
@@ -265,7 +284,7 @@ export function UserProfilePage() {
       else next.delete('catch')
       return next
     }, { replace: true })
-  }, [recentCatches, catchPopupIdx, searchParams, setSearchParams])
+  }, [recentCatches, catchPopupIdx, searchParams, setSearchParams, profile?.username, urlUsername])
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
