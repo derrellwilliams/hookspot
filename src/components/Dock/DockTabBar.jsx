@@ -2,6 +2,7 @@ import { motion } from 'motion/react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
+import { useAuthStore } from '../../store/useAuthStore.js'
 import { NAV_ITEMS } from '../Nav/Nav.jsx'
 import styles from './Dock.module.css'
 
@@ -11,6 +12,7 @@ export function DockTabBar() {
   const navigate = useNavigate()
   const location = useLocation()
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
+  const user = useAuthStore(s => s.user)
   const path = location.pathname
 
   return (
@@ -41,7 +43,7 @@ export function DockTabBar() {
       })}
       <motion.button
         className={styles.tabPlus}
-        onClick={() => setUploadOpen(true)}
+        onClick={() => user ? setUploadOpen(true) : navigate('/login')}
         aria-label="Add catch"
         whileTap={{ scale: 0.95 }}
         transition={springTight}

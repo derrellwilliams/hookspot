@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useShallow } from 'zustand/react/shallow'
-import { IconoirProvider, EditPencil, Xmark, Plus } from 'iconoir-react'
+import { IconoirProvider, EditPencil, Xmark, Plus, ShareIos } from 'iconoir-react'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
@@ -36,7 +36,7 @@ function MiniMap({ lat, lng }) {
   return <div ref={containerRef} className={styles.miniMap} />
 }
 
-export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false }) {
+export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false, shareUrl = null }) {
   const leadName = initialGroup[0].name
   const isOwn = initialGroup[0]?.isOwn ?? true
   const ownerProfile = initialGroup[0]?.ownerProfile
@@ -118,6 +118,21 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
 
   function handleDelete() {
     onDelete?.(orderedGroup.slice())
+  }
+
+  async function handleShare() {
+    try {
+      if (navigator.share) {
+        await navigator.share({ url: shareUrl })
+      } else {
+        await navigator.clipboard.writeText(shareUrl)
+        showToast('Link copied')
+      }
+    } catch (err) {
+      if (err?.name === 'AbortError') return // user dismissed the share sheet
+      console.error('[popup] share failed:', err)
+      showToast('Failed to share')
+    }
   }
 
   // Add photo to group
@@ -251,6 +266,11 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
         {isOwn && (
           <Button variant="icon-sm" onClick={() => editing ? cancelEdit() : startEdit()} title={editing ? 'Cancel' : 'Edit'}>
             {editing ? <Xmark width={20} height={20} /> : <EditPencil width={20} height={20} />}
+          </Button>
+        )}
+        {shareUrl && !editing && (
+          <Button variant="icon-sm" onClick={handleShare} title="Share">
+            <ShareIos width={20} height={20} />
           </Button>
         )}
         {!editing && (

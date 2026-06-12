@@ -30,6 +30,7 @@ function ProfileRedirect() {
 function AppInner() {
   const location = useLocation()
   const navigate = useNavigate()
+  const user = useAuthStore(s => s.user)
   const setUser = useAuthStore(s => s.setUser)
   const setSession = useAuthStore(s => s.setSession)
   const setUserAndUsername = useAuthStore(s => s.setUserAndUsername)
@@ -91,22 +92,25 @@ function AppInner() {
   return (
     <div className={styles.app}>
       {!isPublicPage && !hideNav && <Nav />}
-      <RequireAuth>
-        <div style={{ display: isMap ? 'contents' : 'none' }}>
-          <MapPage active={isMap} />
-        </div>
-      </RequireAuth>
+      {user && (
+        <RequireAuth>
+          <div style={{ display: isMap ? 'contents' : 'none' }}>
+            <MapPage active={isMap} />
+          </div>
+        </RequireAuth>
+      )}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><ProfileRedirect /></RequireAuth>} />
-        <Route path="/user/:username" element={<RequireAuth><UserProfilePage /></RequireAuth>} />
-        <Route path="/" element={null} />
+        <Route path="/user/:username" element={<UserProfilePage />} />
+        {/* MapPage itself stays mounted above; this only enforces the login redirect */}
+        <Route path="/" element={<RequireAuth>{null}</RequireAuth>} />
         <Route path="/design" element={<DesignPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      {!isPublicPage && <DropOverlay />}
-      {!isPublicPage && <UploadDialog />}
+      {!isPublicPage && user && <DropOverlay />}
+      {!isPublicPage && user && <UploadDialog />}
       {!isPublicPage && <Toast />}
     </div>
   )

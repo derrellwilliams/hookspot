@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
@@ -30,6 +30,12 @@ import { uploadAvatar } from '../lib/avatarUpload.js'
 import styles from './UserProfilePage.module.css'
 
 const spring = { type: 'spring', stiffness: 300, damping: 24 }
+
+// Stable share identifier for a catch group; photos without a catches row
+// fall back to the lead photo's filename.
+function groupShareId(group) {
+  return String(group[0].catchId ?? group[0].name)
+}
 const cardVariants = { rest: { y: 0 }, hover: { y: -1 } }
 const imgVariants = { rest: { scale: 1 }, hover: { scale: 1.015 } }
 
@@ -49,6 +55,7 @@ function cacheFavorites(favs) {
 export function UserProfilePage() {
   const { username: urlUsername } = useParams()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const myUser = useAuthStore(s => s.user)
   const myUsername = useAuthStore(s => s.username)
   const setUser = useAuthStore(s => s.setUser)
@@ -123,7 +130,7 @@ export function UserProfilePage() {
   const isLoading = isAuthResolving || isProfileLoading
 
   useEffect(() => {
-    if (isOwnProfile || !urlUsername || !myUser) return
+    if (isOwnProfile || !urlUsername) return
     setLoading(true)
     setError(null)
     setFetchedProfile(null)
@@ -135,7 +142,9 @@ export function UserProfilePage() {
         if (profileError || !profileData) { setError('Profile not found'); return }
         setFetchedProfile(profileData)
         const [followResult, photosRes, followerRes, followingRes] = await Promise.all([
-          supabase.from('follows').select('follower_id').eq('follower_id', myUser.id).eq('following_id', profileData.id).maybeSingle(),
+          myUser
+            ? supabase.from('follows').select('follower_id').eq('follower_id', myUser.id).eq('following_id', profileData.id).maybeSingle()
+            : Promise.resolve({ data: null }),
           fetch(`/api/photos?userId=${profileData.id}&ownOnly=true`),
           supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
           supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
@@ -231,6 +240,33 @@ export function UserProfilePage() {
 
   const catchPopupGroup = catchPopupIdx !== null ? (recentCatches[catchPopupIdx] ?? null) : null
 
+  // ?catch=<id> deep link: on first load with catches present, open the matching
+  // dialog; afterwards keep the param in sync with the open dialog.
+  const catchParamPhase = useRef('pending')
+  useEffect(() => {
+    if (catchParamPhase.current === 'pending') {
+      if (recentCatches.length === 0) return
+      catchParamPhase.current = 'synced'
+      const target = searchParams.get('catch')
+      if (target) {
+        const idx = recentCatches.findIndex(g => groupShareId(g) === target)
+        if (idx !== -1) {
+          setCatchPopupIdx(idx)
+          return // param already matches; sync resumes on the next run
+        }
+      }
+    }
+    const group = catchPopupIdx !== null ? (recentCatches[catchPopupIdx] ?? null) : null
+    const id = group ? groupShareId(group) : null
+    setSearchParams(prev => {
+      if ((prev.get('catch') ?? null) === id) return prev
+      const next = new URLSearchParams(prev)
+      if (id) next.set('catch', id)
+      else next.delete('catch')
+      return next
+    }, { replace: true })
+  }, [recentCatches, catchPopupIdx, searchParams, setSearchParams])
+
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
   }, [effectivePhotos])
@@ -271,6 +307,7 @@ export function UserProfilePage() {
   }, [catchGroups, activeTab])
 
   async function handleFollow() {
+    if (!myUser) { navigate('/login'); return }
     if (followLoading || !profile) return
     setFollowLoading(true)
     try {
@@ -504,7 +541,7 @@ export function UserProfilePage() {
               {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
             </Button>
           )}
-          <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Search users" onClick={() => setSearchOpen(true)}>
+          <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Search users" onClick={() => myUser ? setSearchOpen(true) : navigate('/login')}>
             <Group width={16} height={16} />
           </Button>
           </div>
@@ -701,6 +738,7 @@ export function UserProfilePage() {
                       key={catchPopupIdx}
                       showMap
                       initialGroup={catchPopupGroup}
+                      shareUrl={`${window.location.origin}/user/${profile.username}?catch=${encodeURIComponent(groupShareId(catchPopupGroup))}`}
                       onClose={() => setCatchPopupIdx(null)}
                       onDelete={handleCatchDelete}
                     />

@@ -2,6 +2,7 @@ import { motion } from 'motion/react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
+import { useAuthStore } from '../../store/useAuthStore.js'
 import styles from './Nav.module.css'
 
 const spring = { type: 'spring', stiffness: 300, damping: 24 }
@@ -16,6 +17,7 @@ export function Nav() {
   const navigate = useNavigate()
   const location = useLocation()
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
+  const user = useAuthStore(s => s.user)
   const path = location.pathname
 
   return (
@@ -48,7 +50,7 @@ export function Nav() {
         })}
         <motion.button
           className={styles.plusBtn}
-          onClick={() => setUploadOpen(true)}
+          onClick={() => user ? setUploadOpen(true) : navigate('/login')}
           aria-label="Add catch"
           whileHover={{ scale: 1.007 }}
           whileTap={{ scale: 0.975 }}
