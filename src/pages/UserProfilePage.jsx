@@ -763,7 +763,7 @@ export function UserProfilePage() {
                   >
                     <PopupCarousel
                       key={catchPopupIdx}
-                      showMap={!!myUser}
+                      showMap={!!myUser && !isMobile}
                       sheet
                       initialGroup={catchPopupGroup}
                       shareUrl={`${window.location.origin}/user/${profile.username}?catch=${encodeURIComponent(groupShareId(catchPopupGroup))}`}
