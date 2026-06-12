@@ -36,7 +36,9 @@ function MiniMap({ lat, lng }) {
   return <div ref={containerRef} className={styles.miniMap} />
 }
 
-export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false, shareUrl = null }) {
+// `sheet` opts into the mobile bottom-sheet layout (≤600px): media stacks
+// vertically so the image spans the full width; no effect on desktop.
+export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false, shareUrl = null, sheet = false }) {
   const leadName = initialGroup[0].name
   const isOwn = initialGroup[0]?.isOwn ?? true
   const ownerProfile = initialGroup[0]?.ownerProfile
@@ -206,7 +208,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
 
   return (
     <IconoirProvider iconProps={{ strokeWidth: 2 }}>
-    <div className={styles.popup}>
+    <div className={`${styles.popup} ${sheet ? styles.popupSheet : ''}`}>
       <div className={styles.mediaRow}>
       <div className={styles.imgWrapper}>
         <img className={styles.popupImg} src={mainSrc} alt={photo.name} />

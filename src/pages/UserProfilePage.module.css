@@ -839,6 +839,28 @@
   cursor: default;
 }
 
+/* Bottom sheet on mobile: full width, no arrows, image gets the whole viewport width */
+@media (max-width: 600px) {
+  .catchDialogPositioner {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    display: block;
+  }
+
+  .catchDialogContent {
+    width: 100%;
+    max-width: none;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(10, 10, 10, 0.97);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+
 /* ── Footer ── */
 .footer {
   margin-top: 32px;

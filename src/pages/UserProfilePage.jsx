@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { initPhotos, deletePhotos } from '../lib/fileLoader.js'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 import { groupPhotos } from '../lib/groupPhotos.js'
 import { renderStats } from '../stats.js'
 import { animateMesh } from '../lib/mesh.js'
@@ -67,6 +68,7 @@ export function UserProfilePage() {
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
 
   const isOwnProfile = urlUsername === myUsername
+  const isMobile = useIsMobile()
 
   const [fetchedProfile, setFetchedProfile] = useState(null)
   const [otherPhotos, setOtherPhotos] = useState([])
@@ -738,38 +740,47 @@ export function UserProfilePage() {
                 </Dialog.Overlay>
                 <Dialog.Content className={styles.catchDialogPositioner} aria-describedby={undefined}>
                   <Dialog.Title className={styles.srOnly}>Catch details</Dialog.Title>
-                  <button
-                    className={styles.catchNavArrow}
-                    onClick={() => setCatchPopupIdx(i => Math.max(0, i - 1))}
-                    disabled={catchPopupIdx === 0}
-                    aria-label="Previous catch"
-                  >
-                    <NavArrowLeft width={18} height={18} />
-                  </button>
+                  {!isMobile && (
+                    <button
+                      className={styles.catchNavArrow}
+                      onClick={() => setCatchPopupIdx(i => Math.max(0, i - 1))}
+                      disabled={catchPopupIdx === 0}
+                      aria-label="Previous catch"
+                    >
+                      <NavArrowLeft width={18} height={18} />
+                    </button>
+                  )}
                   <motion.div
                     className={styles.catchDialogContent}
-                    initial={{ opacity: 0, scale: 0.97, y: 4 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
-                    transition={{ delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
+                    initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.97, y: 4 }}
+                    animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
+                    exit={isMobile
+                      ? { y: '100%', transition: { duration: 0.25, ease: [0.67, 0.17, 0.62, 0.64] } }
+                      : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
+                    transition={isMobile
+                      ? { duration: 0.35, ease: [0.32, 0.72, 0, 1] }
+                      : { delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
                   >
                     <PopupCarousel
                       key={catchPopupIdx}
                       showMap
+                      sheet
                       initialGroup={catchPopupGroup}
                       shareUrl={`${window.location.origin}/user/${profile.username}?catch=${encodeURIComponent(groupShareId(catchPopupGroup))}`}
                       onClose={() => setCatchPopupIdx(null)}
                       onDelete={handleCatchDelete}
                     />
                   </motion.div>
-                  <button
-                    className={styles.catchNavArrow}
-                    onClick={() => setCatchPopupIdx(i => Math.min(recentCatches.length - 1, i + 1))}
-                    disabled={catchPopupIdx >= recentCatches.length - 1}
-                    aria-label="Next catch"
-                  >
-                    <NavArrowRight width={18} height={18} />
-                  </button>
+                  {!isMobile && (
+                    <button
+                      className={styles.catchNavArrow}
+                      onClick={() => setCatchPopupIdx(i => Math.min(recentCatches.length - 1, i + 1))}
+                      disabled={catchPopupIdx >= recentCatches.length - 1}
+                      aria-label="Next catch"
+                    >
+                      <NavArrowRight width={18} height={18} />
+                    </button>
+                  )}
                 </Dialog.Content>
               </>
             )}

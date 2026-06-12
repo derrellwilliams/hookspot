@@ -58,6 +58,20 @@
   .popupImg {
     height: min(345px, 62vw);
   }
+
+  /* Sheet variant (profile catch dialog): full-width image, map as a strip below */
+  .popupSheet .mediaRow {
+    flex-direction: column;
+  }
+
+  .popupSheet .popupImg {
+    height: min(100vw, 48vh);
+  }
+
+  .popupSheet .mapWrapper {
+    flex: none;
+    height: 110px;
+  }
 }
 
 .imgBtns {
