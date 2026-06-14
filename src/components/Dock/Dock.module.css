@@ -17,11 +17,6 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
-.dockBarHandle {
-  position: relative;
-  height: 13px;
-  flex-shrink: 0;
-}
 
 .sheet {
   position: fixed;
