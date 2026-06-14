@@ -33,7 +33,7 @@ export function DockSheet({ children }) {
   const activeGroup = usePhotoStore(s => s.activeGroup)
 
   // Native dock geometry: mid card ~49% height (9px inset), full bleed top at safeTop + 10
-  const H_MID = Math.round(vh * 0.49) - 9
+  const H_MID = Math.round(vh * 0.60) - 9
   const H_FULL = vh - insets.top - 10
   const snaps = [H_COLLAPSED, H_MID, H_FULL]
 

@@ -131,13 +131,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
-  margin: 1px 20px 0;
+  margin: 0 18px;
   border: none;
-  background: var(--accent);
+  background: transparent;
   color: #fff;
   border-radius: 50%;
   cursor: pointer;
+  position: relative;
+}
+
+.tabPlus::before {
+  content: '';
+  position: absolute;
+  inset: 2.5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.tabPlus svg {
+  position: relative;
 }
