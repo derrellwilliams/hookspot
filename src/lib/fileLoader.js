@@ -133,12 +133,13 @@ export async function initPhotos() {
         .catch(e => console.error('[hookspot] failed to load', row.filename, e))
 
     // Load the 15 most recent first so the sidebar becomes interactive quickly,
-    // then continue with the rest in the background.
-    await withConcurrency(toLoad.slice(0, 15).map(makeLoader), 8)
+    // then continue with the rest in the background. Cap at 3 concurrent to avoid
+    // stacking too many canvas decodes on low-memory iOS devices.
+    await withConcurrency(toLoad.slice(0, 15).map(makeLoader), 3)
     flush()
     usePhotoStore.getState().setPhotosInitialized()
 
-    await withConcurrency(toLoad.slice(15).map(makeLoader), 8)
+    await withConcurrency(toLoad.slice(15).map(makeLoader), 3)
     flush()
   } finally {
     if (fetchAttempted) usePhotoStore.getState().setPhotosInitialized()
@@ -180,24 +181,26 @@ export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
   const files = Array.from(fileList)
   if (!files.length) return { added: 0, failed: 0 }
 
-  const uploads = []
+  const queue = []
   let order = 0
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) continue
     if (existingNames.has(file.name) || _uploadingNames.has(file.name)) continue
     _uploadingNames.add(file.name)
-    uploads.push(
-      uploadPhoto(file, user, { ...meta, order: order++ }, displayBlobs[i])
-        .catch(() => false)
-        .finally(() => _uploadingNames.delete(file.name))
-    )
+    queue.push({ file, taskMeta: { ...meta, order: order++ }, displayBlob: displayBlobs[i] })
   }
-  const results = await Promise.all(uploads)
-  return {
-    added: results.filter(r => r === true).length,
-    failed: results.filter(r => r === false).length,
+
+  // Process one at a time — canvas resize + storage upload for a single 12MP photo
+  // can peak at ~60MB; running them in parallel on iOS causes memory crashes.
+  let added = 0, failed = 0
+  for (const { file, taskMeta, displayBlob } of queue) {
+    const ok = await uploadPhoto(file, user, taskMeta, displayBlob)
+      .catch(() => false)
+      .finally(() => _uploadingNames.delete(file.name))
+    if (ok) added++; else failed++
   }
+  return { added, failed }
 }
 
 async function uploadPhoto(file, user, uploadMeta, displayBlob) {
@@ -207,7 +210,10 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     displayBlob ? Promise.resolve(displayBlob) : toDisplayBlob(file),
     extractExif(file),
   ])
-  const storageBlob = await resizeForStorage(blob).catch(() => blob)
+  // Resize from the original file so storage quality stays at STORAGE_MAX_PX (2048px)
+  // regardless of how toDisplayBlob resized the preview. Falls back to display blob
+  // if the original can't be decoded (e.g. HEIC on non-native browsers).
+  const storageBlob = await resizeForStorage(file).catch(() => resizeForStorage(blob).catch(() => blob))
 
   const { error: uploadError } = await supabase.storage
     .from('catches')
