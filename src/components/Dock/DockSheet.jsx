@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'motion/react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
+import { deletePhotos } from '../../lib/fileLoader.js'
 import { useSafeAreaInsets } from '../../hooks/useSafeAreaInsets.js'
+import { PopupCarousel } from '../Map/PopupCarousel.jsx'
 import { DockTabBar } from './DockTabBar.jsx'
 import styles from './Dock.module.css'
 
@@ -31,9 +33,10 @@ export function DockSheet({ children }) {
   const insets = useSafeAreaInsets()
   const vh = useViewportHeight()
   const activeGroup = usePhotoStore(s => s.activeGroup)
+  const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
 
-  // Native dock geometry: mid card ~49% height (9px inset), full bleed top at safeTop + 10
-  const H_MID = Math.round(vh * 0.60) - 9
+  // Mid matches the catch detail sheet height
+  const H_MID = Math.round(vh * 0.65) - 9
   const H_FULL = vh - insets.top - 10
   const snaps = [H_COLLAPSED, H_MID, H_FULL]
 
@@ -60,10 +63,10 @@ export function DockSheet({ children }) {
     if (!dragRef.current) h.set(snaps[snapIndexRef.current])
   }, [vh, insets.top, insets.bottom]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Selecting a catch (list tap or marker tap both set activeGroup) collapses
-  // the sheet so the map and popup are visible.
+  // Selecting a catch (list tap or marker tap) keeps the sheet at mid so the
+  // detail view renders inside it — same flow as the mobile app.
   useEffect(() => {
-    if (activeGroup) snapTo(0)
+    if (activeGroup) snapTo(1)
   }, [activeGroup]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function onPointerDown(e) {
@@ -132,7 +135,24 @@ export function DockSheet({ children }) {
         <div className={styles.grabber} />
       </div>
       <motion.div className={styles.content} style={{ bottom: tabAreaH }}>
-        {children}
+        {activeGroup ? (
+          <PopupCarousel
+            key={activeGroup[0].catchId ?? activeGroup[0].name}
+            initialGroup={activeGroup}
+            sheet
+            onClose={() => setActiveGroup(null)}
+            onDelete={async (toDelete) => {
+              setActiveGroup(null)
+              try {
+                await deletePhotos(toDelete)
+                usePhotoStore.getState().showToast('Catch deleted')
+              } catch (err) {
+                console.error('[dock sheet] delete failed:', err)
+                usePhotoStore.getState().showToast('Failed to delete catch')
+              }
+            }}
+          />
+        ) : children}
       </motion.div>
       <motion.div className={styles.separator} style={{ bottom: tabAreaH, opacity: separatorOpacity }} />
       <motion.div

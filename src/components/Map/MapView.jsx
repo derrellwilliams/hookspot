@@ -71,12 +71,12 @@ export function MapView({ active }) {
         const lnglat = marker.getLngLat()
         const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
         const onMobile = window.matchMedia(MOBILE_QUERY).matches
-        // Mobile: push map up so the pin sits above the bottom sheet (~55% height).
+        // Mobile: push map up so the pin sits above the dock sheet mid height (65%).
         // Use visualViewport height (matches dvh used in sheet max-height) so the
         // padding is correct on iOS Safari when the URL bar is visible.
         const vh = window.visualViewport?.height ?? window.innerHeight
         const padding = onMobile
-          ? { left: 0, right: 0, top: 0, bottom: Math.round(vh * 0.55) }
+          ? { left: 0, right: 0, top: 0, bottom: Math.round(vh * 0.65) }
           : { left: DEFAULT_SIDEBAR_RIGHT, right: 0, top: 0, bottom: 0 }
         map.jumpTo({ center: lnglat, zoom, padding })
         if (!onMobile) {
@@ -258,33 +258,5 @@ export function MapView({ active }) {
     setFitted(true)
   }, [groups, mapReady, fitted, photosInitialized])
 
-  return (
-    <>
-      <div ref={containerRef} className={styles.map} />
-      {isMobile && activeGroup && (
-        <>
-          <div className={styles.mapSheetBackdrop} onClick={() => setActiveGroup(null)} />
-          <div className={styles.mapSheetContent}>
-            <PopupCarousel
-              key={activeGroup[0].name}
-              initialGroup={activeGroup}
-              sheet
-              onClose={() => setActiveGroup(null)}
-              onDelete={async (toDelete) => {
-                setActiveGroup(null)
-                markersRef.current.forEach(({ popup: p }) => p.remove())
-                try {
-                  await deletePhotos(toDelete)
-                  usePhotoStore.getState().showToast('Catch deleted')
-                } catch (err) {
-                  console.error('[map sheet] delete failed:', err)
-                  usePhotoStore.getState().showToast('Failed to delete catch')
-                }
-              }}
-            />
-          </div>
-        </>
-      )}
-    </>
-  )
+  return <div ref={containerRef} className={styles.map} />
 }
