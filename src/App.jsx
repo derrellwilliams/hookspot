@@ -3,6 +3,7 @@ import { MotionConfig } from 'motion/react'
 import { IconoirProvider } from 'iconoir-react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Nav } from './components/Nav/Nav.jsx'
+import { DockBar } from './components/Dock/DockBar.jsx'
 import { Toast } from './components/Toast/Toast.jsx'
 import { DropOverlay } from './components/DropOverlay/DropOverlay.jsx'
 import { UploadDialog } from './components/UploadDialog/UploadDialog.jsx'
@@ -85,9 +86,10 @@ function AppInner() {
   }, [setUser, setSession, setUserAndUsername])
 
   const isMap = location.pathname === '/'
-  // On the mobile map page the tabs live inside the dock sheet
+  const isProfile = location.pathname.startsWith('/user/') || location.pathname === '/profile'
+  // On mobile, tabs live inside the dock (map: draggable DockSheet; profile: static DockBar)
   const isMobile = useIsMobile()
-  const hideNav = isMobile && isMap
+  const hideNav = isMobile && (isMap || isProfile)
 
   return (
     <div className={styles.app}>
@@ -109,6 +111,7 @@ function AppInner() {
         <Route path="/design" element={<DesignPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      {isMobile && isProfile && <DockBar />}
       {!isPublicPage && user && <DropOverlay />}
       {!isPublicPage && user && <UploadDialog />}
       {!isPublicPage && <Toast />}

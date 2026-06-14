@@ -1,12 +1,17 @@
+import React from 'react'
 import { motion } from 'motion/react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Plus } from 'iconoir-react'
+import { Map, User, Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
-import { NAV_ITEMS } from '../Nav/Nav.jsx'
 import styles from './Dock.module.css'
 
 const springTight = { type: 'spring', stiffness: 400, damping: 35 }
+
+const TABS = [
+  { path: '/', label: 'Catches', Icon: Map },
+  { path: '/profile', label: 'Profile', Icon: User },
+]
 
 export function DockTabBar() {
   const navigate = useNavigate()
@@ -17,39 +22,34 @@ export function DockTabBar() {
 
   return (
     <div className={styles.tabRow}>
-      {NAV_ITEMS.map(({ path: itemPath, label }) => {
+      {TABS.map(({ path: itemPath, label, Icon }, index) => {
         const isActive = path === itemPath || (itemPath === '/profile' && path.startsWith('/user/'))
-
         return (
-          <motion.button
-            key={itemPath}
-            className={`${styles.tabItem} ${isActive ? styles.active : ''}`}
-            onClick={() => navigate(itemPath)}
-            aria-label={label}
-            whileTap={{ scale: 0.975 }}
-            transition={springTight}
-          >
-            {isActive && (
-              <motion.div
-                layoutId="dock-nav-highlight"
-                className={styles.tabHighlight}
-                initial={false}
+          <React.Fragment key={itemPath}>
+            <motion.button
+              className={`${styles.tabItem} ${isActive ? styles.active : ''}`}
+              onClick={() => navigate(itemPath)}
+              aria-label={label}
+              whileTap={{ scale: 0.975 }}
+              transition={springTight}
+            >
+              <Icon width={22} height={22} strokeWidth={isActive ? 2 : 1.5} />
+              <span className={styles.tabLabel}>{label}</span>
+            </motion.button>
+            {index === 0 && (
+              <motion.button
+                className={styles.tabPlus}
+                onClick={() => user ? setUploadOpen(true) : navigate('/login')}
+                aria-label="Add catch"
+                whileTap={{ scale: 0.95 }}
                 transition={springTight}
-              />
+              >
+                <Plus width={22} height={22} strokeWidth={2.5} />
+              </motion.button>
             )}
-            <span className={styles.tabLabel}>{label}</span>
-          </motion.button>
+          </React.Fragment>
         )
       })}
-      <motion.button
-        className={styles.tabPlus}
-        onClick={() => user ? setUploadOpen(true) : navigate('/login')}
-        aria-label="Add catch"
-        whileTap={{ scale: 0.95 }}
-        transition={springTight}
-      >
-        <Plus width={24} height={24} />
-      </motion.button>
     </div>
   )
 }
