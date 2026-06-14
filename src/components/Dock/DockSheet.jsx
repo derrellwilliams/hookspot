@@ -136,22 +136,24 @@ export function DockSheet({ children }) {
       </div>
       <motion.div className={styles.content} style={{ bottom: tabAreaH }}>
         {activeGroup ? (
-          <PopupCarousel
-            key={activeGroup[0].catchId ?? activeGroup[0].name}
-            initialGroup={activeGroup}
-            sheet
-            onClose={() => setActiveGroup(null)}
-            onDelete={async (toDelete) => {
-              setActiveGroup(null)
-              try {
-                await deletePhotos(toDelete)
-                usePhotoStore.getState().showToast('Catch deleted')
-              } catch (err) {
-                console.error('[dock sheet] delete failed:', err)
-                usePhotoStore.getState().showToast('Failed to delete catch')
-              }
-            }}
-          />
+          <div style={{ overflowY: 'auto', height: '100%', overscrollBehavior: 'contain' }}>
+            <PopupCarousel
+              key={activeGroup[0].catchId ?? activeGroup[0].name}
+              initialGroup={activeGroup}
+              sheet
+              onClose={() => setActiveGroup(null)}
+              onDelete={async (toDelete) => {
+                setActiveGroup(null)
+                try {
+                  await deletePhotos(toDelete)
+                  usePhotoStore.getState().showToast('Catch deleted')
+                } catch (err) {
+                  console.error('[dock sheet] delete failed:', err)
+                  usePhotoStore.getState().showToast('Failed to delete catch')
+                }
+              }}
+            />
+          </div>
         ) : children}
       </motion.div>
       <motion.div className={styles.separator} style={{ bottom: tabAreaH, opacity: separatorOpacity }} />
