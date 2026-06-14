@@ -7,7 +7,7 @@ import { deletePhotos } from '../../lib/fileLoader.js'
 import { PopupCarousel } from './PopupCarousel.jsx'
 import styles from './Map.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
-import { MOBILE_QUERY } from '../../hooks/useIsMobile.js'
+import { MOBILE_QUERY, useIsMobile } from '../../hooks/useIsMobile.js'
 
 const MAP_CENTER = [-111.891, 40.760]
 const MAP_ZOOM = 11
@@ -36,7 +36,9 @@ export function MapView({ active }) {
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
   const ownOnly = usePhotoStore(s => s.ownOnly)
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
+  const activeGroup = usePhotoStore(s => s.activeGroup)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
+  const isMobile = useIsMobile()
 
   const visibleGroups = useMemo(
     () => ownOnly ? groups.filter(g => g.some(p => p.isOwn)) : groups,
@@ -56,6 +58,9 @@ export function MapView({ active }) {
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
     map.on('click', () => {
       markersRef.current.forEach(({ popup }) => popup.remove())
+      if (window.matchMedia(MOBILE_QUERY).matches) {
+        usePhotoStore.getState().setActiveGroup(null)
+      }
     })
     map.on('load', () => {
       setFlyToPhoto((photo) => {
@@ -65,17 +70,23 @@ export function MapView({ active }) {
         markersRef.current.forEach(m => m.popup.remove())
         const lnglat = marker.getLngLat()
         const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
-        // Mobile: sidebar is a bottom dock (collapsed pill ~92px incl. gap), not a left panel
-        const padding = window.matchMedia(MOBILE_QUERY).matches
-          ? { left: 0, right: 0, top: 0, bottom: 110 }
+        const onMobile = window.matchMedia(MOBILE_QUERY).matches
+        // Mobile: push map up so the pin sits above the bottom sheet (~55% height).
+        // Use visualViewport height (matches dvh used in sheet max-height) so the
+        // padding is correct on iOS Safari when the URL bar is visible.
+        const vh = window.visualViewport?.height ?? window.innerHeight
+        const padding = onMobile
+          ? { left: 0, right: 0, top: 0, bottom: Math.round(vh * 0.55) }
           : { left: DEFAULT_SIDEBAR_RIGHT, right: 0, top: 0, bottom: 0 }
         map.jumpTo({ center: lnglat, zoom, padding })
-        popup.addTo(map)
-        requestAnimationFrame(() => {
-          const popupEl = popup.getElement()
-          if (!popupEl) return
-          map.panBy([0, -(popupEl.offsetHeight * POPUP_PAN_FACTOR)], { duration: 0 })
-        })
+        if (!onMobile) {
+          popup.addTo(map)
+          requestAnimationFrame(() => {
+            const popupEl = popup.getElement()
+            if (!popupEl) return
+            map.panBy([0, -(popupEl.offsetHeight * POPUP_PAN_FACTOR)], { duration: 0 })
+          })
+        }
       })
       setMapReady(true)
     })
@@ -185,6 +196,13 @@ export function MapView({ active }) {
     markerByNameRef.current = markerByName
   }, [visibleGroups, mapReady, setActiveGroup])
 
+  // If the viewport crosses the mobile breakpoint while a catch is selected,
+  // clear activeGroup so the sheet doesn't linger (the Mapbox popup was never
+  // added on mobile, so there would be no visible UI without this cleanup).
+  useEffect(() => {
+    if (!isMobile && activeGroup) setActiveGroup(null)
+  }, [isMobile]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Resize map when it becomes visible (e.g. navigating from /profile to /).
   // Save/restore center+zoom because the hidden container collapses to 0×0 and
   // Mapbox recalculates zoom relative to that, zooming out to the whole world.
@@ -240,5 +258,33 @@ export function MapView({ active }) {
     setFitted(true)
   }, [groups, mapReady, fitted, photosInitialized])
 
-  return <div ref={containerRef} className={styles.map} />
+  return (
+    <>
+      <div ref={containerRef} className={styles.map} />
+      {isMobile && activeGroup && (
+        <>
+          <div className={styles.mapSheetBackdrop} onClick={() => setActiveGroup(null)} />
+          <div className={styles.mapSheetContent}>
+            <PopupCarousel
+              key={activeGroup[0].name}
+              initialGroup={activeGroup}
+              sheet
+              onClose={() => setActiveGroup(null)}
+              onDelete={async (toDelete) => {
+                setActiveGroup(null)
+                markersRef.current.forEach(({ popup: p }) => p.remove())
+                try {
+                  await deletePhotos(toDelete)
+                  usePhotoStore.getState().showToast('Catch deleted')
+                } catch (err) {
+                  console.error('[map sheet] delete failed:', err)
+                  usePhotoStore.getState().showToast('Failed to delete catch')
+                }
+              }}
+            />
+          </div>
+        </>
+      )}
+    </>
+  )
 }

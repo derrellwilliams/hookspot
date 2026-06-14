@@ -236,6 +236,7 @@
   color: rgba(255, 255, 255, 0.45);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  white-space: nowrap;
 }
 
 .headerStatDivider {
@@ -926,11 +927,8 @@
     text-align: center;
   }
 
-  /* min-width: 0 lets flex: 1 compress cells below their label width
-     instead of clipping at the card edge */
   .headerStat {
     flex: 1;
-    min-width: 0;
     padding: 12px 14px;
   }
 
