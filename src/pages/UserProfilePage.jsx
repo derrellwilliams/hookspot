@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
@@ -95,6 +95,8 @@ export function UserProfilePage() {
   const [catchPopupIdx, setCatchPopupIdx] = useState(null)
   const fileInputRef = useRef(null)
   const meshCleanupRef = useRef(null)
+  const profileInfoRef = useRef(null)
+  const [sheetTopAnchor, setSheetTopAnchor] = useState(null)
   const headerMeshRef = useCallback((el) => {
     if (meshCleanupRef.current) { meshCleanupRef.current(); meshCleanupRef.current = null }
     if (el) meshCleanupRef.current = animateMesh(el, PROFILE_BLOBS, { speed: 0.005 })
@@ -106,6 +108,13 @@ export function UserProfilePage() {
   const [followingCount, setFollowingCount] = useState(null)
   const [followListOpen, setFollowListOpen] = useState(false)
   const [followListTab, setFollowListTab] = useState('followers')
+
+  // Measure profile info height on mobile so the sheet never covers the stats.
+  useLayoutEffect(() => {
+    if (!isMobile || !profileInfoRef.current) return
+    const rect = profileInfoRef.current.getBoundingClientRect()
+    setSheetTopAnchor(Math.ceil(rect.bottom) + 28)
+  }, [isMobile, profile?.display_name, profile?.username, profile?.bio]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const monthlyRef = useRef(null)
   const hourlyRef = useRef(null)
@@ -552,7 +561,7 @@ export function UserProfilePage() {
             </Button>
           </div>
 
-          <div className={styles.mobileProfileInfo}>
+          <div className={styles.mobileProfileInfo} ref={profileInfoRef}>
             <div className={styles.mobileAvatarWrap}>
               {isOwnProfile ? (
                 <>
@@ -594,7 +603,7 @@ export function UserProfilePage() {
         </div>
 
         {/* DockSheet with Recent Activity + Stats */}
-        <DockSheet noDetail midFraction={0.60}>
+        <DockSheet noDetail topAnchorPx={sheetTopAnchor}>
           <div className={styles.profileSheetInner}>
             <div className={styles.sheetTabBar}>
               {[{ id: 'profile', label: 'Recent Activity' }, { id: 'stats', label: 'Stats' }].map(({ id, label }) => {

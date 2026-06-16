@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'motion/react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { deletePhotos } from '../../lib/fileLoader.js'
@@ -29,14 +29,16 @@ function useViewportHeight() {
   return vh
 }
 
-export function DockSheet({ children, noDetail = false, midFraction = 0.65 }) {
+export function DockSheet({ children, noDetail = false, midFraction = 0.65, topAnchorPx = null }) {
   const insets = useSafeAreaInsets()
   const vh = useViewportHeight()
   const activeGroup = usePhotoStore(s => s.activeGroup)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
 
-  // Mid matches the catch detail sheet height
-  const H_MID = Math.round(vh * midFraction) - 9
+  // When topAnchorPx is provided the sheet opens just below that viewport y position.
+  const H_MID = topAnchorPx != null
+    ? Math.max(H_COLLAPSED, vh - topAnchorPx)
+    : Math.round(vh * midFraction) - 9
   const H_FULL = vh - insets.top - 10
   const snaps = [H_COLLAPSED, H_MID, H_FULL]
 
@@ -57,6 +59,13 @@ export function DockSheet({ children, noDetail = false, midFraction = 0.65 }) {
     snapIndexRef.current = index
     animate(h, snaps[index], SNAP_SPRING)
   }
+
+  // Re-anchor when topAnchorPx is first measured or changes (before paint).
+  useLayoutEffect(() => {
+    if (topAnchorPx != null && !dragRef.current) {
+      h.set(Math.max(H_COLLAPSED, vh - topAnchorPx))
+    }
+  }, [topAnchorPx, vh]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep the sheet pinned to its snap point when the viewport resizes
   // (orientation change, iOS URL bar collapse).
