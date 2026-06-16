@@ -42,7 +42,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 18px;
+  height: 22px;
   z-index: 3;
   touch-action: none;
   cursor: grab;
@@ -99,6 +99,7 @@
 }
 
 .tabItem {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -115,6 +116,20 @@
 
 .tabItem.active {
   color: #fff;
+}
+
+.activePill {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.18);
+}
+
+.tabIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .tabItem:focus-visible {
