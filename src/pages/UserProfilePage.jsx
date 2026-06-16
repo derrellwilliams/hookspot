@@ -110,11 +110,15 @@ export function UserProfilePage() {
   const [followListTab, setFollowListTab] = useState('followers')
 
   // Measure profile info height on mobile so the sheet never covers the stats.
+  // Use source state vars — profile is declared below and can't be referenced here.
+  const _measureName = isOwnProfile ? myUser?.user_metadata?.display_name : fetchedProfile?.display_name
+  const _measureUsername = isOwnProfile ? myUsername : fetchedProfile?.username
+  const _measureBio = isOwnProfile ? myUser?.user_metadata?.bio : fetchedProfile?.bio
   useLayoutEffect(() => {
     if (!isMobile || !profileInfoRef.current) return
     const rect = profileInfoRef.current.getBoundingClientRect()
     setSheetTopAnchor(Math.ceil(rect.bottom) + 28)
-  }, [isMobile, profile?.display_name, profile?.username, profile?.bio]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isMobile, _measureName, _measureUsername, _measureBio]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const monthlyRef = useRef(null)
   const hourlyRef = useRef(null)
