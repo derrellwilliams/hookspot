@@ -353,4 +353,8 @@
   .filterRow {
     display: none;
   }
+
+  .monthHeader {
+    display: none;
+  }
 }
