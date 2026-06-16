@@ -10,8 +10,8 @@ import styles from './Dock.module.css'
 const HANDLE_H = 13
 const TAB_BAR_H = 61
 const H_COLLAPSED = HANDLE_H + TAB_BAR_H
-const DRAG_SLOP = 8
-const VELOCITY_BIAS = 0.15
+const DRAG_SLOP = 4
+const VELOCITY_BIAS = 0.22
 const RUBBER_BAND = 0.2
 const SNAP_SPRING = { type: 'spring', stiffness: 400, damping: 38 }
 
@@ -74,6 +74,13 @@ export function DockSheet({ children, noDetail = false, midFraction = 0.65 }) {
     dragRef.current = { startY: e.clientY, startH: h.get(), dragging: false }
   }
 
+  // Handle area has no tappable children so we can capture immediately,
+  // giving iOS no chance to steal the gesture as a scroll.
+  function onHandlePointerDown(e) {
+    dragRef.current = { startY: e.clientY, startH: h.get(), dragging: true }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* stale pointer */ }
+  }
+
   function onPointerMove(e) {
     const s = dragRef.current
     if (!s) return
@@ -127,7 +134,11 @@ export function DockSheet({ children, noDetail = false, midFraction = 0.65 }) {
     >
       <div
         className={styles.handleArea}
-        {...dragHandlers}
+        onPointerDown={onHandlePointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onClickCapture={suppressDragClick}
         onClick={e => {
           suppressDragClick(e)
           if (!e.defaultPrevented) snapTo(snapIndexRef.current === 0 ? 1 : 0)
