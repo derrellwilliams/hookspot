@@ -952,6 +952,174 @@
   }
 }
 
+/* ── Mobile profile layout (dock sheet pattern) ── */
+.pageMobile {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--dark-bg);
+}
+
+.mobileProfileBg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.mobileIconBtn {
+  background: rgba(22, 22, 24, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: blur(20px) saturate(1.8) brightness(0.9);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8) brightness(0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.mobileHeaderBtns {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.mobileProfileInfo {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 40px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px;
+  z-index: 1;
+}
+
+.mobileAvatarWrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.mobileAvatarBtn {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  background: var(--dark-surface);
+  border: none;
+}
+
+.mobileAvatarImg {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mobileAvatarFallback {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--dark-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--dark-muted);
+}
+
+.mobileDisplayName {
+  font-family: var(--font-condensed);
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  margin: 0;
+}
+
+.mobileBio {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.profileSheetInner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sheetTabBar {
+  display: flex;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+
+.sheetTab {
+  position: relative;
+  padding: 11px 14px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.sheetTabActive {
+  color: #fff;
+  font-weight: 600;
+}
+
+.sheetTabIndicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #fff;
+  border-radius: 1px 1px 0 0;
+}
+
+.profileSheetScroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 0 24px;
+}
+
+.sheetCatchesGrid {
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+}
+
+.sheetCatchThumb {
+  border-radius: 0 !important;
+}
+
 @media (max-width: 400px) {
   .catchesGrid {
     grid-template-columns: 1fr;

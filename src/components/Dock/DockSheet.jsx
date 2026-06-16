@@ -29,14 +29,14 @@ function useViewportHeight() {
   return vh
 }
 
-export function DockSheet({ children }) {
+export function DockSheet({ children, noDetail = false, midFraction = 0.65 }) {
   const insets = useSafeAreaInsets()
   const vh = useViewportHeight()
   const activeGroup = usePhotoStore(s => s.activeGroup)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
 
   // Mid matches the catch detail sheet height
-  const H_MID = Math.round(vh * 0.65) - 9
+  const H_MID = Math.round(vh * midFraction) - 9
   const H_FULL = vh - insets.top - 10
   const snaps = [H_COLLAPSED, H_MID, H_FULL]
 
@@ -47,6 +47,7 @@ export function DockSheet({ children }) {
 
   const sideInset = useTransform(h, snaps, [24, 9, 0])
   const bottomGap = useTransform(h, snaps, [18 + insets.bottom, 9, 0])
+  const bottomRadius = useTransform(h, [H_MID, H_FULL], [38, 0])
   const separatorOpacity = useTransform(h, [H_COLLAPSED, H_MID], [0, 1])
   // Home-indicator clearance only appears at full bleed (matches native)
   const tabClearance = useTransform(h, [H_MID, H_FULL], [0, Math.max(insets.bottom - 14, 0)])
@@ -122,7 +123,7 @@ export function DockSheet({ children }) {
   return (
     <motion.div
       className={styles.sheet}
-      style={{ height: h, bottom: bottomGap, left: sideInset, right: sideInset }}
+      style={{ height: h, bottom: bottomGap, left: sideInset, right: sideInset, borderBottomLeftRadius: bottomRadius, borderBottomRightRadius: bottomRadius }}
     >
       <div
         className={styles.handleArea}
@@ -135,7 +136,7 @@ export function DockSheet({ children }) {
         <div className={styles.grabber} />
       </div>
       <motion.div className={styles.content} style={{ bottom: tabAreaH }}>
-        {activeGroup ? (
+        {!noDetail && activeGroup ? (
           <div style={{ overflowY: 'auto', height: '100%', overscrollBehavior: 'contain' }}>
             <PopupCarousel
               key={activeGroup[0].catchId ?? activeGroup[0].name}

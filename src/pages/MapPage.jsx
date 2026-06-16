@@ -10,7 +10,7 @@ export function MapPage({ active }) {
   return (
     <div id="sidebar-anchor" className={styles.page}>
       {isMobile
-        ? <DockSheet><SidebarContent /></DockSheet>
+        ? active && <DockSheet><SidebarContent /></DockSheet>
         : <Sidebar />}
       <MapView active={active} />
     </div>

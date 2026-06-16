@@ -111,7 +111,7 @@ function AppInner() {
         <Route path="/design" element={<DesignPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      {isMobile && isProfile && <DockBar />}
+
       {!isPublicPage && user && <DropOverlay />}
       {!isPublicPage && user && <UploadDialog />}
       {!isPublicPage && <Toast />}
