@@ -89,7 +89,7 @@
 }
 
 .list {
-  padding: 6px 20px 16px;
+  padding: 5px 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -356,5 +356,9 @@
 
   .monthHeader {
     display: none;
+  }
+
+  .species {
+    font-size: 18px;
   }
 }
