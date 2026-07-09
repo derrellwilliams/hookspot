@@ -11,7 +11,6 @@ export const usePhotoStore = create((set, get) => ({
   toast: null,
   uploadOpen: false,
   pendingUploadFiles: [],
-  ownOnly: false,
   photosInitialized: false,
 
   addPhoto(photo) {
@@ -78,10 +77,6 @@ export const usePhotoStore = create((set, get) => ({
 
   setPendingUploadFiles(files) {
     set({ pendingUploadFiles: files })
-  },
-
-  setOwnOnly(v) {
-    set({ ownOnly: v })
   },
 
   setPhotosInitialized() {

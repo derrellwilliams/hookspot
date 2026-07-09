@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -34,16 +34,10 @@ export function MapView({ active }) {
 
   const groups = usePhotoStore(s => s.groups)
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
-  const ownOnly = usePhotoStore(s => s.ownOnly)
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
   const activeGroup = usePhotoStore(s => s.activeGroup)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
   const isMobile = useIsMobile()
-
-  const visibleGroups = useMemo(
-    () => ownOnly ? groups.filter(g => g.some(p => p.isOwn)) : groups,
-    [groups, ownOnly]
-  )
 
   // Init map once. flyToPhotoFn is defined here so it only enters the store once,
   // reading current marker state via markerByNameRef on each call.
@@ -104,7 +98,7 @@ export function MapView({ active }) {
     const map = mapRef.current
 
     const groupKey = (group) => group.map(p => p.name).sort().join('|')
-    const newKeySet = new Set(visibleGroups.map(groupKey))
+    const newKeySet = new Set(groups.map(groupKey))
 
     // If a group gained or lost photos, its key changes. Update the entry's key in place
     // so the marker and open popup are preserved rather than destroyed and recreated.
@@ -128,7 +122,7 @@ export function MapView({ active }) {
     markersRef.current = markersRef.current.filter(m => newKeySet.has(m.key))
 
     // Add markers for new groups
-    for (const group of visibleGroups) {
+    for (const group of groups) {
       const key = groupKey(group)
       if (existingByKey.has(key)) continue
 
@@ -176,7 +170,7 @@ export function MapView({ active }) {
     // Rebuild name→entry lookup and refresh click handlers
     const finalByKey = new Map(markersRef.current.map(m => [m.key, m]))
     const markerByName = new Map()
-    for (const group of visibleGroups) {
+    for (const group of groups) {
       const key = groupKey(group)
       const entry = finalByKey.get(key)
       if (!entry) continue
@@ -194,7 +188,7 @@ export function MapView({ active }) {
 
     // Publish updated lookup so flyToPhotoFn (in init effect) sees current markers
     markerByNameRef.current = markerByName
-  }, [visibleGroups, mapReady, setActiveGroup])
+  }, [groups, mapReady, setActiveGroup])
 
   // If the viewport crosses the mobile breakpoint while a catch is selected,
   // clear activeGroup so the sheet doesn't linger (the Mapbox popup was never

@@ -1,14 +1,12 @@
-import { useMemo, useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { useMemo } from 'react'
+import { motion } from 'motion/react'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
 import { Plus } from 'iconoir-react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
-import { useCanHover } from '../../hooks/useIsMobile.js'
 import { SidebarItem } from './SidebarItem.jsx'
 import styles from './Sidebar.module.css'
 
 const spring = { type: 'spring', stiffness: 300, damping: 24 }
-const springTight = { type: 'spring', stiffness: 400, damping: 35 }
 
 // Sidebar body without the positioned <aside> shell, so the mobile dock
 // sheet can render the same content inside its own container.
@@ -17,17 +15,9 @@ export function SidebarContent() {
   const hasPhotos = usePhotoStore(s => s.photos.length > 0)
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
-  const ownOnly = usePhotoStore(s => s.ownOnly)
-  const setOwnOnly = usePhotoStore(s => s.setOwnOnly)
-  const [hoveredTab, setHoveredTab] = useState(null)
-  // Touch devices fire mouseenter on tap with no mouseleave, stranding the indicator
-  const canHover = useCanHover()
-
-  const hasOthers = useMemo(() => groups.some(g => g.some(p => !p.isOwn)), [groups])
 
   const items = useMemo(() => {
-    const filtered = ownOnly ? groups.filter(g => g.some(p => p.isOwn)) : groups
-    const sorted = [...filtered].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0))
+    const sorted = [...groups].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0))
     const result = []
     let lastKey = null
     for (const group of sorted) {
@@ -42,52 +32,15 @@ export function SidebarContent() {
       result.push({ type: 'group', group })
     }
     return result
-  }, [groups, ownOnly])
+  }, [groups])
 
   return (
     <>
-      <div className={styles.filterRow}>
-        {hasPhotos && <span className={styles.filterTitle}>Latest Catches</span>}
-        {hasOthers && (
-          <div
-            className={styles.filterTabs}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            {[{ label: 'Everyone', value: false }, { label: 'Me', value: true }].map(({ label, value }) => {
-              const isActive = ownOnly === value
-              return (
-                <button
-                  key={label}
-                  className={`${styles.filterTab} ${isActive ? styles.filterTabActive : ''}`}
-                  onClick={() => setOwnOnly(value)}
-                  onMouseEnter={() => canHover && setHoveredTab(value)}
-                >
-                  <AnimatePresence>
-                    {hoveredTab === value && !isActive && (
-                      <motion.div
-                        className={styles.filterHover}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                      />
-                    )}
-                  </AnimatePresence>
-                  {isActive && (
-                    <motion.div
-                      layoutId="filter-highlight"
-                      className={styles.filterHighlight}
-                      initial={false}
-                      transition={springTight}
-                    />
-                  )}
-                  <span className={styles.filterLabel}>{label}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      {hasPhotos && (
+        <div className={styles.filterRow}>
+          <span className={styles.filterTitle}>Latest Catches</span>
+        </div>
+      )}
       {!photosInitialized ? (
         <div className={styles.loadingCentered}>
           <div className={styles.spinner} />
