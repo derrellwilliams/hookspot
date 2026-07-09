@@ -2,7 +2,7 @@ import { memo, useEffect, useRef } from 'react'
 import { motion } from 'motion/react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
-import { formatDateFull, cleanSpecies, formatLocation, getDisplayName } from '../../lib/formatters.js'
+import { formatDateFull, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'
 import styles from './Sidebar.module.css'
 
 export const SidebarItem = memo(function SidebarItem({ group }) {
@@ -21,7 +21,7 @@ export const SidebarItem = memo(function SidebarItem({ group }) {
     : ownerProfile?.avatar_url
   const displayName = isOwn ? getDisplayName(user?.user_metadata) : getDisplayName(ownerProfile)
   const initial = displayName ? displayName[0].toUpperCase() : '?'
-  const locationStr = formatLocation(lead.meta?.location)
+  const locationStr = formatCatchLocation(lead.meta)
 
   useEffect(() => {
     if (isActive && ref.current) {

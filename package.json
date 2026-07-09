@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "identify": "node --env-file=.env scripts/identify.js",
     "backfill-catches": "node --env-file=.env scripts/backfill-catches.mjs",
+    "backfill-waterbody": "node --env-file=.env scripts/backfill-waterbody.mjs",
     "serve": "node server.js"
   },
   "dependencies": {

@@ -8,7 +8,7 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
-import { formatDateFull, cleanSpecies, cleanGear, formatLocation } from '../../lib/formatters.js'
+import { formatDateFull, cleanSpecies, cleanGear, formatCatchLocation } from '../../lib/formatters.js'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 import styles from './Map.module.css'
 
@@ -205,6 +205,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
   const mapLat = lead.exif?.latitude
   const mapLng = lead.exif?.longitude
   const hasCoords = mapLat != null && mapLng != null
+  const locationStr = formatCatchLocation(lead.meta)
 
   return (
     <IconoirProvider iconProps={{ strokeWidth: 2 }}>
@@ -318,14 +319,14 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
           <div className={styles.popupDetail}>
             {d ? formatDateFull(photo.time) : 'Unknown date'}
           </div>
-          {((photo.meta?.weather?.temp != null && photo.meta?.weather?.condition) || formatLocation(lead.meta?.location)) && (
+          {((photo.meta?.weather?.temp != null && photo.meta?.weather?.condition) || locationStr) && (
             <div className={styles.popupDetail}>
               {photo.meta?.weather?.temp != null && photo.meta?.weather?.condition
                 ? `${photo.meta.weather.temp}°F · ${photo.meta.weather.condition}`
                 : ''}
-              {photo.meta?.weather?.temp != null && photo.meta?.weather?.condition && formatLocation(lead.meta?.location)
-                ? ` · ${formatLocation(lead.meta?.location)}`
-                : formatLocation(lead.meta?.location) ?? ''}
+              {photo.meta?.weather?.temp != null && photo.meta?.weather?.condition && locationStr
+                ? ` · ${locationStr}`
+                : locationStr ?? ''}
             </div>
           )}
           {/* rod/fly are stored on the group lead; stable across photo carousel navigation */}

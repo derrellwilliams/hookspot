@@ -3,6 +3,7 @@ import { getCached, setCached } from '../cache.js'
 import { identifySpecies } from '../identify.js'
 import { fetchWeather } from './weather.js'
 import { reverseGeocode } from './geocode.js'
+import { findNearestWaterBody } from './waterbody.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { supabase } from '../lib/supabase.js'
@@ -79,6 +80,15 @@ function maybeFetchLocation(photo) {
     .catch(() => {}))
 }
 
+function maybeFetchWaterBody(photo) {
+  if (!photo.isOwn) return
+  const user = getUser()
+  if (!photo.hasGps || photo.exif?.latitude == null || photo.exif?.longitude == null || photo.meta?.waterBody || !user) return
+  runGeoTask(() => findNearestWaterBody(photo.exif.latitude, photo.exif.longitude)
+    .then(wb => wb && saveMeta(photo.name, 'waterBody', wb, user.id))
+    .catch(() => {}))
+}
+
 function maybeFetchWeather(photo) {
   if (!photo.isOwn) return
   const user = getUser()
@@ -125,7 +135,7 @@ export async function initPhotos() {
       if (!pending.length) return
       const batch = pending.splice(0)
       usePhotoStore.getState().batchAddPhotos(batch)
-      batch.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo) })
+      batch.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo); maybeFetchWaterBody(photo) })
     }
     const makeLoader = row => () =>
       loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
@@ -257,6 +267,7 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
   usePhotoStore.getState().addPhoto(photo)
   maybeFetchWeather(photo)
   maybeFetchLocation(photo)
+  maybeFetchWaterBody(photo)
 
   if (!photo.species && !uploadMeta.identified) {
     const species = await identifySpecies(blob)
@@ -310,6 +321,7 @@ export async function uploadPhotoToGroup(file, groupLead) {
   const photo = buildPhoto(blob, exif, row, null, user.id)
   usePhotoStore.getState().addPhoto(photo)
   maybeFetchLocation(photo)
+  maybeFetchWaterBody(photo)
   return photo
 }
 

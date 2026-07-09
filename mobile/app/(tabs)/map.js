@@ -16,7 +16,7 @@ import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
 import { EditCatchModal } from '../../components/EditCatchModal'
 import { FLOAT_INSET, TAB_BAR_TOTAL, CARD_RADIUS } from './_layout'
-import { formatDateFull, formatDateShort, formatLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
+import { formatDateFull, formatDateShort, formatCatchLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
@@ -240,7 +240,7 @@ export default function MapScreen() {
   const renderCatchItem = useCallback(({ item: group }) => {
     const lead = group[0]
     const species = cleanSpecies(lead.species)
-    const locationStr = formatLocation(lead.meta?.location)
+    const locationStr = formatCatchLocation(lead.meta)
     return (
       <TouchableOpacity style={styles.item} onPress={() => selectFromList(group)} activeOpacity={0.7}>
         <Image source={{ uri: photoUrl(lead.user_id, lead.filename, lead.storage_path) }} style={styles.thumb} />
@@ -264,7 +264,7 @@ export default function MapScreen() {
   const selectedSpecies = selectedLead ? cleanSpecies(selectedLead.species) : null
   const selectedWeatherLocation = selectedLead ? (() => {
     const w = selectedLead.meta?.weather
-    const loc = formatLocation(selectedLead.meta?.location)
+    const loc = formatCatchLocation(selectedLead.meta)
     const weatherStr = w?.temp != null && w?.condition ? `${w.temp}°F · ${w.condition}` : ''
     if (weatherStr && loc) return `${weatherStr} · ${loc}`
     return weatherStr || loc || null
