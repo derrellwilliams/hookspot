@@ -24,7 +24,10 @@
   display: flex;
   align-items: center;
   height: 60px;
-  background: var(--ui-bg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-shadow);
   border-radius: 16px;
   padding: 6px;
   gap: 2px;
@@ -69,7 +72,7 @@
   position: absolute;
   inset: 0;
   border-radius: 10px;
-  background: #363636;
+  background: var(--ui-bg);
 }
 
 .label {

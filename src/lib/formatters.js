@@ -63,6 +63,19 @@ export function formatDateFull(ts) {
   return `${month} ${day}, ${year} · ${h12}:${m}${ampm}`
 }
 
+export function formatDateNumeric(ts) {
+  const d = new Date(ts)
+  if (isNaN(d.getTime())) return 'Unknown date'
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const yy = String(d.getFullYear()).slice(-2)
+  const h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
+  const ampm = h >= 12 ? 'pm' : 'am'
+  const h12 = h % 12 || 12
+  return `${mm}/${dd}/${yy} · ${h12}:${m}${ampm}`
+}
+
 export function parseExifDate(dt) {
   if (!dt) return null
   const str = String(dt).replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3')

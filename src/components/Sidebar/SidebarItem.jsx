@@ -2,7 +2,7 @@ import { memo, useEffect, useRef } from 'react'
 import { motion } from 'motion/react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
-import { formatDateFull, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'
+import { formatDateNumeric, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'
 import styles from './Sidebar.module.css'
 
 export const SidebarItem = memo(function SidebarItem({ group }) {
@@ -57,7 +57,7 @@ export const SidebarItem = memo(function SidebarItem({ group }) {
         </div>
         {species && <div className={styles.species}>{species}</div>}
         {lead.time && (
-          <div className={styles.datetime}>{formatDateFull(lead.time)}</div>
+          <div className={styles.datetime}>{formatDateNumeric(lead.time)}</div>
         )}
         {locationStr && (
           <div className={styles.location}>{locationStr}</div>

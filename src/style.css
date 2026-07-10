@@ -12,6 +12,17 @@
   --ui-bg: #202020;
   --dock-bg: rgba(20, 20, 22, 0.82);
 
+  /* Glass surface recipe — sidebar, nav pill, dock, map popup, dialogs.
+     --glass-tip-bg is the opaque-ish stand-in for elements that can't
+     take a backdrop-filter (e.g. the Mapbox popup tip arrow). */
+  --glass-bg: rgba(22, 22, 24, 0.68);
+  --glass-filter: blur(28px) saturate(1.8) brightness(0.9);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 24px rgba(0, 0, 0, 0.28);
+  --glass-tip-bg: rgba(22, 22, 24, 0.78);
+
   /* Scroll-container bottom clearance for the fixed mobile nav pill / dock
      (60px pill + 12px offset + breathing room; see Nav.module.css) */
   --nav-clearance: calc(96px + env(safe-area-inset-bottom));
@@ -45,9 +56,11 @@ body {
   padding: 0 !important;
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  box-shadow: var(--glass-shadow);
   width: min(460px, calc(100vw - 24px));
-  background: rgba(0, 0, 0, 0.85) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
   animation: mapPopupIn 0.2s ease-out;
 }
 
@@ -71,19 +84,19 @@ body {
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
-  border-top-color: rgba(0, 0, 0, 0.85) !important;
+  border-top-color: var(--glass-tip-bg) !important;
 }
 
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
-  border-bottom-color: rgba(0, 0, 0, 0.85) !important;
+  border-bottom-color: var(--glass-tip-bg) !important;
 }
 
 .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
-  border-right-color: rgba(0, 0, 0, 0.85) !important;
+  border-right-color: var(--glass-tip-bg) !important;
 }
 
 .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-  border-left-color: rgba(0, 0, 0, 0.85) !important;
+  border-left-color: var(--glass-tip-bg) !important;
 }

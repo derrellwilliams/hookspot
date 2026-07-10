@@ -14,8 +14,12 @@ export const tokens = {
   darkText: '#f4f4f5',
   darkMuted: '#a1a1aa',
 
+  // Glass surface recipe (CSS: --glass-*)
+  glassBg: 'rgba(22, 22, 24, 0.68)',
+  glassFilter: 'blur(28px) saturate(1.8) brightness(0.9)',
+  glassTipBg: 'rgba(22, 22, 24, 0.78)',
+
   // Layout
-  sidebarWidth: 240,
   radius: 8,
   navClearance: 96, // px before safe-area; CSS: --nav-clearance
 

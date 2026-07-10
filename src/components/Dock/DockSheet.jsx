@@ -155,9 +155,12 @@ export function DockSheet({ children, noDetail = false, midFraction = 0.65, topA
       >
         <div className={styles.grabber} />
       </div>
-      <motion.div className={styles.content} style={{ bottom: tabAreaH }}>
+      <motion.div
+        className={`${styles.content} ${!noDetail && activeGroup ? styles.contentFullBleed : ''}`}
+        style={{ bottom: tabAreaH }}
+      >
         {!noDetail && activeGroup ? (
-          <div style={{ overflowY: 'auto', height: '100%', overscrollBehavior: 'contain' }}>
+          <div className={styles.detailScroll}>
             <PopupCarousel
               key={activeGroup[0].catchId ?? activeGroup[0].name}
               initialGroup={activeGroup}

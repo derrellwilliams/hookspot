@@ -4,7 +4,10 @@
   left: 16px;
   bottom: 16px;
   width: 356px;
-  background: #202020;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-shadow);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -26,7 +29,7 @@
   padding: 9px 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .scrollbar {
@@ -146,11 +149,16 @@
 
 .monthHeader {
   padding: 2px 8px 0;
+  margin-bottom: -6px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.3);
+}
+
+.monthHeader:first-child {
+  padding-top: 16px;
 }
 
 .item {
@@ -172,11 +180,11 @@
 }
 
 .item:hover {
-  background: var(--dark-surface);
+  background: var(--ui-bg);
 }
 
 .active {
-  background: var(--dark-surface);
+  background: var(--ui-bg);
   border-color: transparent;
 }
 
@@ -258,7 +266,7 @@
 
 .species {
   font-family: var(--font-sans);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: #fff;
   white-space: nowrap;
@@ -286,9 +294,5 @@
 @media (max-width: 600px) {
   .monthHeader {
     display: none;
-  }
-
-  .species {
-    font-size: 18px;
   }
 }

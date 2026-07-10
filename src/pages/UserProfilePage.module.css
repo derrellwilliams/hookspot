@@ -809,10 +809,12 @@
 .catchDialogContent {
   width: 812px;
   max-width: calc(100vw - 120px);
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  box-shadow: var(--glass-shadow);
 }
 
 .catchNavArrow {
