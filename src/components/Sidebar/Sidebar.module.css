@@ -12,22 +12,6 @@
   z-index: 10;
 }
 
-.filterTitle {
-  font-family: var(--font-condensed);
-  font-size: 16px;
-  font-weight: 500;
-  color: #fff;
-  flex: 1;
-}
-
-.filterRow {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 18px 14px 6px 28px;
-  flex-shrink: 0;
-}
-
 .scrollRoot {
   flex: 1;
   overflow: hidden;
@@ -300,10 +284,6 @@
 }
 
 @media (max-width: 600px) {
-  .filterRow {
-    display: none;
-  }
-
   .monthHeader {
     display: none;
   }

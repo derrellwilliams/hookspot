@@ -36,11 +36,6 @@ export function SidebarContent() {
 
   return (
     <>
-      {hasPhotos && (
-        <div className={styles.filterRow}>
-          <span className={styles.filterTitle}>Latest Catches</span>
-        </div>
-      )}
       {!photosInitialized ? (
         <div className={styles.loadingCentered}>
           <div className={styles.spinner} />
