@@ -2,8 +2,9 @@
 
 This is an in progress fishing app that I'm tinkering with! 
 
-<img width="1582" height="975" alt="Screenshot 2026-06-08 at 8 04 24 PM" src="https://github.com/user-attachments/assets/037ccc0e-b09d-4afa-811c-46390fac72f9" />
-<img width="1582" height="975" alt="Screenshot 2026-06-08 at 8 04 30 PM" src="https://github.com/user-attachments/assets/4fb905d5-417a-433b-8712-2dbb5021125f" />
+<img width="1528" height="1082" alt="Screenshot 2026-07-11 at 1 45 39 PM" src="https://github.com/user-attachments/assets/3b5c612f-1728-4d51-b16a-5fe149d7d94d" />
+<img width="1528" height="1082" alt="Screenshot 2026-07-11 at 1 45 36 PM" src="https://github.com/user-attachments/assets/3d1f2940-709c-4bf9-829f-9d93f42f4501" />
+<img width="1528" height="1082" alt="Screenshot 2026-07-11 at 1 45 28 PM" src="https://github.com/user-attachments/assets/1eb7606b-c9c4-48f8-a97a-e4e42ce59982" />
 
 
 ## What it does
