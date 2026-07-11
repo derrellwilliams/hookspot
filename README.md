@@ -9,7 +9,8 @@ This is an in progress fishing app I'm working on!  You can drop GPS-tagged phot
 ## What it does
 
 - **Map view** — each catch appears as a pin at its GPS coordinates. Click a pin to see the photo, species, date/time, rod, and fly. Multiple photos from the same upload session are grouped into a single pin.
-- **Sidebar** — scrollable list of all catches, sorted newest first. Click any entry to jump to it on the map.
+- **Catch cards** — scrollable grid of catch cards next to the map, sorted newest first. Click any card to jump to it on the map and open its details.
+- **Mobile web** — at phone widths the app switches to an app-like layout: a floating bottom nav (home, profile, search, add), a card feed with a list/map toggle, and bottom-sheet catch details.
 - **Stats view** — charts derived from your catch history: catches per month, time of day, species breakdown, and species by month.
 - **Upload flow** — click **+** or drag photos onto the window to open the upload dialog. Claude automatically identifies the fish species from the image. Edit the species, rod, and fly before saving.
 - **Edit & delete** — click the pencil icon on any popup to edit species, rod, or fly, or delete the catch entirely.
@@ -90,4 +91,4 @@ Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `
 - **Utilities**
   - [exifr](https://github.com/MikeKovarik/exifr) — EXIF/GPS extraction
   - [heic-convert](https://github.com/alexcorvi/heic-convert) & [heic2any](https://github.com/alexcorvi/heic2any) — HEIC conversion
-  - [Iconoir](https://iconoir.com) — icon library
+  - [Lucide](https://lucide.dev) — icon library
