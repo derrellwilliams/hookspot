@@ -7,7 +7,6 @@ import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { deletePhotos } from '../lib/fileLoader.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
-import { useFollowList } from '../hooks/useFollowList.js'
 import { groupPhotos } from '../lib/groupPhotos.js'
 import { UserRow } from '../components/UserRow/UserRow.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
@@ -77,8 +76,6 @@ export function SearchPage() {
   const [catchesLoading, setCatchesLoading] = useState(false)
 
   const [recentSearches, setRecentSearches] = useState(loadRecentSearches)
-  const [followTab, setFollowTab] = useState('following')
-  const { list: followList, loading: followLoading } = useFollowList(myUser?.id, followTab)
 
   const [catchPopupIdx, setCatchPopupIdx] = useState(null)
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -381,44 +378,6 @@ export function SearchPage() {
                     </div>
                   </section>
                 )}
-                <section>
-                  <div className={styles.followTabBar}>
-                    {[{ id: 'following', label: 'Following' }, { id: 'followers', label: 'Followers' }].map(({ id, label }) => {
-                      const isActive = followTab === id
-                      return (
-                        <motion.button
-                          key={id}
-                          className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                          onClick={() => setFollowTab(id)}
-                          whileHover={{ scale: 1.007 }}
-                          whileTap={{ scale: 0.975 }}
-                          transition={spring}
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="search-follow-tab-highlight"
-                              className={styles.tabHighlight}
-                              initial={false}
-                              transition={springTight}
-                            />
-                          )}
-                          <span className={styles.tabLabel}>{label}</span>
-                        </motion.button>
-                      )
-                    })}
-                  </div>
-                  <div className={styles.listCard}>
-                    {followLoading && <div className={styles.emptyText}>Loading…</div>}
-                    {!followLoading && followList.length === 0 && (
-                      <div className={styles.emptyText}>
-                        {followTab === 'followers' ? 'No followers yet' : 'Not following anyone yet'}
-                      </div>
-                    )}
-                    {!followLoading && followList.map(user => (
-                      <UserRow key={user.id} user={user} onClick={() => navigate(`/user/${user.username}`)} />
-                    ))}
-                  </div>
-                </section>
               </div>
             ) : (
               <div className={styles.results}>

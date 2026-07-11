@@ -615,6 +615,16 @@ export function UserProfilePage() {
                 <span className={styles.headerStatLabel}>Species</span>
               </div>
             </div>
+            <div className={styles.followCounts}>
+              <button className={styles.followCountBtn} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
+                <span className={styles.followCountNum}>{followerCount ?? 0}</span>
+                <span className={styles.followCountLabel}>Followers</span>
+              </button>
+              <button className={styles.followCountBtn} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
+                <span className={styles.followCountNum}>{followingCount ?? 0}</span>
+                <span className={styles.followCountLabel}>Following</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -907,6 +917,16 @@ export function UserProfilePage() {
                   <span className={styles.headerStatNum}>{uniqueSpecies}</span>
                   <span className={styles.headerStatLabel}>Species</span>
                 </div>
+              </div>
+              <div className={styles.followCounts}>
+                <button className={styles.followCountBtn} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
+                  <span className={styles.followCountNum}>{followerCount ?? 0}</span>
+                  <span className={styles.followCountLabel}>Followers</span>
+                </button>
+                <button className={styles.followCountBtn} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
+                  <span className={styles.followCountNum}>{followingCount ?? 0}</span>
+                  <span className={styles.followCountLabel}>Following</span>
+                </button>
               </div>
             </div>
           </div>

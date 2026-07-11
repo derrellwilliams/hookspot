@@ -36,16 +36,23 @@
   flex-direction: column;
 }
 
-/* ── Tab bar ── */
+/* ── Header (tab bar + close) ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 12px 8px 16px;
+  flex-shrink: 0;
+}
+
 .tabBar {
   display: flex;
   align-items: center;
+  flex: 1;
   background: var(--dark-surface);
   border-radius: 10px;
   padding: 4px;
   gap: 2px;
-  margin: 16px 16px 8px;
-  flex-shrink: 0;
 }
 
 .tab {
@@ -107,9 +114,7 @@
 
 /* ── Close button ── */
 .closeBtn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  flex-shrink: 0;
   width: 28px;
   height: 28px;
   background: none;

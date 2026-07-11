@@ -13,11 +13,21 @@ export function FollowListDialog({ open, onClose, profileId, initialTab }) {
   const [activeTab, setActiveTab] = useState(initialTab || 'followers')
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(false)
+  const [animateTabs, setAnimateTabs] = useState(false)
 
   // Sync initialTab when dialog re-opens
   useEffect(() => {
     if (open) setActiveTab(initialTab || 'followers')
   }, [open, initialTab])
+
+  // The tab highlight's layoutId animation runs against bounds measured while
+  // the dialog is still mounting, so it slides in from a bogus position on
+  // open. Keep it instant until the first painted frame, then animate.
+  useEffect(() => {
+    if (!open) { setAnimateTabs(false); return }
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setAnimateTabs(true)))
+    return () => cancelAnimationFrame(raf)
+  }, [open])
 
   useEffect(() => {
     if (!open || !profileId) return
@@ -72,30 +82,33 @@ export function FollowListDialog({ open, onClose, profileId, initialTab }) {
         <Dialog.Content className={styles.panel} aria-describedby={undefined}>
           <Dialog.Title className={styles.srOnly}>Followers and following</Dialog.Title>
 
-          <div className={styles.tabBar}>
-            {[{ id: 'followers', label: 'Followers' }, { id: 'following', label: 'Following' }].map(({ id, label }) => {
-              const isActive = activeTab === id
-              return (
-                <motion.button
-                  key={id}
-                  className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                  onClick={() => setActiveTab(id)}
-                  whileHover={{ scale: 1.007 }}
-                  whileTap={{ scale: 0.975 }}
-                  transition={spring}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="follow-tab-highlight"
-                      className={styles.tabHighlight}
-                      initial={false}
-                      transition={spring}
-                    />
-                  )}
-                  <span className={styles.tabLabel}>{label}</span>
-                </motion.button>
-              )
-            })}
+          <div className={styles.header}>
+            <div className={styles.tabBar}>
+              {[{ id: 'followers', label: 'Followers' }, { id: 'following', label: 'Following' }].map(({ id, label }) => {
+                const isActive = activeTab === id
+                return (
+                  <motion.button
+                    key={id}
+                    className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
+                    onClick={() => setActiveTab(id)}
+                    whileHover={{ scale: 1.007 }}
+                    whileTap={{ scale: 0.975 }}
+                    transition={spring}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="follow-tab-highlight"
+                        className={styles.tabHighlight}
+                        initial={false}
+                        transition={animateTabs ? spring : { duration: 0 }}
+                      />
+                    )}
+                    <span className={styles.tabLabel}>{label}</span>
+                  </motion.button>
+                )
+              })}
+            </div>
+            <button className={styles.closeBtn} onClick={onClose} aria-label="Close">×</button>
           </div>
 
           <div className={styles.body}>
@@ -109,8 +122,6 @@ export function FollowListDialog({ open, onClose, profileId, initialTab }) {
               <UserRow key={user.id} user={user} onClick={() => goToUser(user.username)} />
             ))}
           </div>
-
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">×</button>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

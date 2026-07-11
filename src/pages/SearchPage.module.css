@@ -26,15 +26,11 @@
   background: rgba(255,255,255,0.35);
 }
 
-/* Rounded dark-surface container around everything below the header */
 .inner {
   max-width: 1060px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  background: var(--dark-surface);
-  border-radius: 16px;
-  padding: 24px;
 }
 
 /* ── Hero input ── */
@@ -308,18 +304,6 @@
 .recentChip:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.25);
-}
-
-/* ── Follow browser (empty state) ── */
-.followTabBar {
-  display: flex;
-  align-items: center;
-  width: fit-content;
-  background: rgba(0, 0, 0, 0.22);
-  border-radius: 12px;
-  padding: 4px;
-  gap: 2px;
-  margin-bottom: 12px;
 }
 
 /* ── Catches grid ── */
