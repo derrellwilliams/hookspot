@@ -368,7 +368,7 @@ export function SearchPage() {
           <div className={styles.resultsPane}>
             {!isSearching ? (
               <div className={styles.emptyState}>
-                {recentSearches.length > 0 && (
+                {recentSearches.length > 0 ? (
                   <section>
                     <div className={styles.sectionLabel}>Recent searches</div>
                     <div className={styles.recentChips}>
@@ -377,6 +377,12 @@ export function SearchPage() {
                       ))}
                     </div>
                   </section>
+                ) : (
+                  <div className={styles.idleState}>
+                    <div className={styles.idleIcon}><Search width={26} height={26} /></div>
+                    <div className={styles.idleTitle}>Search Hook Spot</div>
+                    <p className={styles.idleHint}>Find anglers by name, or catches by species, fly, rod, or date range.</p>
+                  </div>
                 )}
               </div>
             ) : (
