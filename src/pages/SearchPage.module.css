@@ -32,6 +32,7 @@
 .inner {
   display: flex;
   flex-direction: column;
+  min-height: 100%; /* lets the empty-state mesh stretch to the page's bottom padding */
 }
 
 /* ── Hero input ── */
@@ -73,137 +74,38 @@
   font-size: 14px;
 }
 
-/* ── Filter rail + results split ── */
+/* ── Horizontal filter bar below the hero input ── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+/* Shared ui Select stretches to 100% by default; size to content in the bar */
+.filterBar > div {
+  width: auto;
+}
+
+.filterSelect {
+  width: auto;
+  padding: 8px 32px 8px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.22);
+}
+
 .body {
   display: flex;
-  align-items: flex-start;
-  gap: 32px;
-}
-
-.filterPane {
-  flex: 0 0 240px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  position: sticky;
-  top: 96px; /* stays below the fixed glass Nav while results scroll */
-}
-
-.filterGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.filterGroup .sectionLabel {
-  margin-bottom: 0;
+  flex: 1;
 }
 
 .resultsPane {
   flex: 1;
   min-width: 0;
-}
-
-.tabBar {
   display: flex;
-  align-items: center;
-  width: fit-content;
-  background: rgba(0, 0, 0, 0.22);
-  border-radius: 12px;
-  padding: 4px;
-  gap: 2px;
-}
-
-.tabBarVertical {
   flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-}
-
-.tabBarVertical .tab {
-  justify-content: flex-start;
-}
-
-.tab {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border: none;
-  background: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 400;
-  font-family: var(--font-sans);
-  color: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: color 0.15s;
-}
-
-.tab:hover {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.tabActive {
-  color: var(--dark-text);
-  font-weight: 600;
-}
-
-.tabHighlight {
-  position: absolute;
-  inset: 0;
-  border-radius: 8px;
-  background: #363636;
-}
-
-.tabLabel {
-  position: relative;
-  z-index: 1;
-}
-
-.scopePill {
-  display: flex;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.22);
-  border-radius: 10px;
-  padding: 3px;
-  gap: 2px;
-}
-
-.scopeBtn {
-  position: relative;
-  flex: 1;
-  padding: 6px 12px;
-  border: none;
-  background: none;
-  border-radius: 7px;
-  font-size: 12px;
-  font-weight: 500;
-  font-family: var(--font-sans);
-  color: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: color 0.15s;
-}
-
-.scopeBtn:hover {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.scopeBtnActive {
-  color: var(--dark-text);
-}
-
-.scopeHighlight {
-  position: absolute;
-  inset: 0;
-  border-radius: 7px;
-  background: #363636;
 }
 
 .dateChip {
@@ -244,11 +146,37 @@
 }
 
 /* ── Sections ── */
-.results,
-.emptyState {
+.results {
   display: flex;
   flex-direction: column;
   gap: 32px;
+}
+
+/* ── Empty state over the dither mesh ── */
+.emptyState {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  border: 1px solid var(--dark-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.emptyMesh {
+  position: absolute;
+  inset: 0;
+  background-color: var(--dark-bg);
+}
+
+.emptyContent {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px;
 }
 
 .sectionLabel {
@@ -281,30 +209,6 @@
   display: flex;
   justify-content: center;
   padding: 32px 0;
-}
-
-/* ── Recent searches ── */
-.recentChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.recentChip {
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid var(--dark-border);
-  border-radius: 999px;
-  padding: 7px 14px;
-  font-size: 13px;
-  font-family: var(--font-sans);
-  color: var(--dark-text);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.recentChip:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* ── Idle empty state ── */
@@ -444,27 +348,8 @@
     padding: 16px;
   }
 
-  /* Stack the filter rail above the results */
-  .body {
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .filterPane {
-    position: static;
-    flex: none;
-    width: 100%;
-    gap: 16px;
-  }
-
-  .tabBarVertical {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .tabBarVertical .tab {
-    flex: 1;
-    justify-content: center;
+  .filterBar {
+    gap: 8px;
   }
 
   .resultsPane {

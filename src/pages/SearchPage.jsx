@@ -8,14 +8,13 @@ import { usePhotoStore } from '../store/usePhotoStore.js'
 import { deletePhotos } from '../lib/fileLoader.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { groupPhotos } from '../lib/groupPhotos.js'
+import { Select } from '../components/ui/index.js'
+import { DitherMesh } from '../components/DitherMesh.jsx'
 import { UserRow } from '../components/UserRow/UserRow.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
 import { formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/formatters.js'
 import styles from './SearchPage.module.css'
 import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
-
-const spring = { type: 'spring', stiffness: 300, damping: 24 }
-const springTight = { type: 'spring', stiffness: 400, damping: 35 }
 
 const TABS = [
   { id: 'all', label: 'All' },
@@ -24,12 +23,6 @@ const TABS = [
 ]
 
 const PAGE_SIZE = 24
-const RECENT_KEY = 'hookspot:recentSearches'
-
-function loadRecentSearches() {
-  try { return JSON.parse(localStorage.getItem(RECENT_KEY)) ?? [] }
-  catch { return [] }
-}
 
 function groupShareId(group) {
   return String(group[0].catchId ?? group[0].name)
@@ -74,8 +67,6 @@ export function SearchPage() {
   const [catchRows, setCatchRows] = useState([])
   const [usersLoading, setUsersLoading] = useState(false)
   const [catchesLoading, setCatchesLoading] = useState(false)
-
-  const [recentSearches, setRecentSearches] = useState(loadRecentSearches)
 
   const [catchPopupIdx, setCatchPopupIdx] = useState(null)
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -191,22 +182,11 @@ export function SearchPage() {
     setActiveIdx(-1)
   }, [flatItems.length, activeTab])
 
-  function recordSearch(q) {
-    if (!q) return
-    setRecentSearches(prev => {
-      const next = [q, ...prev.filter(s => s.toLowerCase() !== q.toLowerCase())].slice(0, 8)
-      localStorage.setItem(RECENT_KEY, JSON.stringify(next))
-      return next
-    })
-  }
-
   function goToUser(username) {
-    recordSearch(trimmedQuery)
     navigate(`/user/${username}`)
   }
 
   function openCatch(idx) {
-    recordSearch(trimmedQuery)
     setCatchPopupIdx(idx)
   }
 
@@ -292,98 +272,42 @@ export function SearchPage() {
           />
         </div>
 
+        <div className={styles.filterBar}>
+          <Select className={styles.filterSelect} value={activeTab} onChange={e => setActiveTab(e.target.value)} aria-label="Show">
+            {TABS.map(({ id, label }) => (
+              <option key={id} value={id}>{label}</option>
+            ))}
+          </Select>
+          {activeTab !== 'anglers' && (
+            <>
+              <Select className={styles.filterSelect} value={scope} onChange={e => setScope(e.target.value)} aria-label="Whose catches">
+                <option value="everyone">Everyone</option>
+                <option value="me">Just me</option>
+              </Select>
+              <label className={styles.dateChip}>
+                <span className={styles.dateChipLabel}>From</span>
+                <input type="date" className={styles.dateInput} value={dateFrom} max={dateTo || undefined} onChange={e => setDateFrom(e.target.value)} />
+              </label>
+              <label className={styles.dateChip}>
+                <span className={styles.dateChipLabel}>To</span>
+                <input type="date" className={styles.dateInput} value={dateTo} min={dateFrom || undefined} onChange={e => setDateTo(e.target.value)} />
+              </label>
+            </>
+          )}
+        </div>
+
         <div className={styles.body}>
-          <aside className={styles.filterPane}>
-            <div className={styles.filterGroup}>
-              <div className={styles.sectionLabel}>Show</div>
-              <div className={`${styles.tabBar} ${styles.tabBarVertical}`}>
-                {TABS.map(({ id, label }) => {
-                  const isActive = activeTab === id
-                  return (
-                    <motion.button
-                      key={id}
-                      className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                      onClick={() => setActiveTab(id)}
-                      whileHover={{ scale: 1.007 }}
-                      whileTap={{ scale: 0.975 }}
-                      transition={spring}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="search-tab-highlight"
-                          className={styles.tabHighlight}
-                          initial={false}
-                          transition={springTight}
-                        />
-                      )}
-                      <span className={styles.tabLabel}>{label}</span>
-                    </motion.button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {activeTab !== 'anglers' && (
-              <>
-                <div className={styles.filterGroup}>
-                  <div className={styles.sectionLabel}>Whose catches</div>
-                  <div className={styles.scopePill}>
-                    {[{ id: 'everyone', label: 'Everyone' }, { id: 'me', label: 'Just me' }].map(({ id, label }) => {
-                      const isActive = scope === id
-                      return (
-                        <button
-                          key={id}
-                          className={`${styles.scopeBtn} ${isActive ? styles.scopeBtnActive : ''}`}
-                          onClick={() => setScope(id)}
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="search-scope-highlight"
-                              className={styles.scopeHighlight}
-                              initial={false}
-                              transition={springTight}
-                            />
-                          )}
-                          <span className={styles.tabLabel}>{label}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-                <div className={styles.filterGroup}>
-                  <div className={styles.sectionLabel}>Date range</div>
-                  <label className={styles.dateChip}>
-                    <span className={styles.dateChipLabel}>From</span>
-                    <input type="date" className={styles.dateInput} value={dateFrom} max={dateTo || undefined} onChange={e => setDateFrom(e.target.value)} />
-                  </label>
-                  <label className={styles.dateChip}>
-                    <span className={styles.dateChipLabel}>To</span>
-                    <input type="date" className={styles.dateInput} value={dateTo} min={dateFrom || undefined} onChange={e => setDateTo(e.target.value)} />
-                  </label>
-                </div>
-              </>
-            )}
-          </aside>
-
           <div className={styles.resultsPane}>
             {!isSearching ? (
               <div className={styles.emptyState}>
-                {recentSearches.length > 0 ? (
-                  <section>
-                    <div className={styles.sectionLabel}>Recent searches</div>
-                    <div className={styles.recentChips}>
-                      {recentSearches.map(s => (
-                        <button key={s} className={styles.recentChip} onClick={() => setQuery(s)}>{s}</button>
-                      ))}
-                    </div>
-                  </section>
-                ) : (
+                <DitherMesh className={styles.emptyMesh} aria-hidden="true" />
+                <div className={styles.emptyContent}>
                   <div className={styles.idleState}>
                     <div className={styles.idleIcon}><Search width={26} height={26} /></div>
                     <div className={styles.idleTitle}>Search HookSpot</div>
                     <p className={styles.idleHint}>Find anglers by name, or catches by species, fly, rod, or date range.</p>
                   </div>
-                )}
+                </div>
               </div>
             ) : (
               <div className={styles.results}>
