@@ -12,9 +12,9 @@
 ## Key Files
 - **Entry**: `src/main.jsx` → `src/App.jsx`
 - **Pages**: `src/pages/` — MapPage, LoginPage, OnboardingPage, UserProfilePage, SearchPage, DesignPage, NotFoundPage, FeedPage (WIP, unrouted)
-- **Components**: `src/components/` — Map, Sidebar, Nav, UploadDialog, DropOverlay, FavoritePicker, Toast, ui/; root-level `ProfileBlob.jsx`, `RequireAuth.jsx`
+- **Components**: `src/components/` — Map, Sidebar, Nav, UploadDialog, DropOverlay, FavoritePicker, Toast, ui/; root-level `DitherMesh.jsx`, `RequireAuth.jsx`
 - **Stores**: `usePhotoStore` (photos, groups, flyToPhoto, activeGroup, toast, uploadOpen, bulkUploading, pendingUploadFiles, ownOnly, photosInitialized); `useAuthStore` (user, session, username, loading)
-- **Lib**: `src/lib/` — fileLoader.js, groupPhotos.js, formatters.js, supabase.js, geocode.js, weather.js, validation.js, imageUtils.js, mesh.js
+- **Lib**: `src/lib/` — fileLoader.js, groupPhotos.js, formatters.js, supabase.js, geocode.js, weather.js, validation.js, imageUtils.js
 - **Utilities**: `src/cache.js` (IndexedDB), `src/exif.js`, `src/identify.js`, `src/stats.js` — keep pure (no React)
 - **API**: Vite middleware in `vite.config.js` — `/identify` (Claude AI via Anthropic SDK, requires `ANTHROPIC_API_KEY`), `/api/check-username`, `/api/save-profile`, `/api/profile`, `/api/photos`, `/api/search-users`, `/api/search-catches`
 
