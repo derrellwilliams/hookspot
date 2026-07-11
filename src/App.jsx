@@ -13,6 +13,7 @@ import { NotFoundPage } from './pages/NotFoundPage.jsx'
 import { LoginPage } from './pages/LoginPage.jsx'
 import { OnboardingPage } from './pages/OnboardingPage.jsx'
 import { UserProfilePage } from './pages/UserProfilePage.jsx'
+import { SearchPage } from './pages/SearchPage.jsx'
 import { RequireAuth } from './components/RequireAuth.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { supabase } from './lib/supabase.js'
@@ -24,8 +25,10 @@ import styles from './App.module.css'
 
 function ProfileRedirect() {
   const username = useAuthStore(s => s.username)
+  const location = useLocation()
   if (!username) return null
-  return <Navigate to={`/user/${username}`} replace />
+  // Preserve query params (e.g. ?edit=profile from the nav settings menu)
+  return <Navigate to={`/user/${username}${location.search}`} replace />
 }
 
 function AppInner() {
@@ -36,7 +39,7 @@ function AppInner() {
   const setSession = useAuthStore(s => s.setSession)
   const setUserAndUsername = useAuthStore(s => s.setUserAndUsername)
 
-  const knownRoutes = ['/', '/login', '/onboarding', '/profile', '/design']
+  const knownRoutes = ['/', '/login', '/onboarding', '/profile', '/search', '/design']
   const isKnownRoute = knownRoutes.includes(location.pathname) || location.pathname.startsWith('/user/')
   const isPublicPage = ['/login', '/onboarding'].includes(location.pathname) || !isKnownRoute
 
@@ -106,6 +109,7 @@ function AppInner() {
         <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><ProfileRedirect /></RequireAuth>} />
         <Route path="/user/:username" element={<UserProfilePage />} />
+        <Route path="/search" element={<RequireAuth><SearchPage /></RequireAuth>} />
         {/* MapPage itself stays mounted above; this only enforces the login redirect */}
         <Route path="/" element={<RequireAuth>{null}</RequireAuth>} />
         <Route path="/design" element={<DesignPage />} />

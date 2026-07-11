@@ -1,36 +1,65 @@
+/* Transparent header row — only the icon menu gets a glass container.
+   pointer-events pass through the empty middle to the map/cards below. */
 .navBar {
   position: fixed;
   top: 16px;
-  left: 0;
-  right: 0;
+  /* Aligns with the card grid's left edge (24px) and the map's right edge (24px) */
+  left: 24px;
+  right: 24px;
+  height: 64px;
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
   pointer-events: none;
   z-index: 1000;
 }
 
-@media (max-width: 600px) {
-  .navBar {
-    top: auto;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    justify-content: center;
-    align-items: flex-end;
-  }
-}
-
-.pill {
+/* Accent-blue glass pill around the wordmark — translucent so the
+   backdrop blur still reads through */
+.logo {
   display: flex;
   align-items: center;
-  height: 60px;
+  height: 56px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+  border: none;
+  padding: 0 20px;
+  background: color-mix(in srgb, var(--accent) 72%, transparent);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-radius: 16px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: box-shadow 0.15s ease;
+}
+
+/* Inset dark tint deepens the blue on hover/press */
+.logo:hover {
+  box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.18);
+}
+
+.logo:active {
+  box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.28);
+}
+
+.logo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.navGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-filter);
   -webkit-backdrop-filter: var(--glass-filter);
-  box-shadow: var(--glass-shadow);
   border-radius: 16px;
-  padding: 6px;
-  gap: 2px;
   pointer-events: auto;
 }
 
@@ -39,26 +68,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 48px;
-  padding: 0 14px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: none;
-  color: rgba(255, 255, 255, 0.4);
+  padding: 0;
   border-radius: 10px;
+  color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: var(--font-sans);
-  white-space: nowrap;
   transition: color 0.18s ease;
 }
 
-.navItem.active {
+.navItem:hover {
   color: #fff;
 }
 
-.navItem:not(.active):hover {
+.navItem.active {
   color: #fff;
 }
 
@@ -67,41 +92,95 @@
   outline-offset: 2px;
 }
 
-/* Sliding background pill — positioned behind the label */
+/* Sliding square behind the active icon — 48×48 (button + 4px each side) */
 .highlight {
   position: absolute;
-  inset: 0;
+  inset: -4px;
   border-radius: 10px;
-  background: var(--ui-bg);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .label {
   position: relative;
   z-index: 1;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
-.plusBtn {
+.iconBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  margin-left: 2px;
+  width: 40px;
+  height: 40px;
   border: none;
+  background: none;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.15s ease;
+}
+
+.iconBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Settings dropdown — same look as the profile page's dropdown */
+.dropdownContent {
+  min-width: 140px;
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1001;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--dark-text);
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.dropdownItem:hover,
+.dropdownItem[data-highlighted] {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--dark-text);
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-left: 8px;
+  border: none;
+  border-radius: 50%;
   background: var(--accent);
   color: #fff;
-  border-radius: 10px;
   cursor: pointer;
   transition: opacity 0.15s;
 }
 
-.plusBtn:hover {
-  opacity: 0.88;
+.addBtn:hover {
+  opacity: 0.9;
 }
 
-.plusBtn:focus-visible {
-  outline: 2px solid var(--accent);
+.addBtn:focus-visible {
+  outline: 2px solid #fff;
   outline-offset: 2px;
 }

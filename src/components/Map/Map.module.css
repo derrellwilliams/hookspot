@@ -4,6 +4,25 @@
   z-index: 1;
 }
 
+/* Smooth grow/shrink for the card-hover pin highlight */
+.map :global(.mapboxgl-marker) svg {
+  transition: transform 0.15s ease;
+  transform-origin: center bottom;
+}
+
+.markerHover {
+  z-index: 5;
+}
+
+.markerHover svg {
+  transform: scale(1.3);
+}
+
+/* Overrides the pin body's inline fill attribute */
+.markerHover svg path:first-of-type {
+  fill: var(--accent);
+}
+
 /* Popup wrapper */
 .popup {
   color: var(--dark-text);

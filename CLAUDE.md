@@ -3,7 +3,7 @@
 ## Tech Stack
 - **React 19** + Vite 5 (`@vitejs/plugin-react@4` — do NOT upgrade to v5/v6)
 - **Zustand v5**: `src/store/usePhotoStore.js`, `src/store/useAuthStore.js`
-- **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/design`
+- **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/search`, `/design`
 - **Supabase** auth + storage + database (`src/lib/supabase.js`)
 - **Mapbox GL JS** (raw, no react-map-gl); popups use `createRoot(el).render(<PopupCarousel/>)`
 - **Radix UI** for modals, dropdowns, tooltips; **iconoir-react** icons
@@ -11,12 +11,12 @@
 
 ## Key Files
 - **Entry**: `src/main.jsx` → `src/App.jsx`
-- **Pages**: `src/pages/` — MapPage, LoginPage, OnboardingPage, UserProfilePage, DesignPage, NotFoundPage, FeedPage (WIP, unrouted)
+- **Pages**: `src/pages/` — MapPage, LoginPage, OnboardingPage, UserProfilePage, SearchPage, DesignPage, NotFoundPage, FeedPage (WIP, unrouted)
 - **Components**: `src/components/` — Map, Sidebar, Nav, UploadDialog, DropOverlay, FavoritePicker, Toast, ui/; root-level `ProfileBlob.jsx`, `RequireAuth.jsx`
 - **Stores**: `usePhotoStore` (photos, groups, flyToPhoto, activeGroup, toast, uploadOpen, bulkUploading, pendingUploadFiles, ownOnly, photosInitialized); `useAuthStore` (user, session, username, loading)
 - **Lib**: `src/lib/` — fileLoader.js, groupPhotos.js, formatters.js, supabase.js, geocode.js, weather.js, validation.js, imageUtils.js, mesh.js
 - **Utilities**: `src/cache.js` (IndexedDB), `src/exif.js`, `src/identify.js`, `src/stats.js` — keep pure (no React)
-- **API**: Vite middleware in `vite.config.js` — `/identify` (Claude AI via Anthropic SDK, requires `ANTHROPIC_API_KEY`), `/api/check-username`, `/api/save-profile`, `/api/profile`, `/api/photos`
+- **API**: Vite middleware in `vite.config.js` — `/identify` (Claude AI via Anthropic SDK, requires `ANTHROPIC_API_KEY`), `/api/check-username`, `/api/save-profile`, `/api/profile`, `/api/photos`, `/api/search-users`, `/api/search-catches`
 
 ## Data Model
 - **`catches`** — one row per fishing session: `id, user_id, species, rod, fly, lat, lng, time`
@@ -36,6 +36,7 @@
 - Map screen (`mobile/app/(tabs)/map.js`) fetches photos, maps `catch_id → catchId` + ISO → ms, calls `groupPhotos()`, renders one marker/list item per group
 
 ## Standards
+- **No browser automation unless asked**: Don't use Chrome DevTools MCP / browser tools to verify changes unless explicitly requested
 - **Zustand selectors**: Select only what's needed (`usePhotoStore(s => s.photos)`) — no whole-store subscriptions
 - **Marker lifecycle**: Call `rebuildMarkers` only when necessary; use `identify.js` for batch processing outside React
 - **Design tokens**: Use CSS custom properties from `src/tokens.js` — no hardcoded hex values in `.module.css`

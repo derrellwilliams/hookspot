@@ -3,25 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { supabase } from '../../lib/supabase.js'
+import { UserRow } from '../UserRow/UserRow.jsx'
 import styles from './FollowListDialog.module.css'
 
 const spring = { type: 'spring', stiffness: 400, damping: 35 }
-
-function UserRow({ user, onClick }) {
-  const initial = (user.display_name || user.username || '?')[0].toUpperCase()
-  return (
-    <button className={styles.userRow} onClick={onClick}>
-      {user.avatar_url
-        ? <img src={user.avatar_url} alt={user.display_name || user.username} className={styles.userAvatar} />
-        : <div className={styles.userAvatarFallback}>{initial}</div>
-      }
-      <div className={styles.userInfo}>
-        <span className={styles.userDisplayName}>{user.display_name || user.username}</span>
-        <span className={styles.userUsername}>@{user.username}</span>
-      </div>
-    </button>
-  )
-}
 
 export function FollowListDialog({ open, onClose, profileId, initialTab }) {
   const navigate = useNavigate()

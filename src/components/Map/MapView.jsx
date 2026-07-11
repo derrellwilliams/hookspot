@@ -1,23 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { createRoot } from 'react-dom/client'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
-import { deletePhotos } from '../../lib/fileLoader.js'
-import { PopupCarousel } from './PopupCarousel.jsx'
 import styles from './Map.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
-import { MOBILE_QUERY, useIsMobile } from '../../hooks/useIsMobile.js'
+import { MOBILE_QUERY } from '../../hooks/useIsMobile.js'
 
 const MAP_CENTER = [-111.891, 40.760]
 const MAP_ZOOM = 11
 const MARKER_COLOR = '#000000'
-const POPUP_MAX_WIDTH = 'min(484px, calc(100vw - 24px))'
 const MIN_FLY_ZOOM = 13
-const POPUP_PAN_FACTOR = 0.65
 const BOUNDS_PADDING_DEGREES = 0.008  // ~0.55 miles
 const INITIAL_FIT_COUNT = 10
-const DEFAULT_SIDEBAR_RIGHT = 260
 
 function avg(arr) {
   return arr.reduce((s, v) => s + v, 0) / arr.length
@@ -26,18 +20,17 @@ function avg(arr) {
 export function MapView({ active }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
-  const markersRef = useRef([])  // { key, marker, popup, root }
+  const markersRef = useRef([])  // { key, marker }
   const markerByNameRef = useRef(new Map())
   const [mapReady, setMapReady] = useState(false)
   const [fitted, setFitted] = useState(false)
   const savedViewRef = useRef(null)
 
   const groups = usePhotoStore(s => s.groups)
+  const hoveredPhotoName = usePhotoStore(s => s.hoveredPhotoName)
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
-  const activeGroup = usePhotoStore(s => s.activeGroup)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
-  const isMobile = useIsMobile()
 
   // Init map once. flyToPhotoFn is defined here so it only enters the store once,
   // reading current marker state via markerByNameRef on each call.
@@ -51,18 +44,13 @@ export function MapView({ active }) {
     })
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
     map.on('click', () => {
-      markersRef.current.forEach(({ popup }) => popup.remove())
-      if (window.matchMedia(MOBILE_QUERY).matches) {
-        usePhotoStore.getState().setActiveGroup(null)
-      }
+      usePhotoStore.getState().setActiveGroup(null)
     })
     map.on('load', () => {
       setFlyToPhoto((photo) => {
         const entry = markerByNameRef.current.get(photo.name)
         if (!entry) return
-        const { marker, popup } = entry
-        markersRef.current.forEach(m => m.popup.remove())
-        const lnglat = marker.getLngLat()
+        const lnglat = entry.marker.getLngLat()
         const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
         const onMobile = window.matchMedia(MOBILE_QUERY).matches
         // Mobile: push map up so the pin sits above the dock sheet mid height (65%).
@@ -71,22 +59,18 @@ export function MapView({ active }) {
         const vh = window.visualViewport?.height ?? window.innerHeight
         const padding = onMobile
           ? { left: 0, right: 0, top: 0, bottom: Math.round(vh * 0.65) }
-          : { left: DEFAULT_SIDEBAR_RIGHT, right: 0, top: 0, bottom: 0 }
+          : { left: 0, right: 0, top: 0, bottom: 0 }
         map.jumpTo({ center: lnglat, zoom, padding })
-        if (!onMobile) {
-          popup.addTo(map)
-          requestAnimationFrame(() => {
-            const popupEl = popup.getElement()
-            if (!popupEl) return
-            map.panBy([0, -(popupEl.offsetHeight * POPUP_PAN_FACTOR)], { duration: 0 })
-          })
-        }
       })
       setMapReady(true)
     })
     mapRef.current = map
+    // Keep the canvas in sync with the container — Mapbox only listens to
+    // window resize, so layout-driven size changes need an explicit resize().
+    const ro = new ResizeObserver(() => map.resize())
+    ro.observe(containerRef.current)
     return () => {
-      markersRef.current.forEach(({ root }) => root.unmount())
+      ro.disconnect()
       markersRef.current = []
       map.remove()
     }
@@ -116,8 +100,8 @@ export function MapView({ active }) {
     const existingByKey = new Map(markersRef.current.map(m => [m.key, m]))
 
     // Remove markers for deleted/hidden groups
-    markersRef.current.forEach(({ key, marker, popup, root }) => {
-      if (!newKeySet.has(key)) { root.unmount(); popup.remove(); marker.remove() }
+    markersRef.current.forEach(({ key, marker }) => {
+      if (!newKeySet.has(key)) marker.remove()
     })
     markersRef.current = markersRef.current.filter(m => newKeySet.has(m.key))
 
@@ -129,32 +113,9 @@ export function MapView({ active }) {
       const lng = avg(group.map(p => p.exif.longitude))
       const lat = avg(group.map(p => p.exif.latitude))
       if (isNaN(lng) || isNaN(lat)) continue
-      const lnglat = [lng, lat]
-
-      const el = document.createElement('div')
-      const root = createRoot(el)
-
-      const popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        maxWidth: POPUP_MAX_WIDTH,
-        offset: 12,
-      }).setDOMContent(el).setLngLat(lnglat)
-
-      root.render(
-        <PopupCarousel
-          initialGroup={group}
-          onClose={() => popup.remove()}
-          onDelete={async (toDelete) => {
-            markersRef.current.forEach(({ popup: p }) => p.remove())
-            await deletePhotos(toDelete)
-            usePhotoStore.getState().showToast('Catch deleted')
-          }}
-        />
-      )
 
       const marker = new mapboxgl.Marker({ color: MARKER_COLOR })
-        .setLngLat(lnglat)
+        .setLngLat([lng, lat])
         .addTo(map)
       const markerEl = marker.getElement()
       markerEl.style.cursor = 'pointer'
@@ -164,7 +125,7 @@ export function MapView({ active }) {
         'position:absolute;left:50%;transform:translateX(-50%);bottom:-6px;width:44px;height:50px;'
       markerEl.appendChild(hitArea)
 
-      markersRef.current.push({ key, marker, popup, root })
+      markersRef.current.push({ key, marker })
     }
 
     // Rebuild name→entry lookup and refresh click handlers
@@ -190,12 +151,14 @@ export function MapView({ active }) {
     markerByNameRef.current = markerByName
   }, [groups, mapReady, setActiveGroup])
 
-  // If the viewport crosses the mobile breakpoint while a catch is selected,
-  // clear activeGroup so the sheet doesn't linger (the Mapbox popup was never
-  // added on mobile, so there would be no visible UI without this cleanup).
+  // Card hover → highlight the connected pin
   useEffect(() => {
-    if (!isMobile && activeGroup) setActiveGroup(null)
-  }, [isMobile]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!hoveredPhotoName) return
+    const el = markerByNameRef.current.get(hoveredPhotoName)?.marker.getElement()
+    if (!el) return
+    el.classList.add(styles.markerHover)
+    return () => el.classList.remove(styles.markerHover)
+  }, [hoveredPhotoName])
 
   // Resize map when it becomes visible (e.g. navigating from /profile to /).
   // Save/restore center+zoom because the hidden container collapses to 0×0 and
@@ -245,7 +208,7 @@ export function MapView({ active }) {
     map.fitBounds(bounds, {
       padding: window.matchMedia(MOBILE_QUERY).matches
         ? { top: 60, bottom: 200, left: 40, right: 40 }
-        : { top: 80, bottom: 60, left: 376, right: 60 },
+        : { top: 60, bottom: 60, left: 60, right: 60 },
       maxZoom: 16,
       duration: 0,
     })
