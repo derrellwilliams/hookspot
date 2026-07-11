@@ -89,13 +89,15 @@ function AppInner() {
 
   const isMap = location.pathname === '/'
   const isProfile = location.pathname.startsWith('/user/') || location.pathname === '/profile'
-  // On mobile, tabs live inside the dock (map: draggable DockSheet; profile: static DockBar)
+  const isSearch = location.pathname === '/search'
+  // On mobile, tabs live inside the dock (map/profile: draggable DockSheet; search: static DockBar)
   const isMobile = useIsMobile()
-  const hideNav = isMobile && (isMap || isProfile)
+  const hideNav = isMobile && (isMap || isProfile || isSearch)
 
   return (
     <div className={styles.app}>
       {!isPublicPage && !hideNav && <Nav />}
+      {isMobile && isSearch && user && <DockBar />}
       {user && (
         <RequireAuth>
           <div style={{ display: isMap ? 'contents' : 'none' }}>

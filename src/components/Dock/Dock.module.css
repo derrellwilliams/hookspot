@@ -116,24 +116,25 @@
   touch-action: none;
 }
 
+/* Instagram-style tab row: icons evenly distributed, roomy edge insets */
 .tabRow {
   display: flex;
-  align-items: flex-start;
-  padding: 8px 8px 0;
+  align-items: center;
+  height: 61px;
+  padding: 0 24px;
 }
 
 .tabItem {
   position: relative;
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  height: 53px;
+  justify-content: center;
+  height: 100%;
   padding: 0;
   border: none;
   background: none;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
   transition: color 0.18s ease;
 }
@@ -142,14 +143,22 @@
   color: #fff;
 }
 
+/* Fixed circle zone the active bubble fills — keeps it round regardless of tab width */
+.tabBubble {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+}
+
+/* Instagram-style selection: gray circle bubble behind the active icon */
 .activePill {
   position: absolute;
-  top: -4px;
-  bottom: 10px;
-  left: 0;
-  right: 0;
-  border-radius: 100px;
-  background: transparent;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(120, 120, 128, 0.36);
 }
 
 .tabIconWrap {
@@ -163,39 +172,4 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 8px;
-}
-
-.tabLabel {
-  font-family: var(--font-condensed);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.4px;
-}
-
-.tabPlus {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  margin: -1px 18px 0;
-  border: none;
-  background: transparent;
-  color: #fff;
-  border-radius: 50%;
-  cursor: pointer;
-  position: relative;
-}
-
-.tabPlus::before {
-  content: '';
-  position: absolute;
-  inset: 2.5px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.tabPlus svg {
-  position: relative;
 }

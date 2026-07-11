@@ -4,6 +4,7 @@
 export const tokens = {
   // Colors
   accent: '#2563eb',
+  iosBlue: '#0a84ff', // iOS system blue (dark) — selected-control tint on glass
 
   // Dark UI
   darkBg: '#1A1953',

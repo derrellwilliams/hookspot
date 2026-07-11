@@ -335,8 +335,9 @@
 }
 
 @media (max-width: 600px) {
+  /* No glass Nav on mobile — clear the notch on top, the dock pill on bottom */
   .page {
-    padding: 88px 12px 32px;
+    padding: calc(16px + env(safe-area-inset-top)) 12px calc(110px + env(safe-area-inset-bottom));
   }
 
   .inner {
