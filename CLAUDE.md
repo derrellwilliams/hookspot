@@ -6,7 +6,7 @@
 - **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/search`, `/design`
 - **Supabase** auth + storage + database (`src/lib/supabase.js`)
 - **Mapbox GL JS** (raw, no react-map-gl); popups use `createRoot(el).render(<PopupCarousel/>)`
-- **Radix UI** for modals, dropdowns, tooltips; **iconoir-react** icons
+- **Radix UI** for modals, dropdowns, tooltips; **lucide-react** icons via `src/components/icons.js` (mobile: `lucide-react-native` via `mobile/components/icons.js`)
 - **CSS Modules** + CSS custom properties; tokens in `src/tokens.js` mirror `src/style.css`
 
 ## Key Files

@@ -7,7 +7,7 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
-import { Group, Settings } from 'iconoir-react-native'
+import { Group, Settings } from '../../components/icons.js'
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { BlurView } from 'expo-blur'
 import { supabase } from '../../lib/supabase'
