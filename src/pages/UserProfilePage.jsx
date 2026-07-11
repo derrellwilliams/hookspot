@@ -24,12 +24,12 @@ const PROFILE_BLOBS = [
 import { DockSheet } from '../components/Dock/DockSheet.jsx'
 import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
-import { SearchOverlay } from '../components/SearchOverlay/SearchOverlay.jsx'
 import { FollowListDialog } from '../components/FollowListDialog/FollowListDialog.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
-import { formatDateFull, cleanSpecies, speciesLabel } from '../lib/formatters.js'
+import { formatDateFull, formatDateNumeric, formatCatchLocation, cleanSpecies, speciesLabel } from '../lib/formatters.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'
 import styles from './UserProfilePage.module.css'
+import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
 
 const spring = { type: 'spring', stiffness: 300, damping: 24 }
 
@@ -103,7 +103,6 @@ export function UserProfilePage() {
   }, [])
 
   const [activeTab, setActiveTab] = useState('profile')
-  const [searchOpen, setSearchOpen] = useState(false)
   const [followerCount, setFollowerCount] = useState(null)
   const [followingCount, setFollowingCount] = useState(null)
   const [followListOpen, setFollowListOpen] = useState(false)
@@ -301,6 +300,19 @@ export function UserProfilePage() {
       return next
     }, { replace: true })
   }, [recentCatches, catchPopupIdx, searchParams, setSearchParams, profile?.username, urlUsername])
+
+  // Open the edit dialogs when deep-linked from the nav settings menu (?edit=profile|gear)
+  useEffect(() => {
+    const edit = searchParams.get('edit')
+    if (!edit || !isOwnProfile) return
+    if (edit === 'profile') openDialog()
+    else if (edit === 'gear') openGearDialog()
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      next.delete('edit')
+      return next
+    }, { replace: true })
+  }, [searchParams, isOwnProfile]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
@@ -560,7 +572,7 @@ export function UserProfilePage() {
                 {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
               </Button>
             )}
-            <Button variant="icon-sm" className={`${styles.headerIconBtn} ${styles.mobileIconBtn}`} aria-label="Search users" onClick={() => myUser ? setSearchOpen(true) : navigate('/login')}>
+            <Button variant="icon-sm" className={`${styles.headerIconBtn} ${styles.mobileIconBtn}`} aria-label="Search users" onClick={() => myUser ? navigate('/search') : navigate('/login')}>
               <Group width={16} height={16} />
             </Button>
           </div>
@@ -821,7 +833,6 @@ export function UserProfilePage() {
           </>
         )}
 
-        <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} profileId={profile?.id} />
         <FollowListDialog open={followListOpen} onClose={() => setFollowListOpen(false)} profileId={profile?.id} initialTab={followListTab} />
       </div>
     )
@@ -829,66 +840,22 @@ export function UserProfilePage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.scroll}>
-        <div className={styles.content}>
-
+      <aside className={styles.profilePane}>
         {/* Profile header */}
         <div className={styles.profileHeader}>
           <div ref={headerMeshRef} className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
-          <div className={styles.headerBtns}>
-          {isOwnProfile ? (
-            <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
-              <DropdownMenu.Trigger asChild>
-                <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Profile settings">
-                  <Settings width={16} height={16} />
-                </Button>
-              </DropdownMenu.Trigger>
-              <AnimatePresence>
-                {settingsOpen && (
-                  <DropdownMenu.Portal forceMount>
-                    <DropdownMenu.Content
-                      forceMount
-                      sideOffset={6}
-                      align="start"
-                      asChild
-                    >
-                      <motion.div
-                        className={styles.dropdownContent}
-                        initial={{ opacity: 0, scale: 0.92, y: -6 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.92, y: -6 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                        style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
-                      >
-                        <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>
-                          Edit profile
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>
-                          Edit gear
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>
-                          Log out
-                        </DropdownMenu.Item>
-                      </motion.div>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Portal>
-                )}
-              </AnimatePresence>
-            </DropdownMenu.Root>
-          ) : (
-            <Button
-              variant="secondary"
-              onClick={isFollowing ? handleUnfollow : handleFollow}
-              disabled={followLoading}
-            >
-              {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
-            </Button>
+          {!isOwnProfile && (
+            <div className={styles.headerBtns}>
+              <Button
+                variant="secondary"
+                onClick={isFollowing ? handleUnfollow : handleFollow}
+                disabled={followLoading}
+              >
+                {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
+              </Button>
+            </div>
           )}
-          <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Search users" onClick={() => myUser ? setSearchOpen(true) : navigate('/login')}>
-            <Group width={16} height={16} />
-          </Button>
-          </div>
           <div className={styles.headerLeft}>
             <div className={styles.avatarWrap}>
               {isOwnProfile ? (
@@ -945,7 +912,9 @@ export function UserProfilePage() {
           </div>
 
         </div>
+      </aside>
 
+      <div className={styles.contentPane}>
         {/* Tab bar */}
         <div className={styles.tabBar}>
           {[{ id: 'profile', label: 'Recent Activity' }, { id: 'stats', label: 'Stats' }].map(({ id, label }) => {
@@ -989,25 +958,25 @@ export function UserProfilePage() {
         ) : recentCatches.length > 0 ? (
           <div className={styles.catchesGrid}>
             {visibleCatches.map((group, i) => {
-              const photo = group[0]
-              const species = cleanSpecies(photo.species)
+              const lead = group.find(p => p.species) ?? group[0]
+              const species = cleanSpecies(lead.species)
+              const locationStr = formatCatchLocation(lead.meta)
               return (
                 <motion.button
-                  key={photo.name}
-                  className={styles.catchThumb}
+                  key={group[0].name}
+                  className={cardStyles.card}
                   onClick={() => setCatchPopupIdx(i)}
-                  initial="rest"
-                  whileHover="hover"
-                  whileTap={{ scale: 0.99 }}
-                  variants={cardVariants}
-                  transition={spring}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
                 >
-                  <motion.div className={styles.catchThumbImgWrap} variants={imgVariants} transition={spring}>
-                    <img src={photo.url} alt="" className={styles.catchThumbImg} loading="lazy" />
-                  </motion.div>
-                  <div className={styles.catchMeta}>
-                    {species && <div className={styles.catchSpecies}>{species}</div>}
-                    {photo.time && <div className={styles.catchDatetime}>{formatDateFull(photo.time).split(' ·')[0]}</div>}
+                  <div className={cardStyles.imageWrap}>
+                    <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
+                  </div>
+                  <div className={cardStyles.meta}>
+                    {species && <div className={cardStyles.species}>{species}</div>}
+                    {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
+                    {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
                   </div>
                 </motion.button>
               )
@@ -1043,8 +1012,6 @@ export function UserProfilePage() {
             <div className={styles.emptyStats}>No catch data yet.</div>
           )
         )}
-
-        </div>
       </div>
 
       <Dialog.Root open={!!catchPopupGroup} onOpenChange={o => { if (!o) setCatchPopupIdx(null) }}>
@@ -1211,11 +1178,6 @@ export function UserProfilePage() {
         </>
       )}
 
-      <SearchOverlay
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        profileId={profile?.id}
-      />
       <FollowListDialog
         open={followListOpen}
         onClose={() => setFollowListOpen(false)}

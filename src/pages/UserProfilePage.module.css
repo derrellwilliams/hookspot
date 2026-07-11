@@ -1,40 +1,52 @@
+/* Airbnb-style split: fixed profile card left, scrollable content right */
 .page {
   position: absolute;
   inset: 0;
-  overflow-y: auto;
+  display: flex;
+  overflow: hidden;
   background: var(--dark-surface);
+}
+
+/* Left pane doesn't scroll — the card rests below the glass header
+   (16px + 64px header + 16px gap = 96px) */
+.profilePane {
+  flex: 0 0 424px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 96px 0 24px 24px;
+}
+
+/* Card fills the pane's full height; content centers vertically */
+.profilePane .profileHeader {
+  flex: 1;
+  justify-content: center;
+}
+
+.contentPane {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 96px 24px 48px 24px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.2) transparent;
 }
 
-.page::-webkit-scrollbar {
+.contentPane::-webkit-scrollbar {
   width: 8px;
 }
 
-.page::-webkit-scrollbar-track {
+.contentPane::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.page::-webkit-scrollbar-thumb {
+.contentPane::-webkit-scrollbar-thumb {
   background: rgba(255,255,255,0.2);
   border-radius: 999px;
 }
 
-.page::-webkit-scrollbar-thumb:hover {
+.contentPane::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.35);
-}
-
-.scroll {
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: 40px 64px 60px;
-  position: relative;
-  overflow-x: clip;
-}
-
-.content {
-  position: relative;
-  z-index: 1;
 }
 
 /* ── Profile header ── */
@@ -299,7 +311,7 @@
   border-radius: 12px;
   padding: 4px;
   gap: 2px;
-  margin-top: 40px;
+  margin-top: 0;
   margin-bottom: 18px;
 }
 
@@ -375,7 +387,7 @@
 /* ── Catches grid ── */
 .catchesGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 32px;
 }
@@ -938,11 +950,6 @@
   .headerStatMonth,
   .headerStatMonth + .headerStatDivider {
     display: none;
-  }
-
-  .scroll {
-    /* 16px gutter around the header card; clear the bottom nav pill */
-    padding: 16px 16px var(--nav-clearance);
   }
 
   .catchesGrid {

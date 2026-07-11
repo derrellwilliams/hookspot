@@ -1,7 +1,76 @@
+/* Airbnb-style split: scrollable card grid left, contained map right.
+   The cards pane spans the full height so content scrolls under the glass
+   header; its 96px top padding (16 + 64 header + 16 gap) sets the resting
+   position, and the map pane's matching margin keeps the two tops aligned. */
 .page {
   position: relative;
   display: flex;
   flex: 1;
   overflow: hidden;
   height: 100dvh;
+  background: var(--dark-surface);
+}
+
+.cardsPane {
+  flex: 1 1 55%;
+  min-width: 0;
+  overflow-y: auto;
+  /* Slim right padding keeps the scrollbar hugging the cards — the
+     cards↔map gap lives on .mapPane's left margin instead */
+  padding: 96px 8px 48px 24px;
+}
+
+/* Firefox only — in Chromium, setting scrollbar-width disables the
+   ::-webkit-scrollbar styles below (and their track margins) */
+@supports (-moz-appearance: none) {
+  .cardsPane {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.2) transparent;
+  }
+}
+
+.cardsPane::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cardsPane::-webkit-scrollbar-track {
+  background: transparent;
+  /* Track starts level with the first card row and ends level with the map */
+  margin-top: 96px;
+  margin-bottom: 16px;
+}
+
+.cardsPane::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 999px;
+}
+
+.cardsPane::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+/* Inset map: top edge aligns with the first card row (96px = 16 + 64 header
+   + 16 gap); the same 16px gap repeats underneath, 24px right matches the
+   header's inset */
+.mapPane {
+  position: relative;
+  flex: 1 1 45%;
+  min-width: 0;
+  margin: 96px 24px 16px 16px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Mobile keeps the full-bleed map + dock sheet */
+@media (max-width: 600px) {
+  .cardsPane {
+    display: none;
+  }
+
+  .mapPane {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    border-radius: 0;
+  }
 }

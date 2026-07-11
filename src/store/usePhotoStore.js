@@ -8,6 +8,7 @@ export const usePhotoStore = create((set, get) => ({
   groups: [],
   flyToPhoto: null,
   activeGroup: null,
+  hoveredPhotoName: null,
   toast: null,
   uploadOpen: false,
   pendingUploadFiles: [],
@@ -57,6 +58,11 @@ export const usePhotoStore = create((set, get) => ({
     set({ activeGroup: group })
   },
 
+  // Card hover → map pin highlight (keyed by the group's lead photo name)
+  setHoveredPhotoName(name) {
+    set({ hoveredPhotoName: name })
+  },
+
   showToast(msg) {
     set({ toast: msg })
     setTimeout(() => set(s => s.toast === msg ? { toast: null } : {}), 3200)
@@ -85,6 +91,6 @@ export const usePhotoStore = create((set, get) => ({
 
   clearPhotos() {
     get().photos.forEach(p => { if (p.url?.startsWith('blob:')) URL.revokeObjectURL(p.url) })
-    set({ photos: [], groups: [], activeGroup: null, uploadOpen: false, toast: null, flyToPhoto: null, photosInitialized: false })
+    set({ photos: [], groups: [], activeGroup: null, hoveredPhotoName: null, uploadOpen: false, toast: null, flyToPhoto: null, photosInitialized: false })
   },
 }))
