@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Check } from 'iconoir-react'
+import { Check } from '../icons.js'
 import { useShallow } from 'zustand/react/shallow'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { formatDateFull, cleanSpecies } from '../../lib/formatters.js'

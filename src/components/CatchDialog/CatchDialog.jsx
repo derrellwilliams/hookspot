@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { NavArrowLeft, NavArrowRight } from 'iconoir-react'
+import { NavArrowLeft, NavArrowRight } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { deletePhotos } from '../../lib/fileLoader.js'
 import { PopupCarousel } from '../Map/PopupCarousel.jsx'

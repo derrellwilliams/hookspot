@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { MotionConfig } from 'motion/react'
-import { IconoirProvider } from 'iconoir-react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Nav } from './components/Nav/Nav.jsx'
 import { DockBar } from './components/Dock/DockBar.jsx'
@@ -127,11 +126,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <MotionConfig reducedMotion="user">
-        <IconoirProvider iconProps={{ strokeWidth: 2 }}>
-          <BrowserRouter>
-            <AppInner />
-          </BrowserRouter>
-        </IconoirProvider>
+        <BrowserRouter>
+          <AppInner />
+        </BrowserRouter>
       </MotionConfig>
     </ErrorBoundary>
   )

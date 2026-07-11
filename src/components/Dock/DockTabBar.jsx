@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'motion/react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Map, User, Plus } from 'iconoir-react'
+import { Map, User, Plus } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import styles from './Dock.module.css'

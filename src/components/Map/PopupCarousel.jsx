@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useShallow } from 'zustand/react/shallow'
-import { IconoirProvider, EditPencil, Xmark, Plus, ShareIos } from 'iconoir-react'
+import { EditPencil, Xmark, Plus, ShareIos } from '../icons.js'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
@@ -208,7 +208,6 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
   const locationStr = formatCatchLocation(lead.meta)
 
   return (
-    <IconoirProvider iconProps={{ strokeWidth: 2 }}>
     <div className={`${styles.popup} ${sheet ? styles.popupSheet : ''}`}>
       <div className={styles.mediaRow}>
       <div className={styles.imgWrapper}>
@@ -338,6 +337,5 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
         </div>
       )}
     </div>
-    </IconoirProvider>
   )
 }

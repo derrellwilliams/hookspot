@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Xmark, Plus } from 'iconoir-react'
+import { Xmark, Plus } from '../icons.js'
 import { Button } from '../ui/index.js'
 import styles from './UploadDialog.module.css'
 

@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef, memo } from 'react'
 import { motion } from 'motion/react'
-import { Plus } from 'iconoir-react'
+import { Plus } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { formatDateNumeric, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'

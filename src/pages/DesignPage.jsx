@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Xmark, EditPencil } from 'iconoir-react'
+import { Xmark, EditPencil } from '../components/icons.js'
 import { tokens } from '../tokens.js'
 import { Button, Input } from '../components/ui/index.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'

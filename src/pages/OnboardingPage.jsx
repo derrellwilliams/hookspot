@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { EditPencil, User } from 'iconoir-react'
+import { EditPencil, User } from '../components/icons.js'
 import { Button } from '../components/ui/index.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'

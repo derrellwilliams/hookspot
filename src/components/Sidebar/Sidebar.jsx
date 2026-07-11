@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { motion } from 'motion/react'
 import * as ScrollArea from '@radix-ui/react-scroll-area'
-import { Plus } from 'iconoir-react'
+import { Plus } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { SidebarItem } from './SidebarItem.jsx'
 import styles from './Sidebar.module.css'
