@@ -1,9 +1,9 @@
-import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { EditPencil, Group, NavArrowLeft, NavArrowRight, Settings, UserCircle } from '../components/icons.js'
+import { EditPencil, NavArrowLeft, NavArrowRight, Settings, UserCircle } from '../components/icons.js'
 import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
@@ -12,12 +12,11 @@ import { useIsMobile } from '../hooks/useIsMobile.js'
 import { groupPhotos } from '../lib/groupPhotos.js'
 import { renderStats } from '../stats.js'
 import { DitherMesh } from '../components/DitherMesh.jsx'
-import { DockSheet } from '../components/Dock/DockSheet.jsx'
 import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { FollowListDialog } from '../components/FollowListDialog/FollowListDialog.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
-import { formatDateFull, formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/formatters.js'
+import { formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/formatters.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'
 import styles from './UserProfilePage.module.css'
 import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
@@ -29,9 +28,6 @@ const spring = { type: 'spring', stiffness: 300, damping: 24 }
 function groupShareId(group) {
   return String(group[0].catchId ?? group[0].name)
 }
-const cardVariants = { rest: { y: 0 }, hover: { y: -1 } }
-const imgVariants = { rest: { scale: 1 }, hover: { scale: 1.015 } }
-
 const FAVORITES_KEY = 'hookspot:favorites'
 function loadFavoritesCache() {
   try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) ?? [null, null, null, null] }
@@ -85,25 +81,12 @@ export function UserProfilePage() {
   const [pickerSlot, setPickerSlot] = useState(null)
   const [catchPopupIdx, setCatchPopupIdx] = useState(null)
   const fileInputRef = useRef(null)
-  const profileInfoRef = useRef(null)
-  const [sheetTopAnchor, setSheetTopAnchor] = useState(null)
 
   const [activeTab, setActiveTab] = useState('profile')
   const [followerCount, setFollowerCount] = useState(null)
   const [followingCount, setFollowingCount] = useState(null)
   const [followListOpen, setFollowListOpen] = useState(false)
   const [followListTab, setFollowListTab] = useState('followers')
-
-  // Measure profile info height on mobile so the sheet never covers the stats.
-  // Use source state vars — profile is declared below and can't be referenced here.
-  const _measureName = isOwnProfile ? myUser?.user_metadata?.display_name : fetchedProfile?.display_name
-  const _measureUsername = isOwnProfile ? myUsername : fetchedProfile?.username
-  const _measureBio = isOwnProfile ? myUser?.user_metadata?.bio : fetchedProfile?.bio
-  useLayoutEffect(() => {
-    if (!isMobile || !profileInfoRef.current) return
-    const rect = profileInfoRef.current.getBoundingClientRect()
-    setSheetTopAnchor(Math.ceil(rect.bottom) + 28)
-  }, [isMobile, _measureName, _measureUsername, _measureBio]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const monthlyRef = useRef(null)
   const hourlyRef = useRef(null)
@@ -495,13 +478,14 @@ export function UserProfilePage() {
   if (isMobile) {
     return (
       <div className={styles.pageMobile}>
-        {/* Full-screen profile background */}
-        <div className={styles.mobileProfileBg}>
+        <div className={styles.mobileScroll}>
+        {/* Contained profile header card with dither background */}
+        <div className={styles.mobileHeaderCard}>
           <DitherMesh className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
 
-          <div className={styles.mobileHeaderBtns}>
-            {isOwnProfile ? (
+          {isOwnProfile ? (
+            <div className={styles.mobileHeaderBtnsLeft}>
               <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <DropdownMenu.Trigger asChild>
                   <Button variant="icon-sm" className={`${styles.headerIconBtn} ${styles.mobileIconBtn}`} aria-label="Profile settings">
@@ -511,7 +495,7 @@ export function UserProfilePage() {
                 <AnimatePresence>
                   {settingsOpen && (
                     <DropdownMenu.Portal forceMount>
-                      <DropdownMenu.Content forceMount sideOffset={6} align="end" asChild>
+                      <DropdownMenu.Content forceMount sideOffset={6} align="start" asChild>
                         <motion.div
                           className={styles.dropdownContent}
                           initial={{ opacity: 0, scale: 0.92, y: -6 }}
@@ -529,17 +513,16 @@ export function UserProfilePage() {
                   )}
                 </AnimatePresence>
               </DropdownMenu.Root>
-            ) : (
+            </div>
+          ) : (
+            <div className={styles.mobileHeaderBtns}>
               <Button variant="secondary" onClick={isFollowing ? handleUnfollow : handleFollow} disabled={followLoading}>
                 {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
               </Button>
-            )}
-            <Button variant="icon-sm" className={`${styles.headerIconBtn} ${styles.mobileIconBtn}`} aria-label="Search users" onClick={() => myUser ? navigate('/search') : navigate('/login')}>
-              <Group width={16} height={16} />
-            </Button>
-          </div>
+            </div>
+          )}
 
-          <div className={styles.mobileProfileInfo} ref={profileInfoRef}>
+          <div className={styles.mobileProfileInfo}>
             <div className={styles.mobileAvatarWrap}>
               {isOwnProfile ? (
                 <>
@@ -580,10 +563,8 @@ export function UserProfilePage() {
           </div>
         </div>
 
-        {/* DockSheet with Recent Activity + Stats */}
-        <DockSheet noDetail topAnchorPx={sheetTopAnchor}>
-          <div className={styles.profileSheetInner}>
-            <div className={styles.sheetTabBar}>
+        {/* Segmented control: Recent Activity / Stats */}
+        <div className={styles.sheetTabBar}>
               {[{ id: 'profile', label: 'Recent Activity' }, { id: 'stats', label: 'Stats' }].map(({ id, label }) => {
                 const isTabActive = activeTab === id
                 return (
@@ -607,7 +588,7 @@ export function UserProfilePage() {
               })}
             </div>
 
-            <div className={styles.profileSheetScroll}>
+            <div className={styles.mobileTabContent}>
               {activeTab === 'profile' && (
                 isOwnProfile && effectivePhotos.length === 0 && !photosInitialized ? (
                   <div className={`${styles.catchesGrid} ${styles.sheetCatchesGrid}`}>
@@ -624,25 +605,25 @@ export function UserProfilePage() {
                 ) : recentCatches.length > 0 ? (
                   <div className={`${styles.catchesGrid} ${styles.sheetCatchesGrid}`}>
                     {visibleCatches.map((group, i) => {
-                      const photo = group[0]
-                      const species = cleanSpecies(photo.species)
+                      const lead = group.find(p => p.species) ?? group[0]
+                      const species = cleanSpecies(lead.species)
+                      const locationStr = formatCatchLocation(lead.meta)
                       return (
                         <motion.button
-                          key={photo.name}
-                          className={`${styles.catchThumb} ${styles.sheetCatchThumb}`}
+                          key={group[0].name}
+                          className={cardStyles.card}
                           onClick={() => setCatchPopupIdx(i)}
-                          initial="rest"
-                          whileHover="hover"
-                          whileTap={{ scale: 0.99 }}
-                          variants={cardVariants}
-                          transition={spring}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.25, ease: 'easeOut' }}
                         >
-                          <motion.div className={styles.catchThumbImgWrap} variants={imgVariants} transition={spring}>
-                            <img src={photo.url} alt="" className={styles.catchThumbImg} loading="lazy" />
-                          </motion.div>
-                          <div className={styles.catchMeta}>
-                            {species && <div className={styles.catchSpecies}>{species}</div>}
-                            {photo.time && <div className={styles.catchDatetime}>{formatDateFull(photo.time).split(' ·')[0]}</div>}
+                          <div className={cardStyles.imageWrap}>
+                            <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
+                          </div>
+                          <div className={cardStyles.meta}>
+                            {species && <div className={cardStyles.species}>{species}</div>}
+                            {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
+                            {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
                           </div>
                         </motion.button>
                       )
@@ -669,8 +650,7 @@ export function UserProfilePage() {
                 )
               )}
             </div>
-          </div>
-        </DockSheet>
+        </div>
 
         {/* Catch popup dialog */}
         <Dialog.Root open={!!catchPopupGroup} onOpenChange={o => { if (!o) setCatchPopupIdx(null) }}>

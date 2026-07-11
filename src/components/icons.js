@@ -3,10 +3,13 @@
 // is the weight we want everywhere.
 export {
   Check,
+  House as Home,
   Pencil as EditPencil,
   Users as Group,
   Map,
+  MapPin,
   Image as MediaImage,
+  LayoutList as ListView,
   ChevronLeft as NavArrowLeft,
   ChevronRight as NavArrowRight,
   Plus,

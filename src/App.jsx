@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { MotionConfig } from 'motion/react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Nav } from './components/Nav/Nav.jsx'
-import { DockBar } from './components/Dock/DockBar.jsx'
+import { MobileNav } from './components/MobileNav/MobileNav.jsx'
 import { Toast } from './components/Toast/Toast.jsx'
 import { DropOverlay } from './components/DropOverlay/DropOverlay.jsx'
 import { UploadDialog } from './components/UploadDialog/UploadDialog.jsx'
@@ -90,14 +90,15 @@ function AppInner() {
   const isMap = location.pathname === '/'
   const isProfile = location.pathname.startsWith('/user/') || location.pathname === '/profile'
   const isSearch = location.pathname === '/search'
-  // On mobile, tabs live inside the dock (map/profile: draggable DockSheet; search: static DockBar)
+  // Mobile uses the floating MobileNav pill instead of the top Nav
   const isMobile = useIsMobile()
-  const hideNav = isMobile && (isMap || isProfile || isSearch)
+  const isMainPage = isMap || isProfile || isSearch
+  const hideNav = isMobile && isMainPage
 
   return (
     <div className={styles.app}>
       {!isPublicPage && !hideNav && <Nav />}
-      {isMobile && isSearch && user && <DockBar />}
+      {!isPublicPage && isMobile && isMainPage && <MobileNav />}
       {user && (
         <RequireAuth>
           <div style={{ display: isMap ? 'contents' : 'none' }}>

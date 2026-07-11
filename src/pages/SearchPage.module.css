@@ -335,17 +335,35 @@
 }
 
 @media (max-width: 600px) {
-  /* No glass Nav on mobile — clear the notch on top, the dock pill on bottom */
+  /* No glass Nav on mobile — clear the notch on top; bottom padding puts the
+     empty-state mesh 20px above the nav pill (70px nav top + 20px gap − 16px
+     inner padding), matching the filters → mesh gap above */
   .page {
-    padding: calc(16px + env(safe-area-inset-top)) 12px calc(110px + env(safe-area-inset-bottom));
+    padding: calc(4px + env(safe-area-inset-top)) 12px calc(74px + env(safe-area-inset-bottom));
   }
 
   .inner {
     padding: 16px;
   }
 
+  /* Single horizontally scrolling row; bleeds to the page edge.
+     Bottom margin matches the search-box → filters gap (20px). */
   .filterBar {
     gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -16px 20px;
+    padding: 0 16px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filterBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filterBar > * {
+    flex-shrink: 0;
   }
 
   .resultsPane {
@@ -377,7 +395,6 @@
     max-width: none;
     border-radius: 20px 20px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(10, 10, 10, 0.97);
     max-height: calc(100dvh - 24px);
     overflow-y: auto;
   }
