@@ -807,8 +807,36 @@ export function UserProfilePage() {
         <div className={styles.profileHeader}>
           <DitherMesh className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
-          {!isOwnProfile && (
-            <div className={styles.headerBtns}>
+          <div className={styles.headerBtns}>
+            {isOwnProfile ? (
+              <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <DropdownMenu.Trigger asChild>
+                  <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Profile settings">
+                    <Settings width={16} height={16} />
+                  </Button>
+                </DropdownMenu.Trigger>
+                <AnimatePresence>
+                  {settingsOpen && (
+                    <DropdownMenu.Portal forceMount>
+                      <DropdownMenu.Content forceMount sideOffset={6} align="start" asChild>
+                        <motion.div
+                          className={styles.dropdownContent}
+                          initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                          style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
+                        >
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>Edit profile</DropdownMenu.Item>
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>Edit gear</DropdownMenu.Item>
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>Log out</DropdownMenu.Item>
+                        </motion.div>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  )}
+                </AnimatePresence>
+              </DropdownMenu.Root>
+            ) : (
               <Button
                 variant="secondary"
                 onClick={isFollowing ? handleUnfollow : handleFollow}
@@ -816,8 +844,8 @@ export function UserProfilePage() {
               >
                 {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
               </Button>
-            </div>
-          )}
+            )}
+          </div>
           <div className={styles.headerLeft}>
             <div className={styles.avatarWrap}>
               {isOwnProfile ? (

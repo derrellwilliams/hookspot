@@ -1,8 +1,6 @@
-import { useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { motion } from 'motion/react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Plus, Search, Settings, Map, User } from '../icons.js'
+import { Plus, Search, Map, User } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import styles from './Nav.module.css'
@@ -21,8 +19,6 @@ export function Nav() {
   const location = useLocation()
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const user = useAuthStore(s => s.user)
-  const signOut = useAuthStore(s => s.signOut)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const path = location.pathname
 
   return (
@@ -62,45 +58,6 @@ export function Nav() {
             </motion.button>
           )
         })}
-        {user ? (
-          <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <DropdownMenu.Trigger asChild>
-              <button className={styles.iconBtn} aria-label="Settings">
-                <Settings width={20} height={20} />
-              </button>
-            </DropdownMenu.Trigger>
-            <AnimatePresence>
-              {settingsOpen && (
-                <DropdownMenu.Portal forceMount>
-                  <DropdownMenu.Content forceMount sideOffset={6} align="end" asChild>
-                    <motion.div
-                      className={styles.dropdownContent}
-                      initial={{ opacity: 0, scale: 0.92, y: -6 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.92, y: -6 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                      style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
-                    >
-                      <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => navigate('/profile?edit=profile')}>
-                        Edit profile
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => navigate('/profile?edit=gear')}>
-                        Edit gear
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>
-                        Log out
-                      </DropdownMenu.Item>
-                    </motion.div>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              )}
-            </AnimatePresence>
-          </DropdownMenu.Root>
-        ) : (
-          <button className={styles.iconBtn} aria-label="Settings" onClick={() => navigate('/login')}>
-            <Settings width={20} height={20} />
-          </button>
-        )}
         <motion.button
           className={styles.addBtn}
           onClick={() => user ? setUploadOpen(true) : navigate('/login')}

@@ -303,7 +303,11 @@ export function SearchPage() {
                 <DitherMesh className={styles.emptyMesh} aria-hidden="true" />
                 <div className={styles.emptyContent}>
                   <div className={styles.idleState}>
-                    <div className={styles.idleIcon}><Search width={26} height={26} /></div>
+                    <div className={styles.idleIcon}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width={64} height={64} aria-hidden="true">
+                        <path d="M18 19h-6v-2h6v2ZM4 9h2v2H4v2h2v2H4v2H2V7h2v2Zm8 8h-2v-2h2v2Zm8 0h-2v-2h2v2Zm-10-2H8v-2h2v2Zm12 0h-2V9h2v6ZM8 13H6v-2h2v2Zm9-1h-2v-2h2v2Zm-7-1H8V9h2v2Zm2-2h-2V7h2v2Zm8 0h-2V7h2v2Zm-2-2h-6V5h6v2Z" />
+                      </svg>
+                    </div>
                     <div className={styles.idleTitle}>Search HookSpot</div>
                     <p className={styles.idleHint}>Find anglers by name, or catches by species, fly, rod, or date range.</p>
                   </div>

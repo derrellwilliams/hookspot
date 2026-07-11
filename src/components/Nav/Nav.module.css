@@ -92,60 +92,6 @@
   align-items: center;
 }
 
-.iconBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: none;
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.55);
-  cursor: pointer;
-  transition: color 0.18s ease, background 0.15s ease;
-}
-
-.iconBtn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.iconBtn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Settings dropdown — same look as the profile page's dropdown */
-.dropdownContent {
-  min-width: 140px;
-  background: var(--dark-surface);
-  border: 1px solid var(--dark-border);
-  border-radius: 8px;
-  padding: 4px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  z-index: 1001;
-}
-
-.dropdownItem {
-  display: block;
-  width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-family: var(--font-sans);
-  color: var(--dark-text);
-  border-radius: 5px;
-  cursor: pointer;
-  outline: none;
-  user-select: none;
-}
-
-.dropdownItem:hover,
-.dropdownItem[data-highlighted] {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--dark-text);
-}
-
 .addBtn {
   display: flex;
   align-items: center;
