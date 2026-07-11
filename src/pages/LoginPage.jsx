@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { useAuthStore } from '../store/useAuthStore.js'
-import { animateMesh, DEFAULT_BLOBS } from '../lib/mesh.js'
+import { DitherMesh } from '../components/DitherMesh.jsx'
 import { Button } from '../components/ui/Button.jsx'
 import styles from './LoginPage.module.css'
 
@@ -17,12 +17,6 @@ export function LoginPage() {
   const [code, setCode] = useState('')
   const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState(null)
-  const meshRef = useRef(null)
-
-  useEffect(() => {
-    if (!meshRef.current) return
-    return animateMesh(meshRef.current, DEFAULT_BLOBS)
-  }, [])
 
   useEffect(() => {
     if (!loading && user && username) navigate('/', { replace: true })
@@ -51,7 +45,7 @@ export function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.bgMesh}>
-        <div className={styles.meshNoise} ref={meshRef} />
+        <DitherMesh className={styles.meshNoise} />
         <div className={styles.meshOverlay} aria-hidden="true" />
       </div>
       <div className={styles.center}>

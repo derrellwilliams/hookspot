@@ -199,7 +199,6 @@
 .headerUsername {
   font-family: var(--font-display);
   font-size: 36px;
-  font-weight: 700;
   color: var(--dark-text);
   line-height: 1.1;
 }

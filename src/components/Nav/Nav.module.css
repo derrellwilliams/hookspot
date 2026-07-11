@@ -14,35 +14,20 @@
   z-index: 1000;
 }
 
-/* Accent-blue glass pill around the wordmark — translucent so the
-   backdrop blur still reads through */
+/* Bare wordmark — no pill, sits directly on the page */
 .logo {
   display: flex;
   align-items: center;
   height: 56px;
   font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 26px;
   letter-spacing: 0.01em;
   color: #fff;
   border: none;
-  padding: 0 20px;
-  background: color-mix(in srgb, var(--accent) 72%, transparent);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
-  border-radius: 16px;
+  padding: 0;
+  background: none;
   cursor: pointer;
   pointer-events: auto;
-  transition: box-shadow 0.15s ease;
-}
-
-/* Inset dark tint deepens the blue on hover/press */
-.logo:hover {
-  box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.18);
-}
-
-.logo:active {
-  box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.28);
 }
 
 .logo:focus-visible {

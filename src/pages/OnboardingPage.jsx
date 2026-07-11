@@ -5,7 +5,7 @@ import { Button } from '../components/ui/index.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'
 import { initPhotos } from '../lib/fileLoader.js'
-import { animateMesh, DEFAULT_BLOBS } from '../lib/mesh.js'
+import { DitherMesh } from '../components/DitherMesh.jsx'
 import { USERNAME_RE } from '../lib/validation.js'
 import styles from './OnboardingPage.module.css'
 
@@ -31,12 +31,6 @@ export function OnboardingPage() {
   const fileInputRef = useRef(null)
   const checkCountRef = useRef(0)
   const lastCheckedRef = useRef({ val: null, result: false })
-  const meshRef = useRef(null)
-
-  useEffect(() => {
-    if (!meshRef.current) return
-    return animateMesh(meshRef.current, DEFAULT_BLOBS)
-  }, [])
 
   async function checkUsername(val) {
     if (!USERNAME_RE.test(val)) {
@@ -124,7 +118,7 @@ export function OnboardingPage() {
   return (
     <div className={styles.page}>
       <div className={styles.bgMesh}>
-        <div className={styles.meshNoise} ref={meshRef} />
+        <DitherMesh className={styles.meshNoise} />
         <div className={styles.meshOverlay} aria-hidden="true" />
       </div>
       <div className={styles.wordmark}>Hook Spot</div>

@@ -1,19 +1,11 @@
-import { useRef, useEffect } from 'react'
-import { animateMesh, DEFAULT_BLOBS } from '../lib/mesh.js'
+import { DitherMesh } from '../components/DitherMesh.jsx'
 import styles from './LoginPage.module.css'
 
 export function NotFoundPage() {
-  const meshRef = useRef(null)
-
-  useEffect(() => {
-    if (!meshRef.current) return
-    return animateMesh(meshRef.current, DEFAULT_BLOBS)
-  }, [])
-
   return (
     <div className={styles.page}>
       <div className={styles.bgMesh}>
-        <div className={styles.meshNoise} ref={meshRef} />
+        <DitherMesh className={styles.meshNoise} />
         <div className={styles.meshOverlay} aria-hidden="true" />
       </div>
       <div className={styles.center}>

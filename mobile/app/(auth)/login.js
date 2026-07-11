@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     gap: 32,
   },
   wordmark: {
-    fontFamily: 'SpaceMono_700Bold',
+    fontFamily: 'GeistPixel',
     fontSize: 36,
     color: '#ffffff',
     textAlign: 'center',

@@ -27,5 +27,5 @@ export const tokens = {
   fontSans: '"Roboto", sans-serif',
   fontCondensed: '"Roboto Condensed", sans-serif',
   fontMono: '"Roboto Mono", monospace',
-  fontDisplay: '"Space Mono", monospace',
+  fontDisplay: '"Geist Pixel", monospace',
 }

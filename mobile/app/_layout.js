@@ -8,7 +8,6 @@ import { useFonts } from 'expo-font'
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto'
 import { RobotoCondensed_400Regular, RobotoCondensed_500Medium } from '@expo-google-fonts/roboto-condensed'
 import { RobotoMono_400Regular } from '@expo-google-fonts/roboto-mono'
-import { SpaceMono_700Bold } from '@expo-google-fonts/space-mono'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/useAuthStore'
 
@@ -22,7 +21,7 @@ export default function RootLayout() {
     RobotoCondensed_400Regular,
     RobotoCondensed_500Medium,
     RobotoMono_400Regular,
-    SpaceMono_700Bold,
+    GeistPixel: require('../assets/fonts/GeistPixel.ttf'),
   })
 
   useEffect(() => {

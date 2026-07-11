@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
@@ -11,16 +11,7 @@ import { initPhotos, deletePhotos } from '../lib/fileLoader.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { groupPhotos } from '../lib/groupPhotos.js'
 import { renderStats } from '../stats.js'
-import { animateMesh } from '../lib/mesh.js'
-
-const PROFILE_BLOBS = [
-  { x: 58, y: 33, color: '#2563eb', dx: 0.8,  dy: 0.6  }, // accent
-  { x: 27, y: 45, color: '#64748b', dx: 0.7,  dy: -0.8 }, // muted
-  { x: 74, y: 66, color: '#1A1953', dx: -0.6, dy: 0.5  }, // darkBg
-  { x: 35, y: 67, color: '#a1a1aa', dx: 0.9,  dy: -0.7 }, // darkMuted
-  { x: 31, y: 18, color: '#2c2c2e', dx: 0.6,  dy: 0.8  }, // darkSurface
-  { x: 15, y: 55, color: '#060a1a', dx: -0.5, dy: 0.6  }, // deepNavy
-]
+import { DitherMesh } from '../components/DitherMesh.jsx'
 import { DockSheet } from '../components/Dock/DockSheet.jsx'
 import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
@@ -94,13 +85,8 @@ export function UserProfilePage() {
   const [pickerSlot, setPickerSlot] = useState(null)
   const [catchPopupIdx, setCatchPopupIdx] = useState(null)
   const fileInputRef = useRef(null)
-  const meshCleanupRef = useRef(null)
   const profileInfoRef = useRef(null)
   const [sheetTopAnchor, setSheetTopAnchor] = useState(null)
-  const headerMeshRef = useCallback((el) => {
-    if (meshCleanupRef.current) { meshCleanupRef.current(); meshCleanupRef.current = null }
-    if (el) meshCleanupRef.current = animateMesh(el, PROFILE_BLOBS, { speed: 0.005 })
-  }, [])
 
   const [activeTab, setActiveTab] = useState('profile')
   const [followerCount, setFollowerCount] = useState(null)
@@ -535,7 +521,7 @@ export function UserProfilePage() {
       <div className={styles.pageMobile}>
         {/* Full-screen profile background */}
         <div className={styles.mobileProfileBg}>
-          <div ref={headerMeshRef} className={styles.headerMesh} aria-hidden="true" />
+          <DitherMesh className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
 
           <div className={styles.mobileHeaderBtns}>
@@ -853,7 +839,7 @@ export function UserProfilePage() {
       <aside className={styles.profilePane}>
         {/* Profile header */}
         <div className={styles.profileHeader}>
-          <div ref={headerMeshRef} className={styles.headerMesh} aria-hidden="true" />
+          <DitherMesh className={styles.headerMesh} aria-hidden="true" />
           <div className={styles.headerGrain} aria-hidden="true" />
           {!isOwnProfile && (
             <div className={styles.headerBtns}>

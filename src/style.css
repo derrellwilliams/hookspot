@@ -9,6 +9,7 @@
   --radius: 8px;
 
   /* Dark UI */
+  --dark-bg: #1A1953;
   --ui-bg: #202020;
   --dock-bg: rgba(20, 20, 22, 0.82);
 
@@ -35,7 +36,7 @@
   --font-sans: "Roboto", sans-serif;
   --font-condensed: "Roboto Condensed", sans-serif;
   --font-mono: "Roboto Mono", monospace;
-  --font-display: "Space Mono", monospace;
+  --font-display: "Geist Pixel", monospace;
 }
 
 html {

@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   wordmark: {
-    fontFamily: 'SpaceMono_700Bold',
+    fontFamily: 'GeistPixel',
     fontSize: 28,
     color: '#ffffff',
     textAlign: 'center',
