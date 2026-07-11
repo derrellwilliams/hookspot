@@ -17,7 +17,7 @@ import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { FollowListDialog } from '../components/FollowListDialog/FollowListDialog.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
-import { formatDateFull, formatDateNumeric, formatCatchLocation, cleanSpecies, speciesLabel } from '../lib/formatters.js'
+import { formatDateFull, formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/formatters.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'
 import styles from './UserProfilePage.module.css'
 import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
@@ -206,30 +206,6 @@ export function UserProfilePage() {
   )
 
   const catchGroups = useMemo(() => groupPhotos(effectivePhotos), [effectivePhotos])
-
-  const catchesThisYear = useMemo(() => {
-    const year = new Date().getFullYear()
-    return catchGroups.filter(g => g[0].time && new Date(g[0].time).getFullYear() === year).length
-  }, [catchGroups])
-
-  const uniqueSpecies = useMemo(() => {
-    const seen = new Set()
-    for (const g of catchGroups) {
-      const lead = g.find(p => p.species) ?? g[0]
-      const label = speciesLabel(lead)
-      if (label) seen.add(label)
-    }
-    return seen.size
-  }, [catchGroups])
-
-  const catchesThisMonth = useMemo(() => {
-    const now = new Date()
-    return catchGroups.filter(g => {
-      if (!g[0].time) return false
-      const d = new Date(g[0].time)
-      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-    }).length
-  }, [catchGroups])
 
   const PAGE_SIZE = 24
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -592,23 +568,13 @@ export function UserProfilePage() {
                 <span className={styles.headerStatNum}>{catchGroups.length}</span>
                 <span className={styles.headerStatLabel}>Catches</span>
               </div>
-              <div className={styles.headerStat}>
-                <span className={styles.headerStatNum}>{catchesThisYear}</span>
-                <span className={styles.headerStatLabel}>Year</span>
-              </div>
-              <div className={styles.headerStat}>
-                <span className={styles.headerStatNum}>{uniqueSpecies}</span>
-                <span className={styles.headerStatLabel}>Species</span>
-              </div>
-            </div>
-            <div className={styles.followCounts}>
-              <button className={styles.followCountBtn} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
-                <span className={styles.followCountNum}>{followerCount ?? 0}</span>
-                <span className={styles.followCountLabel}>Followers</span>
+              <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
+                <span className={styles.headerStatNum}>{followerCount ?? 0}</span>
+                <span className={styles.headerStatLabel}>Followers</span>
               </button>
-              <button className={styles.followCountBtn} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
-                <span className={styles.followCountNum}>{followingCount ?? 0}</span>
-                <span className={styles.followCountLabel}>Following</span>
+              <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
+                <span className={styles.headerStatNum}>{followingCount ?? 0}</span>
+                <span className={styles.headerStatLabel}>Following</span>
               </button>
             </div>
           </div>
@@ -889,29 +855,14 @@ export function UserProfilePage() {
                   <span className={styles.headerStatLabel}>Catches</span>
                 </div>
                 <div className={styles.headerStatDivider} />
-                <div className={styles.headerStat}>
-                  <span className={styles.headerStatNum}>{catchesThisYear}</span>
-                  <span className={styles.headerStatLabel}>Year</span>
-                </div>
-                <div className={styles.headerStatDivider} />
-                <div className={`${styles.headerStat} ${styles.headerStatMonth}`}>
-                  <span className={styles.headerStatNum}>{catchesThisMonth}</span>
-                  <span className={styles.headerStatLabel}>Month</span>
-                </div>
-                <div className={styles.headerStatDivider} />
-                <div className={styles.headerStat}>
-                  <span className={styles.headerStatNum}>{uniqueSpecies}</span>
-                  <span className={styles.headerStatLabel}>Species</span>
-                </div>
-              </div>
-              <div className={styles.followCounts}>
-                <button className={styles.followCountBtn} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
-                  <span className={styles.followCountNum}>{followerCount ?? 0}</span>
-                  <span className={styles.followCountLabel}>Followers</span>
+                <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
+                  <span className={styles.headerStatNum}>{followerCount ?? 0}</span>
+                  <span className={styles.headerStatLabel}>Followers</span>
                 </button>
-                <button className={styles.followCountBtn} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
-                  <span className={styles.followCountNum}>{followingCount ?? 0}</span>
-                  <span className={styles.followCountLabel}>Following</span>
+                <div className={styles.headerStatDivider} />
+                <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
+                  <span className={styles.headerStatNum}>{followingCount ?? 0}</span>
+                  <span className={styles.headerStatLabel}>Following</span>
                 </button>
               </div>
             </div>
