@@ -6,6 +6,7 @@
 
 :root {
   --accent: #2563eb;
+  --ios-blue: #0a84ff; /* iOS system blue (dark) — selected-control tint on glass */
   --radius: 8px;
 
   /* Dark UI */

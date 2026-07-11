@@ -1,0 +1,88 @@
+/* Instagram-replica floating bottom nav: icon pill + isolated add button.
+   Geometry (insets, heights) animates between full and compact in MobileNav.jsx
+   via motion values — only static looks live here. */
+
+.wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pill {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(22, 22, 24, 0.86);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab.active {
+  color: #fff;
+}
+
+/* Instagram's selected-tab stadium: fills the whole tab cell, hugging the
+   bar's edges like IG (their bar has ~5px padding and cell-wide capsules) */
+.stadium {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 2px;
+  right: 2px;
+  border-radius: 999px;
+  background: rgba(120, 120, 128, 0.36);
+}
+
+.iconWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Isolated blue + circle to the right of the pill — accent tint over glass */
+.addBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.30);
+}

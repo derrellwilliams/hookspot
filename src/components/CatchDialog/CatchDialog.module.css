@@ -57,6 +57,27 @@
   cursor: default;
 }
 
+/* Mobile: bottom sheet, same pattern as the search/profile catch dialogs */
+@media (max-width: 600px) {
+  .positioner {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    display: block;
+  }
+
+  .content {
+    width: 100%;
+    max-width: none;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

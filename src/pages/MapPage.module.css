@@ -74,16 +74,83 @@
     border-radius: 0;
   }
 
-  /* Wordmark floating over the map, clear of the notch */
-  .mobileLogo {
+  .mapPaneHidden {
+    /* visibility (not display) keeps the container sized so Mapbox never
+       recalculates zoom against a 0×0 canvas */
+    visibility: hidden;
+  }
+
+  /* Wordmark scrolls with the feed; on the map it floats top-left */
+  .feedLogo {
+    margin-bottom: 26px;
+    font-family: var(--font-display);
+    font-size: 26px;
+    color: #fff;
+    pointer-events: none;
+  }
+
+  .feedLogoOverlay {
     position: absolute;
     top: calc(14px + env(safe-area-inset-top));
     left: 16px;
     z-index: 5;
-    font-family: var(--font-display);
-    font-size: 28px;
+    margin: 0;
+  }
+
+  /* Toggle stays fixed top-right, floating over feed and map */
+  .viewToggle {
+    position: absolute;
+    top: calc(10px + env(safe-area-inset-top));
+    right: 16px;
+    z-index: 5;
+    display: flex;
+    padding: 3px;
+    gap: 2px;
+    border-radius: 999px;
+    background: rgba(22, 22, 24, 0.6);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border: 0.5px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .viewToggleBtn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .viewToggleActive {
     color: #fff;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-    pointer-events: none;
+  }
+
+  .viewToggleThumb {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: rgba(120, 120, 128, 0.4);
+  }
+
+  .viewToggleIcon {
+    position: relative;
+  }
+
+  /* List mode: card feed scrolls over the (hidden) map pane */
+  .feedScroll {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow-y: auto;
+    background: var(--dark-surface);
+    padding: calc(12px + env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom));
   }
 }

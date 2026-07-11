@@ -881,7 +881,6 @@
     max-width: none;
     border-radius: 20px 20px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(10, 10, 10, 0.97);
     max-height: calc(100dvh - 24px);
     overflow-y: auto;
   }
@@ -966,18 +965,25 @@
   }
 }
 
-/* ── Mobile profile layout (dock sheet pattern) ── */
+/* ── Mobile profile layout ── */
 .pageMobile {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: var(--dark-bg);
+  background: var(--dark-surface);
 }
 
-.mobileProfileBg {
-  position: absolute;
-  inset: 0;
+.mobileScroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 12px calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Contained header card — dither mesh fills the rounded card, not the screen */
+.mobileHeaderCard {
+  position: relative;
   overflow: hidden;
+  border-radius: 20px;
 }
 
 .mobileIconBtn {
@@ -992,7 +998,7 @@
 
 .mobileHeaderBtns {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  top: 14px;
   right: 14px;
   display: flex;
   align-items: center;
@@ -1000,16 +1006,23 @@
   z-index: 10;
 }
 
-.mobileProfileInfo {
+.mobileHeaderBtnsLeft {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 40px);
-  left: 0;
-  right: 0;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.mobileProfileInfo {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 0 20px;
+  padding: 48px 20px 26px;
   z-index: 1;
 }
 
@@ -1076,17 +1089,9 @@
   -webkit-box-orient: vertical;
 }
 
-.profileSheetInner {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
 .sheetTabBar {
   display: flex;
-  padding: 0 16px;
-  flex-shrink: 0;
+  padding: 12px 4px 0;
 }
 
 
@@ -1118,20 +1123,14 @@
   border-radius: 1px 1px 0 0;
 }
 
-.profileSheetScroll {
-  flex: 1;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 12px 0 24px;
+.mobileTabContent {
+  padding: 12px 0 0;
 }
 
+/* Recent Activity: desktop CatchGrid cards, one per row on mobile */
 .sheetCatchesGrid {
   grid-template-columns: 1fr !important;
-  gap: 0 !important;
-}
-
-.sheetCatchThumb {
-  border-radius: 0 !important;
+  gap: 28px !important;
 }
 
 @media (max-width: 400px) {

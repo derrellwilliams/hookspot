@@ -209,3 +209,11 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Mobile feed: one card per row, Instagram-style vertical rhythm */
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
