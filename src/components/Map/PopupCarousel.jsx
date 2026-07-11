@@ -12,7 +12,7 @@ import { formatDateFull, cleanSpecies, cleanGear, formatCatchLocation } from '..
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 import styles from './Map.module.css'
 
-// Static Images API can't render the Standard-based Hook Spot style,
+// Static Images API can't render the Standard-based HookSpot style,
 // so the dialog mini-map is a live (non-interactive) GL map instead.
 function MiniMap({ lat, lng }) {
   const containerRef = useRef(null)

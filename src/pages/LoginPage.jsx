@@ -49,7 +49,7 @@ export function LoginPage() {
         <div className={styles.meshOverlay} aria-hidden="true" />
       </div>
       <div className={styles.center}>
-        <div className={styles.wordmark}>Hook Spot</div>
+        <div className={styles.wordmark}>HookSpot</div>
         <div className={styles.card}>
           {!sent ? (
             <form onSubmit={handleSubmit} className={styles.form}>

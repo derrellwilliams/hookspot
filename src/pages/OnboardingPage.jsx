@@ -121,7 +121,7 @@ export function OnboardingPage() {
         <DitherMesh className={styles.meshNoise} />
         <div className={styles.meshOverlay} aria-hidden="true" />
       </div>
-      <div className={styles.wordmark}>Hook Spot</div>
+      <div className={styles.wordmark}>HookSpot</div>
       <form className={styles.card} onSubmit={handleSave}>
         <h1 className={styles.title}>Let's setup your profile.</h1>
         <div className={styles.avatarField}>

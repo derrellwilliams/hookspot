@@ -143,7 +143,7 @@ export default function OnboardingScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.wordmark}>Hook Spot</Text>
+          <Text style={styles.wordmark}>HookSpot</Text>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Let's set up your profile.</Text>
 

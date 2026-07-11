@@ -380,7 +380,7 @@ export function SearchPage() {
                 ) : (
                   <div className={styles.idleState}>
                     <div className={styles.idleIcon}><Search width={26} height={26} /></div>
-                    <div className={styles.idleTitle}>Search Hook Spot</div>
+                    <div className={styles.idleTitle}>Search HookSpot</div>
                     <p className={styles.idleHint}>Find anglers by name, or catches by species, fly, rod, or date range.</p>
                   </div>
                 )}

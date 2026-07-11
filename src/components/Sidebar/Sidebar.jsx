@@ -51,7 +51,7 @@ export function SidebarContent() {
               )}
               {!hasPhotos && (
                 <div className={styles.empty}>
-                  <p className={styles.emptyTitle}>Welcome to Hook Spot!</p>
+                  <p className={styles.emptyTitle}>Welcome to HookSpot!</p>
                   <p className={styles.emptySubtitle}>Add photos of your catches to pin them to the map. Follow other anglers to see their catches here too.</p>
                 </div>
               )}

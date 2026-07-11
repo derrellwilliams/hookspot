@@ -30,12 +30,12 @@ export function Nav() {
       <motion.button
         className={styles.logo}
         onClick={() => navigate('/')}
-        aria-label="Hookspot — home"
+        aria-label="HookSpot — home"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.97 }}
         transition={spring}
       >
-        Hookspot
+        HookSpot
       </motion.button>
       <div className={styles.navGroup}>
         {NAV_ITEMS.map(({ path: itemPath, label, Icon }) => {

@@ -26,6 +26,7 @@ export function MapPage({ active }) {
       <div className={styles.mapPane}>
         <MapView active={active} />
       </div>
+      {isMobile && <div className={styles.mobileLogo} aria-hidden="true">HookSpot</div>}
     </div>
   )
 }

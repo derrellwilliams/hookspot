@@ -49,7 +49,7 @@ export default function LoginScreen() {
         style={styles.center}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Text style={styles.wordmark}>Hook Spot</Text>
+        <Text style={styles.wordmark}>HookSpot</Text>
 
         <View style={styles.form}>
           {!sent ? (
