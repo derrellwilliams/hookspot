@@ -27,6 +27,13 @@
   background: rgba(255,255,255,0.35);
 }
 
+/* Idle (empty-state) view: bottom padding matches the 24px sides so the
+   dither mesh stretches full-height instead of stopping at the default 48px
+   bottom gap used when results are showing. */
+.pageIdle {
+  padding-bottom: 24px;
+}
+
 /* Full-bleed like the glass Nav: the page's 24px side padding matches the
    Nav's left/right offsets */
 .inner {
@@ -340,6 +347,10 @@
      inner padding), matching the filters → mesh gap above */
   .page {
     padding: calc(4px + env(safe-area-inset-top)) 12px calc(74px + env(safe-area-inset-bottom));
+  }
+
+  .pageIdle {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
 
   .inner {
