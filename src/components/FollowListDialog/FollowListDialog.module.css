@@ -22,7 +22,6 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
   width: 420px;
   max-width: calc(100vw - 32px);
   max-height: 70vh;

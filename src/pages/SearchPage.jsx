@@ -13,6 +13,7 @@ import { DitherMesh } from '../components/DitherMesh.jsx'
 import { UserRow } from '../components/UserRow/UserRow.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
 import { formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/formatters.js'
+import { EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../lib/motion.js'
 import styles from './SearchPage.module.css'
 import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
 
@@ -256,7 +257,7 @@ export function SearchPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${!isSearching ? styles.pageIdle : ''}`}>
       <div className={styles.inner}>
         <div className={styles.inputWrap}>
           <Search className={styles.inputIcon} width={18} height={18} />
@@ -422,11 +423,11 @@ export function SearchPage() {
                     initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.97, y: 4 }}
                     animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
                     exit={isMobile
-                      ? { y: '100%', transition: { duration: 0.25, ease: [0.67, 0.17, 0.62, 0.64] } }
-                      : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
+                      ? { y: '100%', transition: { duration: 0.3, ease: EASE_DRAWER } }
+                      : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: EASE_OUT } }}
                     transition={isMobile
-                      ? { duration: 0.35, ease: [0.32, 0.72, 0, 1] }
-                      : { delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
+                      ? { duration: 0.35, ease: EASE_DRAWER }
+                      : { duration: 0.25, ease: EASE_ENTER }}
                   >
                     <PopupCarousel
                       key={catchPopupIdx}

@@ -8,6 +8,7 @@
   --accent: #2563eb;
   --ios-blue: #0a84ff; /* iOS system blue (dark) — selected-control tint on glass */
   --radius: 8px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* mirrors EASE_OUT in src/lib/motion.js */
 
   /* Dark UI */
   --dark-bg: #1A1953;
@@ -63,12 +64,32 @@ body {
   background: var(--glass-bg) !important;
   backdrop-filter: var(--glass-filter);
   -webkit-backdrop-filter: var(--glass-filter);
-  animation: mapPopupIn 0.2s ease-out;
+  animation: mapPopupIn 0.2s var(--ease-out);
 }
 
 @keyframes mapPopupIn {
   from { opacity: 0; transform: scale(0.97) translateY(6px); }
   to   { opacity: 1; transform: none; }
+}
+
+/* Popup grows out of its marker anchor */
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-content        { transform-origin: 50% 100%; }
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-content   { transform-origin: 0% 100%; }
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-content  { transform-origin: 100% 100%; }
+.mapboxgl-popup-anchor-top .mapboxgl-popup-content           { transform-origin: 50% 0%; }
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-content      { transform-origin: 0% 0%; }
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-content     { transform-origin: 100% 0%; }
+.mapboxgl-popup-anchor-left .mapboxgl-popup-content          { transform-origin: 0% 50%; }
+.mapboxgl-popup-anchor-right .mapboxgl-popup-content         { transform-origin: 100% 50%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mapboxgl-popup-content {
+    animation: mapPopupFade 0.2s var(--ease-out);
+  }
+}
+@keyframes mapPopupFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .mapboxgl-popup-close-button {

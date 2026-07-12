@@ -477,6 +477,12 @@
   animation: shimmer 2.2s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .skeletonImg, .skeletonLine, .skeletonLineShort {
+    animation: none;
+  }
+}
+
 /* ── Stats tab ── */
 .statsHeader {
   display: flex;

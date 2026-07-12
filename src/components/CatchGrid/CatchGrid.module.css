@@ -40,8 +40,16 @@
   transition: transform 0.25s ease;
 }
 
-.card:hover .image {
-  transform: scale(1.03);
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .image {
+    transform: scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover .image {
+    transform: none;
+  }
 }
 
 /* Ring renders above the image */

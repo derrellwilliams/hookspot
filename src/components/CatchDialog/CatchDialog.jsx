@@ -6,6 +6,7 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { deletePhotos } from '../../lib/fileLoader.js'
 import { PopupCarousel } from '../Map/PopupCarousel.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
+import { EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../../lib/motion.js'
 import styles from './CatchDialog.module.css'
 
 // Catch dialog for the map page — same look as the profile page's catch
@@ -66,11 +67,11 @@ export function CatchDialog() {
                   initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.97, y: 4 }}
                   animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
                   exit={isMobile
-                    ? { y: '100%', transition: { duration: 0.25, ease: [0.67, 0.17, 0.62, 0.64] } }
-                    : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
+                    ? { y: '100%', transition: { duration: 0.3, ease: EASE_DRAWER } }
+                    : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: EASE_OUT } }}
                   transition={isMobile
-                    ? { duration: 0.35, ease: [0.32, 0.72, 0, 1] }
-                    : { delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
+                    ? { duration: 0.35, ease: EASE_DRAWER }
+                    : { duration: 0.25, ease: EASE_ENTER }}
                 >
                   <PopupCarousel
                     key={activeGroup[0].catchId ?? activeGroup[0].name}

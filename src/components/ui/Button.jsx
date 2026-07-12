@@ -1,7 +1,6 @@
 import { motion } from 'motion/react'
+import { SPRING } from '../../lib/motion.js'
 import styles from './ui.module.css'
-
-const spring = { type: 'spring', stiffness: 300, damping: 24 }
 
 export function Button({ variant = 'primary', icon, children, className = '', ...props }) {
   const disabled = props.disabled
@@ -10,7 +9,7 @@ export function Button({ variant = 'primary', icon, children, className = '', ..
       className={`${styles.btn} ${styles[`btn-${variant}`]} ${icon ? styles.btnWithIcon : ''} ${className}`}
       whileHover={disabled ? undefined : { scale: 1.007 }}
       whileTap={disabled ? undefined : { scale: 0.975 }}
-      transition={spring}
+      transition={SPRING}
       {...props}
     >
       {icon && <span className={styles.btnIcon}>{icon}</span>}

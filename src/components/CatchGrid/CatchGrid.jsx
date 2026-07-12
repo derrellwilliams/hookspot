@@ -4,11 +4,10 @@ import { Plus } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { formatDateNumeric, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'
+import { SPRING } from '../../lib/motion.js'
 import styles from './CatchGrid.module.css'
 
-const spring = { type: 'spring', stiffness: 300, damping: 24 }
-
-const CatchCard = memo(function CatchCard({ group }) {
+const CatchCard = memo(function CatchCard({ group, index }) {
   const ref = useRef(null)
   const leadName = group[0].name
   const isActive = usePhotoStore(s => s.activeGroup?.[0]?.name === leadName)
@@ -48,7 +47,7 @@ const CatchCard = memo(function CatchCard({ group }) {
       onMouseLeave={() => setHoveredPhotoName(null)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      transition={{ duration: 0.25, ease: 'easeOut', delay: index < 9 ? index * 0.04 : 0 }}
     >
       <div className={styles.imageWrap}>
         <img
@@ -95,8 +94,8 @@ export function CatchGrid() {
 
   return (
     <div className={styles.grid}>
-      {sorted.map(group => (
-        <CatchCard key={`${group[0].userId}/${group[0].name}`} group={group} />
+      {sorted.map((group, i) => (
+        <CatchCard key={`${group[0].userId}/${group[0].name}`} group={group} index={i} />
       ))}
       {!hasPhotos && (
         <div className={styles.empty}>
@@ -109,7 +108,7 @@ export function CatchGrid() {
         onClick={() => setUploadOpen(true)}
         whileHover={{ scale: 1.007 }}
         whileTap={{ scale: 0.975 }}
-        transition={spring}
+        transition={SPRING}
       >
         <Plus width={24} height={24} className={styles.addIcon} />
         <span className={styles.addLabel}>Add catches</span>

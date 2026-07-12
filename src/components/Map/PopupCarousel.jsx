@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useShallow } from 'zustand/react/shallow'
@@ -211,7 +212,18 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
     <div className={`${styles.popup} ${sheet ? styles.popupSheet : ''}`}>
       <div className={styles.mediaRow}>
       <div className={styles.imgWrapper}>
-        <img className={styles.popupImg} src={mainSrc} alt={photo.name} />
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.img
+            key={photo.name}
+            className={styles.popupImg}
+            src={mainSrc}
+            alt={photo.name}
+            initial={{ opacity: 0, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, filter: 'blur(4px)' }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+          />
+        </AnimatePresence>
         {((isOwn && editing) || orderedGroup.length > 1) && (
           <div className={styles.stripRow}>
             {orderedGroup.map((p, i) => (

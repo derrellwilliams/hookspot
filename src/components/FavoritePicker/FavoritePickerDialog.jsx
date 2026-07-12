@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
+import { AnimatePresence, motion } from 'motion/react'
 import { Check } from '../icons.js'
 import { useShallow } from 'zustand/react/shallow'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { formatDateFull, cleanSpecies } from '../../lib/formatters.js'
+import { EASE_OUT, EASE_ENTER } from '../../lib/motion.js'
 import styles from './FavoritePickerDialog.module.css'
 
 export function FavoritePickerDialog({ open, current, onSelect, onRemove, onClose }) {
@@ -40,54 +42,77 @@ export function FavoritePickerDialog({ open, current, onSelect, onRemove, onClos
 
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className={styles.backdrop} />
-        <Dialog.Content className={styles.content} aria-describedby={undefined}>
-          <Dialog.Title className={styles.srOnly}>Choose a favorite catch</Dialog.Title>
+      <Dialog.Portal forceMount>
+        <AnimatePresence>
+          {open && (
+            <>
+              <Dialog.Overlay asChild forceMount>
+                <motion.div
+                  className={styles.backdrop}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+              </Dialog.Overlay>
+              <Dialog.Content asChild forceMount aria-describedby={undefined}>
+                <motion.div
+                  className={styles.content}
+                  style={{ x: '-50%', y: '-50%' }}
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15, ease: EASE_OUT } }}
+                  transition={{ duration: 0.25, ease: EASE_ENTER }}
+                >
+                  <Dialog.Title className={styles.srOnly}>Choose a favorite catch</Dialog.Title>
 
-          {photos.length === 0 ? (
-            <div className={styles.empty}>No catches yet — add some first.</div>
-          ) : (
-            <div className={styles.scrollContainer}>
-              <div className={styles.list}>
-                {items.map(item => {
-                  if (item.type === 'header') {
-                    return <div key={item.key} className={styles.monthHeader}>{item.label}</div>
-                  }
-                  const { photo } = item
-                  const species = cleanSpecies(photo.species)
-                  const isSelected = photo.name === selected
-                  return (
-                    <button
-                      key={photo.name}
-                      className={`${styles.item} ${isSelected ? styles.active : ''}`}
-                      onClick={() => setSelected(photo.name)}
-                    >
-                      <img src={photo.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={styles.thumb} />
-                      <div className={styles.meta}>
-                        {species && <div className={styles.species}>{species}</div>}
-                        <div className={styles.date}>
-                          {photo.time ? formatDateFull(photo.time) : 'No date'}
-                        </div>
+                  {photos.length === 0 ? (
+                    <div className={styles.empty}>No catches yet — add some first.</div>
+                  ) : (
+                    <div className={styles.scrollContainer}>
+                      <div className={styles.list}>
+                        {items.map(item => {
+                          if (item.type === 'header') {
+                            return <div key={item.key} className={styles.monthHeader}>{item.label}</div>
+                          }
+                          const { photo } = item
+                          const species = cleanSpecies(photo.species)
+                          const isSelected = photo.name === selected
+                          return (
+                            <button
+                              key={photo.name}
+                              className={`${styles.item} ${isSelected ? styles.active : ''}`}
+                              onClick={() => setSelected(photo.name)}
+                            >
+                              <img src={photo.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={styles.thumb} />
+                              <div className={styles.meta}>
+                                {species && <div className={styles.species}>{species}</div>}
+                                <div className={styles.date}>
+                                  {photo.time ? formatDateFull(photo.time) : 'No date'}
+                                </div>
+                              </div>
+                              {isSelected && <Check width={16} height={16} className={styles.check} />}
+                            </button>
+                          )
+                        })}
                       </div>
-                      {isSelected && <Check width={16} height={16} className={styles.check} />}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+                    </div>
+                  )}
 
-          <div className={styles.footer}>
-            {current && onRemove && (
-              <button className={styles.removeBtn} onClick={onRemove}>Remove</button>
-            )}
-            <div className={styles.footerActions}>
-              <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
-              <button className={styles.selectBtn} onClick={handleSubmit} disabled={!selected}>Select</button>
-            </div>
-          </div>
-        </Dialog.Content>
+                  <div className={styles.footer}>
+                    {current && onRemove && (
+                      <button className={styles.removeBtn} onClick={onRemove}>Remove</button>
+                    )}
+                    <div className={styles.footerActions}>
+                      <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+                      <button className={styles.selectBtn} onClick={handleSubmit} disabled={!selected}>Select</button>
+                    </div>
+                  </div>
+                </motion.div>
+              </Dialog.Content>
+            </>
+          )}
+        </AnimatePresence>
       </Dialog.Portal>
     </Dialog.Root>
   )

@@ -18,10 +18,9 @@ import { FollowListDialog } from '../components/FollowListDialog/FollowListDialo
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
 import { formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/formatters.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'
+import { SPRING, SPRING_TIGHT, SPRING_POP, EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../lib/motion.js'
 import styles from './UserProfilePage.module.css'
 import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
-
-const spring = { type: 'spring', stiffness: 300, damping: 24 }
 
 // Stable share identifier for a catch group; photos without a catches row
 // fall back to the lead photo's filename.
@@ -501,7 +500,7 @@ export function UserProfilePage() {
                           initial={{ opacity: 0, scale: 0.92, y: -6 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.92, y: -6 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                          transition={SPRING_POP}
                           style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
                         >
                           <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>Edit profile</DropdownMenu.Item>
@@ -579,7 +578,7 @@ export function UserProfilePage() {
                         layoutId="profile-sheet-tab-indicator"
                         className={styles.sheetTabIndicator}
                         initial={false}
-                        transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                        transition={SPRING_TIGHT}
                       />
                     )}
                     <span className={styles.tabLabel}>{label}</span>
@@ -667,8 +666,8 @@ export function UserProfilePage() {
                       className={styles.catchDialogContent}
                       initial={{ y: '100%' }}
                       animate={{ y: 0 }}
-                      exit={{ y: '100%', transition: { duration: 0.25, ease: [0.67, 0.17, 0.62, 0.64] } }}
-                      transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+                      exit={{ y: '100%', transition: { duration: 0.3, ease: EASE_DRAWER } }}
+                      transition={{ duration: 0.35, ease: EASE_DRAWER }}
                     >
                       <PopupCarousel
                         key={catchPopupIdx}
@@ -804,7 +803,7 @@ export function UserProfilePage() {
                           initial={{ opacity: 0, scale: 0.92, y: -6 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.92, y: -6 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                          transition={SPRING_POP}
                           style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
                         >
                           <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>Edit profile</DropdownMenu.Item>
@@ -891,14 +890,14 @@ export function UserProfilePage() {
                 onClick={() => setActiveTab(id)}
                 whileHover={{ scale: 1.007 }}
                 whileTap={{ scale: 0.975 }}
-                transition={spring}
+                transition={SPRING}
               >
                 {isActive && (
                   <motion.div
                     layoutId="tab-highlight"
                     className={styles.tabHighlight}
                     initial={false}
-                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                    transition={SPRING_TIGHT}
                   />
                 )}
                 <span className={styles.tabLabel}>{label}</span>
@@ -1010,11 +1009,11 @@ export function UserProfilePage() {
                     initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.97, y: 4 }}
                     animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
                     exit={isMobile
-                      ? { y: '100%', transition: { duration: 0.25, ease: [0.67, 0.17, 0.62, 0.64] } }
-                      : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
+                      ? { y: '100%', transition: { duration: 0.3, ease: EASE_DRAWER } }
+                      : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: EASE_OUT } }}
                     transition={isMobile
-                      ? { duration: 0.35, ease: [0.32, 0.72, 0, 1] }
-                      : { delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
+                      ? { duration: 0.35, ease: EASE_DRAWER }
+                      : { duration: 0.25, ease: EASE_ENTER }}
                   >
                     <PopupCarousel
                       key={catchPopupIdx}

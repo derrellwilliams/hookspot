@@ -24,6 +24,9 @@ export const tokens = {
   radius: 8,
   navClearance: 96, // px before safe-area; CSS: --nav-clearance
 
+  // Motion
+  easeOut: 'cubic-bezier(0.23, 1, 0.32, 1)',
+
   // Typography
   fontSans: '"Roboto", sans-serif',
   fontCondensed: '"Roboto Condensed", sans-serif',

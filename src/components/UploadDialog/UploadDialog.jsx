@@ -17,8 +17,8 @@ import { identifySpecies } from '../../identify.js'
 import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
+import { SPRING, EASE_OUT, EASE_ENTER } from '../../lib/motion.js'
 
-const spring = { type: 'spring', stiffness: 300, damping: 24 }
 const STEP_FADE = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
 
 function computeHomeCenter(photos) {
@@ -223,7 +223,7 @@ export function UploadDialog() {
         await supabase.from('catches').delete().eq('id', catchId)
         showToast('Failed to add catch.')
       } else {
-        showToast('Catch added!')
+        showToast('Catch added!', 'success')
         await saveNewGear(flyVal, rodVal)
       }
     } catch {
@@ -279,8 +279,8 @@ export function UploadDialog() {
                   className={styles.content}
                   initial={{ opacity: 0, scale: 0.97, y: 4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: [0.67, 0.17, 0.62, 0.64] } }}
-                  transition={{ delay: 0.05, duration: 0.25, ease: [0.17, 0.67, 0.51, 1] }}
+                  exit={{ opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: EASE_OUT } }}
+                  transition={{ duration: 0.25, ease: EASE_ENTER }}
                 >
                   <div className={styles.header}>
                     <Dialog.Title className={styles.title}>Add a catch</Dialog.Title>
@@ -309,7 +309,7 @@ export function UploadDialog() {
                                 onClick={() => fileInputRef.current?.click()}
                                 whileHover={{ scale: 1.007 }}
                                 whileTap={{ scale: 0.975 }}
-                                transition={spring}
+                                transition={SPRING}
                               >Browse</motion.button>
                             </>
                           ) : (
@@ -319,13 +319,13 @@ export function UploadDialog() {
                                 className={`${styles.browseBtn} ${styles.touchBtn} ${styles.touchBtnPrimary}`}
                                 onClick={() => fileInputRef.current?.click()}
                                 whileTap={{ scale: 0.975 }}
-                                transition={spring}
+                                transition={SPRING}
                               >Choose photos</motion.button>
                               <motion.button
                                 className={`${styles.browseBtn} ${styles.touchBtn}`}
                                 onClick={() => cameraInputRef.current?.click()}
                                 whileTap={{ scale: 0.975 }}
-                                transition={spring}
+                                transition={SPRING}
                               >Take photo</motion.button>
                             </>
                           )}

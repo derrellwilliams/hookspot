@@ -10,6 +10,7 @@ export const usePhotoStore = create((set, get) => ({
   activeGroup: null,
   hoveredPhotoName: null,
   toast: null,
+  toastVariant: 'default',
   uploadOpen: false,
   pendingUploadFiles: [],
   photosInitialized: false,
@@ -63,8 +64,8 @@ export const usePhotoStore = create((set, get) => ({
     set({ hoveredPhotoName: name })
   },
 
-  showToast(msg) {
-    set({ toast: msg })
+  showToast(msg, variant = 'default') {
+    set({ toast: msg, toastVariant: variant })
     setTimeout(() => set(s => s.toast === msg ? { toast: null } : {}), 3200)
   },
 

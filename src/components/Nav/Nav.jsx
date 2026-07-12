@@ -3,10 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus, Search, Map, User } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
+import { SPRING, SPRING_TIGHT } from '../../lib/motion.js'
 import styles from './Nav.module.css'
-
-const spring = { type: 'spring', stiffness: 300, damping: 24 }
-const springTight = { type: 'spring', stiffness: 400, damping: 35 }
 
 export const NAV_ITEMS = [
   { path: '/', label: 'Catches', Icon: Map },
@@ -29,7 +27,7 @@ export function Nav() {
         aria-label="HookSpot — home"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.97 }}
-        transition={spring}
+        transition={SPRING}
       >
         HookSpot
       </motion.button>
@@ -44,14 +42,14 @@ export function Nav() {
               aria-label={label}
               whileHover={{ scale: 1.007 }}
               whileTap={{ scale: 0.975 }}
-              transition={spring}
+              transition={SPRING}
             >
               {isActive && (
                 <motion.div
                   layoutId="nav-highlight"
                   className={styles.highlight}
                   initial={false}
-                  transition={springTight}
+                  transition={SPRING_TIGHT}
                 />
               )}
               <span className={styles.label}><Icon width={20} height={20} /></span>
@@ -64,7 +62,7 @@ export function Nav() {
           aria-label="Add catch"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
-          transition={spring}
+          transition={SPRING}
         >
           <Plus width={22} height={22} />
         </motion.button>
