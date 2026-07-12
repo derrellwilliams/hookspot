@@ -1,24 +1,17 @@
 import { useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator,
+  KeyboardAvoidingView, Platform, ActivityIndicator, useWindowDimensions,
 } from 'react-native'
 import { supabase } from '../../lib/supabase'
-import { MeshBackground } from '../../components/MeshBackground'
+import { DitherMesh } from '../../components/DitherMesh'
 import { C } from '../../lib/theme'
 
-const BLOBS = [
-  { x: 58, y: 33, color: '#2563eb', dx: 0.8,  dy: 0.6,  offset: 0.0 },
-  { x: 27, y: 45, color: '#64748b', dx: 0.7,  dy: -0.8, offset: 1.3 },
-  { x: 74, y: 66, color: '#1A1953', dx: -0.6, dy: 0.5,  offset: 2.6 },
-  { x: 35, y: 67, color: '#a1a1aa', dx: 0.9,  dy: -0.7, offset: 3.9 },
-  { x: 18, y: 40, color: '#f4f4f5', dx: 0.5,  dy: 0.4,  offset: 5.2 },
-  { x: 31, y: 18, color: '#2c2c2e', dx: 0.6,  dy: 0.8,  offset: 6.5 },
-  { x: 72, y: 88, color: '#2563eb', dx: -0.7, dy: 0.5,  offset: 7.8 },
-  { x: 18, y: 82, color: '#64748b', dx: 0.6,  dy: -0.6, offset: 9.1 },
-]
-
 export default function LoginScreen() {
+  // Explicit dimensions: with flex:1, this screen's subtree can get a
+  // zero-height first layout under rn-screens + Fabric that never corrects,
+  // collapsing the form and breaking sibling paint order.
+  const { width, height } = useWindowDimensions()
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [sent, setSent] = useState(false)
@@ -43,12 +36,16 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.page}>
-      <MeshBackground blobs={BLOBS} bgColor="#1A1953" />
-      <KeyboardAvoidingView
-        style={styles.center}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+    <View style={[styles.page, { width, height }]}>
+      <DitherMesh />
+      {/* Absolute with explicit dims: in-flow or flex-sized content here can
+          get a zero-height first layout (rn-screens + Fabric) and absolute
+          siblings paint above in-flow ones — keep both layers absolute */}
+      <View style={{ position: 'absolute', top: 0, left: 0, width, height }}>
+        <KeyboardAvoidingView
+          style={styles.center}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
         <Text style={styles.wordmark}>HookSpot</Text>
 
         <View style={styles.form}>
@@ -107,7 +104,8 @@ export default function LoginScreen() {
             </>
           )}
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </View>
   )
 }
@@ -119,10 +117,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 28,
     gap: 32,
+    zIndex: 1, // paint above the absolute DitherMesh background
   },
   wordmark: {
     fontFamily: 'GeistPixel',
-    fontSize: 36,
+    fontSize: 48,
     color: '#ffffff',
     textAlign: 'center',
   },

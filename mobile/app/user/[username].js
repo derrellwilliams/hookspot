@@ -1,64 +1,42 @@
+// Other-user profile — same dither header card + segmented layout as the own
+// profile, under a native transparent Stack header (back chevron + swipe-back
+// is the iOS-better choice over the web's in-page back). Photos come from the
+// get_user_catches RPC so non-followed profiles show their grid (web parity).
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
-  View, Text, Image, TouchableOpacity, FlatList,
-  StyleSheet, Alert, ActivityIndicator, Dimensions,
+  View, Text, Image, TouchableOpacity, Pressable,
+  StyleSheet, Alert, ActivityIndicator,
 } from 'react-native'
+import Animated from 'react-native-reanimated'
 import { Stack, useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as Haptics from 'expo-haptics'
 import { supabase } from '../../lib/supabase'
-import { C } from '../../lib/theme'
-import { Group } from '../../components/icons.js'
-import { SearchModal } from '../../components/SearchModal'
+import { C, RADII, FONTS, NAV_CLEARANCE } from '../../lib/theme'
+import { DitherMesh } from '../../components/DitherMesh'
 import { FollowListSheet } from '../../components/FollowListSheet'
-import { photoUrl } from '../../lib/storage'
+import { StatsCharts } from '../../components/StatsCharts'
+import { CatchCard } from '../../components/CatchCard'
+import { CatchDetailSheet } from '../../components/CatchDetailSheet'
+import { SegmentedTabs } from '../../components/SegmentedTabs'
+import { useNavScrollHandler } from '../../lib/navScroll'
 import { groupPhotos } from '../../lib/groupPhotos'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
-import { formatDateFull, cleanSpecies } from '../../lib/formatters'
 
-const { width: SCREEN_W } = Dimensions.get('window')
-const GRID_PADDING = 12
-const GRID_GAP = 8
-const CARD_W = (SCREEN_W - GRID_PADDING * 2 - GRID_GAP) / 2
-
-const QUERY_COLS = 'id, filename, user_id, catch_id, lat, lng, species, time, meta, storage_path'
+const PAGE_SIZE = 24
 
 function normalize(row) {
   return { ...row, catchId: row.catch_id, time: row.time ? new Date(row.time).getTime() : null }
 }
 
-function StatBox({ label, value }) {
-  return (
-    <View style={styles.statBox}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  )
-}
-
-function CatchCard({ group }) {
-  const lead = group[0]
-  const uri = photoUrl(lead.user_id, lead.filename, lead.storage_path)
-  const species = cleanSpecies(lead.species)
-  const dateStr = lead.time ? formatDateFull(lead.time).split(' ·')[0] : null
-
-  return (
-    <View style={styles.catchCard}>
-      <Image source={{ uri }} style={styles.catchImg} resizeMode="cover" />
-      <View style={styles.catchMeta}>
-        {species ? <Text style={styles.catchSpecies} numberOfLines={1}>{species}</Text> : null}
-        {dateStr ? <Text style={styles.catchDate} numberOfLines={1}>{dateStr}</Text> : null}
-      </View>
-    </View>
-  )
-}
-
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams()
   const myUser = useAuthStore(s => s.user)
-  const addPhotos = usePhotoStore(s => s.addPhotos)
-  const removeUserPhotos = usePhotoStore(s => s.removeUserPhotos)
+  const refreshFeed = usePhotoStore(s => s.refreshFeed)
+  const addProfiles = usePhotoStore(s => s.addProfiles)
   const insets = useSafeAreaInsets()
+  const scrollHandler = useNavScrollHandler()
 
   const [profile, setProfile] = useState(null)
   const [photos, setPhotos] = useState([])
@@ -66,11 +44,13 @@ export default function UserProfileScreen() {
   const [loading, setLoading] = useState(true)
   const [followLoading, setFollowLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [followerCount, setFollowerCount] = useState(null)
   const [followingCount, setFollowingCount] = useState(null)
   const [followListOpen, setFollowListOpen] = useState(false)
   const [followListTab, setFollowListTab] = useState('followers')
+  const [activeTab, setActiveTab] = useState('Recent Activity')
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [selectedGroup, setSelectedGroup] = useState(null)
 
   useEffect(() => {
     if (!username || !myUser) return
@@ -83,7 +63,9 @@ export default function UserProfileScreen() {
         const { data: profileData, error: profileErr } = await supabase
           .from('profiles').select('*').eq('username', username).single()
         if (profileErr || !profileData) { setError('Profile not found'); return }
-        if (!cancelled) setProfile(profileData)
+        if (cancelled) return
+        setProfile(profileData)
+        addProfiles([profileData])
 
         const [followRes, photosRes, followerRes, followingRes] = await Promise.all([
           supabase.from('follows')
@@ -91,13 +73,8 @@ export default function UserProfileScreen() {
             .eq('follower_id', myUser.id)
             .eq('following_id', profileData.id)
             .maybeSingle(),
-          supabase.from('photos')
-            .select(QUERY_COLS)
-            .eq('user_id', profileData.id)
-            .not('lat', 'is', null)
-            .not('lng', 'is', null)
-            .order('time', { ascending: false })
-            .limit(200),
+          // security-definer RPC: visible regardless of follow state (web parity)
+          supabase.rpc('get_user_catches', { profile_user_id: profileData.id }),
           supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
           supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
         ])
@@ -107,6 +84,7 @@ export default function UserProfileScreen() {
           setPhotos((photosRes.data ?? []).map(normalize))
           setFollowerCount(followerRes.count ?? 0)
           setFollowingCount(followingRes.count ?? 0)
+          if (photosRes.error) console.error('[user-profile] photos:', photosRes.error)
         }
       } catch (err) {
         if (!cancelled) setError('Failed to load profile')
@@ -120,240 +98,273 @@ export default function UserProfileScreen() {
     return () => { cancelled = true }
   }, [username, myUser?.id])
 
-  const groups = useMemo(() => groupPhotos(photos), [photos])
+  // Reset per-profile state when switching profiles (no remount on param change)
+  useEffect(() => {
+    setActiveTab('Recent Activity')
+    setVisibleCount(PAGE_SIZE)
+    setSelectedGroup(null)
+  }, [username])
 
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = now.getMonth()
-
-  const statsAll = groups.length
-  const statsYear = useMemo(() =>
-    groups.filter(g => g[0].time && new Date(g[0].time).getFullYear() === currentYear).length,
-    [groups, currentYear]
+  const groups = useMemo(() =>
+    groupPhotos(photos).sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
+    [photos]
   )
-  const statsMonth = useMemo(() =>
-    groups.filter(g => {
-      if (!g[0].time) return false
-      const d = new Date(g[0].time)
-      return d.getFullYear() === currentYear && d.getMonth() === currentMonth
-    }).length,
-    [groups, currentYear, currentMonth]
-  )
-  const statsSpecies = useMemo(() => {
-    const seen = new Set()
-    groups.forEach(g => g.forEach(p => { if (p.species) seen.add(p.species.toLowerCase()) }))
-    return seen.size
-  }, [groups])
 
-  const handleFollow = useCallback(async () => {
+  const handleFollowToggle = useCallback(async () => {
     if (!myUser || !profile) return
+    Haptics.selectionAsync()
     setFollowLoading(true)
     try {
-      const { error } = await supabase.from('follows')
-        .insert({ follower_id: myUser.id, following_id: profile.id })
-      if (error) throw error
-      setIsFollowing(true)
-      setFollowerCount(c => c !== null ? c + 1 : c)
-      addPhotos(photos)
+      if (isFollowing) {
+        const { error } = await supabase.from('follows')
+          .delete()
+          .eq('follower_id', myUser.id)
+          .eq('following_id', profile.id)
+        if (error) throw error
+        setIsFollowing(false)
+        setFollowerCount(c => c !== null ? Math.max(0, c - 1) : c)
+      } else {
+        const { error } = await supabase.from('follows')
+          .insert({ follower_id: myUser.id, following_id: profile.id })
+        if (error) throw error
+        setIsFollowing(true)
+        setFollowerCount(c => c !== null ? c + 1 : c)
+      }
+      refreshFeed(myUser.id)
     } catch (err) {
       console.error('[follow]', err)
-      Alert.alert('Error', 'Failed to follow user.')
+      Alert.alert('Error', `Failed to ${isFollowing ? 'unfollow' : 'follow'} user.`)
     } finally {
       setFollowLoading(false)
     }
-  }, [myUser, profile, photos, addPhotos])
+  }, [myUser, profile, isFollowing, refreshFeed])
 
-  const handleUnfollow = useCallback(async () => {
-    if (!myUser || !profile) return
-    setFollowLoading(true)
-    try {
-      const { error } = await supabase.from('follows')
-        .delete()
-        .eq('follower_id', myUser.id)
-        .eq('following_id', profile.id)
-      if (error) throw error
-      setIsFollowing(false)
-      setFollowerCount(c => c !== null ? Math.max(0, c - 1) : c)
-      removeUserPhotos(profile.id)
-    } catch (err) {
-      console.error('[unfollow]', err)
-      Alert.alert('Error', 'Failed to unfollow user.')
-    } finally {
-      setFollowLoading(false)
-    }
-  }, [myUser, profile, removeUserPhotos])
+  const openFollowList = useCallback((tab) => {
+    Haptics.selectionAsync()
+    setFollowListTab(tab)
+    setFollowListOpen(true)
+  }, [])
 
-  const renderHeader = useCallback(() => {
-    if (!profile) return null
-    const avatarUrl = profile.avatar_url
-    const displayName = profile.display_name || profile.username || 'Angler'
-    const initial = displayName[0].toUpperCase()
+  const visibleGroups = activeTab === 'Recent Activity' ? groups.slice(0, visibleCount) : []
 
+  const renderItem = useCallback(({ item: group }) => (
+    <CatchCard
+      group={group}
+      profile={profile}
+      isOwn={false}
+      onPress={setSelectedGroup}
+    />
+  ), [profile])
+
+  const keyExtractor = useCallback(group => group[0].catchId ?? `${group[0].user_id}/${group[0].filename}`, [])
+
+  const screenOptions = {
+    title: profile?.username ? `@${profile.username}` : String(username ?? ''),
+    headerShown: true,
+    headerTransparent: true,
+    headerBlurEffect: 'systemUltraThinMaterialDark',
+    headerStyle: { backgroundColor: 'transparent' },
+    headerTintColor: C.text,
+    headerTitleStyle: { fontFamily: FONTS.mono, fontSize: 14 },
+    headerBackTitle: '',
+    headerShadowVisible: false,
+  }
+
+  if (loading || error) {
     return (
-      <View style={styles.profileHeader}>
-        {avatarUrl
-          ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-          : (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarInitial}>{initial}</Text>
-            </View>
-          )
+      <View style={styles.centered}>
+        <Stack.Screen options={screenOptions} />
+        {loading
+          ? <ActivityIndicator size="large" color={C.accent} />
+          : <Text style={styles.errorText}>{error}</Text>
         }
-        <Text style={styles.displayName}>{displayName}</Text>
-        {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
-        <View style={styles.statsRow}>
-          <StatBox label="Catches" value={statsAll} />
-          <View style={styles.statDivider} />
-          <StatBox label="Year" value={statsYear} />
-          <View style={styles.statDivider} />
-          <StatBox label="Month" value={statsMonth} />
-          <View style={styles.statDivider} />
-          <StatBox label="Species" value={statsSpecies} />
-        </View>
+      </View>
+    )
+  }
+
+  const displayName = profile.display_name || profile.username || 'Angler'
+
+  const header = (
+    <View>
+      <View style={styles.headerCard}>
+        <DitherMesh />
 
         <TouchableOpacity
-          style={[styles.followBtn, isFollowing && styles.followBtnFollowing, followLoading && styles.followBtnDisabled]}
-          onPress={isFollowing ? handleUnfollow : handleFollow}
+          style={[styles.followBtn, isFollowing && styles.followBtnFollowing]}
+          onPress={handleFollowToggle}
           disabled={followLoading}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
           {followLoading
-            ? <ActivityIndicator size="small" color={isFollowing ? C.muted : '#fff'} />
-            : <Text style={[styles.followBtnText, isFollowing && styles.followBtnTextFollowing]}>
-                {isFollowing ? 'Following' : 'Follow'}
-              </Text>
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <Text style={styles.followBtnText}>{isFollowing ? 'Following' : 'Follow'}</Text>
           }
         </TouchableOpacity>
 
-        {groups.length > 0 && (
-          <Text style={styles.sectionLabel}>Catches</Text>
-        )}
-      </View>
-    )
-  }, [profile, statsAll, statsYear, statsMonth, statsSpecies, isFollowing, followLoading, handleFollow, handleUnfollow, followerCount, followingCount])
+        <View style={styles.headerInner}>
+          {profile.avatar_url
+            ? <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+            : (
+              <View style={[styles.avatar, styles.avatarFallback]}>
+                <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
+              </View>
+            )
+          }
+          <Text style={styles.displayName}>{displayName}</Text>
+          {profile.bio ? <Text style={styles.bio} numberOfLines={2}>{profile.bio}</Text> : null}
 
-  const renderItem = useCallback(({ item }) => <CatchCard group={item} />, [])
-  const keyExtractor = useCallback(item => item[0].catchId ?? item[0].filename, [])
-
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <Stack.Screen options={{ title: username, headerShown: true, headerStyle: { backgroundColor: C.bg }, headerTintColor: C.text, headerBackTitle: '', headerRight: () => (
-          <TouchableOpacity onPress={() => setSearchOpen(true)} hitSlop={12} style={{ paddingHorizontal: 4 }}>
-            <Group width={20} height={20} color={C.text} strokeWidth={1.5} />
-          </TouchableOpacity>
-        ) }} />
-        <ActivityIndicator size="large" color={C.accent} />
+          <View style={styles.statsRow}>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{groups.length}</Text>
+              <Text style={styles.statLabel}>Catches</Text>
+            </View>
+            <Pressable style={styles.stat} onPress={() => openFollowList('followers')} accessibilityRole="button">
+              <Text style={styles.statValue}>{followerCount ?? '—'}</Text>
+              <Text style={styles.statLabel}>Followers</Text>
+            </Pressable>
+            <Pressable style={styles.stat} onPress={() => openFollowList('following')} accessibilityRole="button">
+              <Text style={styles.statValue}>{followingCount ?? '—'}</Text>
+              <Text style={styles.statLabel}>Following</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
-    )
-  }
 
-  if (error) {
-    return (
-      <View style={styles.centered}>
-        <Stack.Screen options={{ title: username, headerShown: true, headerStyle: { backgroundColor: C.bg }, headerTintColor: C.text, headerBackTitle: '', headerRight: () => (
-          <TouchableOpacity onPress={() => setSearchOpen(true)} hitSlop={12} style={{ paddingHorizontal: 4 }}>
-            <Group width={20} height={20} color={C.text} strokeWidth={1.5} />
-          </TouchableOpacity>
-        ) }} />
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    )
-  }
+      <SegmentedTabs
+        tabs={['Recent Activity', 'Stats']}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
+    </View>
+  )
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          title: profile?.username ?? username,
-          headerShown: true,
-          headerStyle: { backgroundColor: C.bg },
-          headerTintColor: C.text,
-          headerBackTitle: '',
-          headerShadowVisible: false,
-          headerRight: () => (
-            <TouchableOpacity onPress={() => setSearchOpen(true)} hitSlop={12} style={{ paddingHorizontal: 4 }}>
-              <Group width={20} height={20} color={C.text} strokeWidth={1.5} />
-            </TouchableOpacity>
-          ),
-        }}
-      />
-      <FlatList
-        data={groups}
-        numColumns={2}
+    <View style={styles.page}>
+      <Stack.Screen options={screenOptions} />
+      <Animated.FlatList
+        data={visibleGroups}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No catches yet</Text>
-          </View>
-        }
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingTop: insets.top + 52,
+          paddingBottom: NAV_CLEARANCE + insets.bottom,
+          paddingHorizontal: 12,
+          gap: 28,
+        }}
+        ListHeaderComponent={header}
+        ListEmptyComponent={activeTab === 'Recent Activity' ? (
+          <Text style={styles.emptyText}>No catches yet</Text>
+        ) : null}
+        ListFooterComponent={activeTab === 'Stats' ? (
+          <StatsCharts groups={groups} />
+        ) : null}
+        onEndReached={() => {
+          if (activeTab === 'Recent Activity' && visibleCount < groups.length) {
+            setVisibleCount(c => c + PAGE_SIZE)
+          }
+        }}
+        onEndReachedThreshold={0.4}
       />
-      <SearchModal visible={searchOpen} onClose={() => setSearchOpen(false)} />
+
       <FollowListSheet
         visible={followListOpen}
         onClose={() => setFollowListOpen(false)}
         profileId={profile?.id}
         initialTab={followListTab}
       />
+
+      <CatchDetailSheet group={selectedGroup} onDismiss={() => setSelectedGroup(null)} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
-  centered: { flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
-  errorText: { color: C.muted, fontSize: 16 },
+  page: { flex: 1, backgroundColor: C.surface },
+  centered: { flex: 1, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' },
+  errorText: { color: C.muted, fontSize: 16, fontFamily: FONTS.sans },
 
-  profileHeader: { paddingHorizontal: GRID_PADDING, paddingTop: 24, paddingBottom: 16, alignItems: 'center' },
-
-  avatar: { width: 80, height: 80, borderRadius: 40, marginBottom: 12 },
-  avatarFallback: {
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+  headerCard: {
+    borderRadius: RADII.sheet,
+    overflow: 'hidden',
+    marginBottom: 18,
   },
-  avatarInitial: { fontSize: 36, fontWeight: '600', color: C.text },
-
-  displayName: { fontSize: 22, fontWeight: '700', color: C.text, marginBottom: 4 },
-  bio: { fontSize: 16, color: C.muted, textAlign: 'center', lineHeight: 22, marginBottom: 16 },
-
-  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  statBox: { alignItems: 'center', paddingHorizontal: 16 },
-  statValue: { fontSize: 22, fontWeight: '700', color: C.text },
-  statLabel: { fontSize: 12, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
-  statDivider: { width: 1, height: 28, backgroundColor: C.border },
-
   followBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    borderRadius: RADII.pill,
+    paddingVertical: 7,
+    paddingHorizontal: 16,
     backgroundColor: C.accent,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 32,
-    marginBottom: 24,
-    minWidth: 120,
+    minWidth: 84,
     alignItems: 'center',
   },
-  followBtnFollowing: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
-  followBtnDisabled: { opacity: 0.6 },
-  followBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  followBtnTextFollowing: { color: C.muted },
+  followBtnFollowing: {
+    backgroundColor: 'rgba(22,22,24,0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  followBtnText: { color: '#fff', fontFamily: FONTS.sansSemiBold, fontSize: 13 },
 
-  sectionLabel: {
-    fontSize: 14, fontWeight: '600', color: C.muted,
-    textTransform: 'uppercase', letterSpacing: 0.8,
-    alignSelf: 'flex-start', width: '100%', marginBottom: 10,
+  headerInner: {
+    alignItems: 'center',
+    paddingTop: 48,
+    paddingBottom: 26,
+    paddingHorizontal: 20,
+  },
+  avatar: { width: 100, height: 100, borderRadius: 50 },
+  avatarFallback: {
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitial: { fontSize: 40, fontFamily: FONTS.sansSemiBold, color: '#fff' },
+  displayName: {
+    fontFamily: FONTS.condensedSemiBold,
+    fontSize: 20,
+    color: '#fff',
+    marginTop: 14,
+    textAlign: 'center',
+  },
+  bio: {
+    fontFamily: FONTS.sans,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 36,
+    marginTop: 22,
+  },
+  stat: { alignItems: 'center' },
+  statValue: {
+    fontFamily: FONTS.mono,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  statLabel: {
+    fontFamily: FONTS.condensed,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
   },
 
-  columnWrapper: { paddingHorizontal: GRID_PADDING, gap: GRID_GAP, marginBottom: GRID_GAP },
-  catchCard: { width: CARD_W, borderRadius: 10, overflow: 'hidden', backgroundColor: C.surface },
-  catchImg: { width: CARD_W, height: CARD_W * 0.75, backgroundColor: C.border },
-  catchMeta: { padding: 8 },
-  catchSpecies: { fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 2 },
-  catchDate: { fontSize: 12, color: C.muted },
-
-  emptyState: { alignItems: 'center', paddingTop: 40 },
-  emptyText: { color: C.muted, fontSize: 16 },
+  emptyText: {
+    fontFamily: FONTS.sans,
+    color: C.muted,
+    fontSize: 15,
+    textAlign: 'center',
+    paddingTop: 24,
+  },
 })

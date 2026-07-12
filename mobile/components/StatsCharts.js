@@ -1,14 +1,16 @@
 import { useMemo } from 'react'
 import { View, Text, ScrollView, StyleSheet, useWindowDimensions } from 'react-native'
 import { Svg, G, Rect, Path, Text as SvgText, Line } from 'react-native-svg'
+import { C as T, RADII, FONTS } from '../lib/theme'
+import { cleanGear } from '../lib/formatters'
 
 const CARD_PAD = 16
 
 const C = {
-  surface: '#2c2c2e',
-  border: '#3a3a3c',
-  text: '#f4f4f5',
-  muted: '#8d8d8d',
+  cardBg: T.htmlBg, // web chart cards: #111113
+  border: T.border,
+  text: T.text,
+  muted: T.muted,
   rule: 'rgba(255,255,255,0.08)',
 }
 const BLUES = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe']
@@ -88,7 +90,44 @@ function useStatsData(groups) {
       .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
       .map(([label, value]) => ({ label, value }))
 
-    return { monthly, hourly, species, weatherCond, weatherTemp, hasWeather: withWeather.length > 0 }
+    // Species by month (stacked): top 5 species across the same 12-month window
+    const topSpecies = Object.entries(spCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name]) => name)
+    const speciesMonthly = mLabels.map((label, idx) => {
+      const segments = topSpecies.map((sp, si) => {
+        const count = leadsWithTime.filter(p => {
+          const d = new Date(p.time)
+          const diff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
+          return diff >= 0 && diff < 12 && 11 - diff === idx && speciesLabel(p) === sp
+        }).length
+        return { value: count, color: BLUES[si], name: sp }
+      })
+      return { label, segments }
+    })
+
+    // Gear breakdowns — rod/fly live in meta on the upload's photos; dedupe
+    // case-insensitively, keep first-seen casing (mirrors src/stats.js)
+    const gearEntries = key => {
+      const counts = new Map()
+      groups.forEach(g => {
+        const val = cleanGear(g.find(p => p.meta?.[key])?.meta[key])
+        if (!val) return
+        const k = val.toLowerCase()
+        const entry = counts.get(k)
+        if (entry) entry.value++
+        else counts.set(k, { label: val, value: 1 })
+      })
+      return [...counts.values()].sort((a, b) => b.value - a.value)
+    }
+    const rods = gearEntries('rod')
+    const flies = gearEntries('fly')
+
+    return {
+      monthly, hourly, species, speciesMonthly, topSpecies, rods, flies,
+      weatherCond, weatherTemp, hasWeather: withWeather.length > 0,
+    }
   }, [groups])
 }
 
@@ -176,6 +215,108 @@ function BarChartSvg({ data, width, height = 160, color = BLUES[0] }) {
   )
 }
 
+// Stacked bar chart (Species by Month): each bar is segments bottom-up
+function StackedBarChartSvg({ data, width, height = 180 }) {
+  const PAD_L = 24, PAD_B = 22, PAD_T = 6
+  const cW = width - PAD_L
+  const cH = height - PAD_B - PAD_T
+  const n = data.length
+  const totals = data.map(d => d.segments.reduce((s, seg) => s + seg.value, 0))
+  const max = Math.max(...totals, 1)
+
+  const barSlot = cW / n
+  const barW = Math.max(barSlot * 0.52, 6)
+  const barOffset = (barSlot - barW) / 2
+
+  const sections = 4
+  const yTicks = Array.from({ length: sections + 1 }, (_, i) => ({
+    value: Math.round(max * i / sections),
+    y: PAD_T + cH - cH * (i / sections),
+  }))
+
+  return (
+    <Svg width={width} height={height}>
+      {yTicks.map(({ value, y }, i) => (
+        <G key={i}>
+          {i > 0 && (
+            <Line x1={PAD_L} y1={y} x2={width} y2={y} stroke={C.rule} strokeDasharray="3,3" />
+          )}
+          <SvgText x={PAD_L - 4} y={y + 4} textAnchor="end" fill={C.muted} fontSize={10}>
+            {value}
+          </SvgText>
+        </G>
+      ))}
+      <Line x1={PAD_L} y1={PAD_T + cH} x2={width} y2={PAD_T + cH} stroke={C.border} />
+      {data.map(({ label, segments }, i) => {
+        const x = PAD_L + i * barSlot + barOffset
+        let yCursor = PAD_T + cH
+        return (
+          <G key={i}>
+            {segments.map((seg, si) => {
+              if (!seg.value) return null
+              const segH = (seg.value / max) * cH
+              yCursor -= segH
+              return <Rect key={si} x={x} y={yCursor} width={barW} height={segH} fill={seg.color} rx={2} />
+            })}
+            {label ? (
+              <SvgText
+                x={PAD_L + i * barSlot + barSlot / 2}
+                y={height - 4}
+                textAnchor="middle"
+                fill={C.muted}
+                fontSize={10}
+              >
+                {label}
+              </SvgText>
+            ) : null}
+          </G>
+        )
+      })}
+    </Svg>
+  )
+}
+
+// Horizontal bar chart (By Rod / By Fly)
+function HBarChartSvg({ data, width, color = BLUES[1] }) {
+  const ROW_H = 30, PAD_T = 4
+  const LABEL_W = Math.min(width * 0.38, 140)
+  const cW = width - LABEL_W - 34
+  const height = data.length * ROW_H + PAD_T * 2
+  const max = Math.max(...data.map(d => d.value), 1)
+
+  return (
+    <Svg width={width} height={height}>
+      {data.map(({ label, value }, i) => {
+        const y = PAD_T + i * ROW_H
+        const barH = ROW_H * 0.55
+        const barW = Math.max((value / max) * cW, 2)
+        return (
+          <G key={label}>
+            <SvgText
+              x={LABEL_W - 8}
+              y={y + ROW_H / 2 + 4}
+              textAnchor="end"
+              fill={C.muted}
+              fontSize={11}
+            >
+              {label.length > 18 ? `${label.slice(0, 17)}…` : label}
+            </SvgText>
+            <Rect x={LABEL_W} y={y + (ROW_H - barH) / 2} width={barW} height={barH} fill={color} rx={3} />
+            <SvgText
+              x={LABEL_W + barW + 6}
+              y={y + ROW_H / 2 + 4}
+              fill={C.muted}
+              fontSize={11}
+            >
+              {value}
+            </SvgText>
+          </G>
+        )
+      })}
+    </Svg>
+  )
+}
+
 function DonutChart({ data, radius = 84, innerRadius = 52, size = 180, totalLabel }) {
   const cx = size / 2
   const cy = size / 2
@@ -223,7 +364,10 @@ export function StatsCharts({ groups }) {
   const { width: screenW } = useWindowDimensions()
   const chartW = screenW - CARD_PAD * 4 // card padding + outer padding
 
-  const { monthly, hourly, species, weatherCond, weatherTemp, hasWeather } = useStatsData(groups)
+  const {
+    monthly, hourly, species, speciesMonthly, topSpecies, rods, flies,
+    weatherCond, weatherTemp, hasWeather,
+  } = useStatsData(groups)
 
   if (!groups.length) {
     return (
@@ -264,6 +408,32 @@ export function StatsCharts({ groups }) {
         </ChartCard>
       )}
 
+      {topSpecies.length > 0 && (
+        <ChartCard title="Species by Month">
+          <StackedBarChartSvg data={speciesMonthly} width={chartW} />
+          <View style={styles.inlineLegend}>
+            {topSpecies.map((name, i) => (
+              <View key={name} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: BLUES[i] }]} />
+                <Text style={styles.legendLabel} numberOfLines={1}>{name}</Text>
+              </View>
+            ))}
+          </View>
+        </ChartCard>
+      )}
+
+      {rods.length > 0 && (
+        <ChartCard title="Catches by Rod">
+          <HBarChartSvg data={rods} width={chartW} color={BLUES[1]} />
+        </ChartCard>
+      )}
+
+      {flies.length > 0 && (
+        <ChartCard title="Catches by Fly">
+          <HBarChartSvg data={flies} width={chartW} color={BLUES[2]} />
+        </ChartCard>
+      )}
+
       {hasWeather && weatherCond.length > 0 && (
         <ChartCard title="Catches by Condition">
           <BarChartSvg data={weatherCond} width={chartW} color={BLUES[1]} />
@@ -282,8 +452,8 @@ export function StatsCharts({ groups }) {
 const styles = StyleSheet.create({
   container: { paddingBottom: 0 },
   card: {
-    backgroundColor: C.surface,
-    borderRadius: 12,
+    backgroundColor: C.cardBg,
+    borderRadius: RADII.card,
     padding: CARD_PAD,
     borderWidth: 1,
     borderColor: C.border,
@@ -291,12 +461,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardTitle: {
+    fontFamily: FONTS.condensedSemiBold,
     fontSize: 12,
-    fontWeight: '600',
     color: C.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 12,
+  },
+  inlineLegend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 10,
   },
 
   // Donut

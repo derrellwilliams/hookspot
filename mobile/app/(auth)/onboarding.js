@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, ScrollView, Platform, ActivityIndicator,
-  Image, Alert,
+  Image, Alert, useWindowDimensions,
 } from 'react-native'
 import { router } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
@@ -10,9 +10,13 @@ import { supabase } from '../../lib/supabase'
 import { uploadAvatar } from '../../lib/upload'
 import { useAuthStore } from '../../store/useAuthStore'
 import { USERNAME_RE } from '../../lib/validation'
-import { MeshBackground } from '../../components/MeshBackground'
+import { DitherMesh } from '../../components/DitherMesh'
 
 export default function OnboardingScreen() {
+  // Explicit dims + absolute layers: see login.js — flex-sized content can get
+  // a zero-height first layout under rn-screens + Fabric, and absolute
+  // siblings paint above in-flow ones.
+  const { width, height } = useWindowDimensions()
   const user = useAuthStore(s => s.user)
   const setUsernameStore = useAuthStore(s => s.setUsername)
 
@@ -132,8 +136,9 @@ export default function OnboardingScreen() {
   const canSubmit = usernameStatus === 'ok' && !!avatarAsset && !saving
 
   return (
-    <View style={styles.page}>
-      <MeshBackground />
+    <View style={[styles.page, { width, height }]}>
+      <DitherMesh />
+      <View style={{ position: 'absolute', top: 0, left: 0, width, height }}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -228,6 +233,7 @@ export default function OnboardingScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      </View>
     </View>
   )
 }

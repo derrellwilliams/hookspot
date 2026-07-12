@@ -1,22 +1,23 @@
+// Home ("Catches") — native port of the web mobile MapPage: card feed over an
+// always-mounted full-bleed map, with a fixed glass list/map toggle. The feed
+// layer toggles with opacity + pointerEvents (RN's `visibility`) so Mapbox
+// never re-initializes.
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator, Alert, useWindowDimensions } from 'react-native'
+import { StyleSheet, View, Text, Pressable, ActivityIndicator, RefreshControl } from 'react-native'
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
 import MapboxGL from '@rnmapbox/maps'
-import BottomSheet, { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet'
 import { BlurView } from 'expo-blur'
-import { EditPencil, Trash, ArrowLeft, Map as MapIcon, Plus } from '../../components/icons.js'
 import Constants from 'expo-constants'
-import * as ImagePicker from 'expo-image-picker'
-import { supabase } from '../../lib/supabase'
-import { C } from '../../lib/theme'
-import { storageKey, photoUrl } from '../../lib/storage'
-import { addPhotosToGroup } from '../../lib/upload'
+import * as Haptics from 'expo-haptics'
+import { ListView, MapPin, Plus } from '../../components/icons.js'
+import { C, GLASS, RADII, FONTS, SPRINGS, NAV_CLEARANCE } from '../../lib/theme'
+import { enrichPhotos } from '../../lib/enrich'
+import { useNavScrollHandler } from '../../lib/navScroll'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
-import { EditCatchModal } from '../../components/EditCatchModal'
-import { FLOAT_INSET, TAB_BAR_TOTAL, CARD_RADIUS } from './_layout'
-import { formatDateFull, formatDateShort, formatCatchLocation, cleanSpecies, getDisplayName } from '../../lib/formatters'
+import { CatchCard } from '../../components/CatchCard'
+import { CatchDetailSheet } from '../../components/CatchDetailSheet'
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
@@ -24,67 +25,64 @@ const MAP_STYLE = 'mapbox://styles/derrellwilliams/cmoc96j0y000i01r90nqr62du'
 
 const BOUNDS_PADDING_DEG = 0.008
 const BOUNDS_SUBSET_FRACTION = 0.8
+const TOGGLE_BTN = { width: 46, height: 30 }
 
-function AnglerRow({ user, profile }) {
-  const avatarUrl = profile?.avatar_url
-  const displayName = getDisplayName(profile) || getDisplayName(user?.user_metadata)
-  const initial = displayName ? displayName[0].toUpperCase() : '?'
+function ViewToggle({ view, onChange }) {
+  const activeIndex = view === 'list' ? 0 : 1
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: withSpring(activeIndex * TOGGLE_BTN.width, SPRINGS.nav) }],
+  }), [activeIndex])
 
   return (
-    <View style={styles.angler}>
-      {avatarUrl
-        ? <Image source={{ uri: avatarUrl }} style={styles.anglerAvatar} />
-        : <View style={styles.anglerFallback}><Text style={styles.anglerInitial}>{initial}</Text></View>
-      }
-      {displayName ? <Text style={styles.anglerName} numberOfLines={1}>{displayName}</Text> : null}
+    <View style={styles.toggleShadow}>
+      <View style={styles.toggleClip}>
+        <BlurView tint="dark" intensity={GLASS.navBlur} style={StyleSheet.absoluteFill} />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(22,22,24,0.6)' }]} />
+        <View style={styles.toggleRow}>
+          <Animated.View style={[styles.toggleThumb, thumbStyle]} />
+          {[
+            { key: 'list', Icon: ListView, label: 'List view' },
+            { key: 'map', Icon: MapPin, label: 'Map view' },
+          ].map(({ key, Icon, label }) => (
+            <Pressable
+              key={key}
+              style={styles.toggleBtn}
+              accessibilityRole="button"
+              accessibilityLabel={label}
+              onPress={() => {
+                if (view === key) return
+                Haptics.selectionAsync()
+                onChange(key)
+              }}
+            >
+              <Icon size={17} color={view === key ? '#fff' : 'rgba(255,255,255,0.7)'} strokeWidth={2} />
+            </Pressable>
+          ))}
+        </View>
+      </View>
     </View>
   )
 }
 
-function SheetBackground({ style }) {
-  return (
-    <BlurView
-      tint="systemMaterialDark"
-      intensity={85}
-      style={[style, styles.sheetBg]}
-    />
-  )
-}
-
-export default function MapScreen() {
+export default function HomeScreen() {
   const user = useAuthStore(s => s.user)
-  const profile = useAuthStore(s => s.profile)
   const groups = usePhotoStore(s => s.groups)
+  const photos = usePhotoStore(s => s.photos)
+  const profilesById = usePhotoStore(s => s.profilesById)
   const loading = usePhotoStore(s => s.loading)
   const loadingMore = usePhotoStore(s => s.loadingMore)
   const loadPhotos = usePhotoStore(s => s.loadPhotos)
   const loadMore = usePhotoStore(s => s.loadMore)
-  const addPhotos = usePhotoStore(s => s.addPhotos)
-  const removePhotos = usePhotoStore(s => s.removePhotos)
+  const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const reset = usePhotoStore(s => s.reset)
   const insets = useSafeAreaInsets()
-  const { height: screenHeight } = useWindowDimensions()
-  // Sheet container bottom = nav bar bottom edge (sheet slides *behind* the nav bar)
-  const sheetBottomInset = FLOAT_INSET
-  // Content padding so items don't hide behind the nav bar
-  const tabBarInset = TAB_BAR_TOTAL + 20
-  const cameraRef = useRef(null)
-  const sheetRef = useRef(null)
-  const [selected, setSelected] = useState(null)
-  const [sheetIndex, setSheetIndex] = useState(1)
-  const [addingPhotos, setAddingPhotos] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
-  const fitted = useRef(false)
 
-  // Snap heights measured from container bottom (= nav bar bottom edge)
-  const snapPoints = useMemo(
-    () => [
-      TAB_BAR_TOTAL + 20,  // handle peeks just above nav bar top
-      Math.max(100, Math.round(screenHeight * 0.65) - sheetBottomInset),
-      Math.max(100, Math.round(screenHeight * 0.90) - sheetBottomInset),
-    ],
-    [screenHeight, sheetBottomInset],
-  )
+  const cameraRef = useRef(null)
+  const fitted = useRef(false)
+  const [view, setView] = useState('list')
+  const [selectedGroup, setSelectedGroup] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const scrollHandler = useNavScrollHandler()
 
   useEffect(() => {
     if (!user) {
@@ -95,11 +93,26 @@ export default function MapScreen() {
     loadPhotos(user.id)
   }, [user?.id])
 
+  // Backfill weather/place/water-body meta for own photos missing it
+  useEffect(() => {
+    if (loading || !user || !photos.length) return
+    enrichPhotos(photos, user.id)
+  }, [loading, user?.id])
+
+  const onRefresh = useCallback(async () => {
+    if (!user) return
+    setRefreshing(true)
+    await loadPhotos(user.id)
+    setRefreshing(false)
+  }, [user?.id])
+
+  // Camera auto-fit on first load (dense-subset bounds, ignores GPS-less catches)
   useEffect(() => {
     if (fitted.current || groups.length === 0 || !cameraRef.current) return
     fitted.current = true
 
-    const leads = groups.map(g => g[0])
+    const leads = groups.map(g => g[0]).filter(c => c.lat != null && c.lng != null)
+    if (!leads.length) return
     const cLng = leads.reduce((s, c) => s + c.lng, 0) / leads.length
     const cLat = leads.reduce((s, c) => s + c.lat, 0) / leads.length
     const count = Math.max(1, Math.ceil(leads.length * BOUNDS_SUBSET_FRACTION))
@@ -113,14 +126,14 @@ export default function MapScreen() {
     cameraRef.current.fitBounds(
       [Math.max(...lngs) + BOUNDS_PADDING_DEG, Math.max(...lats) + BOUNDS_PADDING_DEG],
       [Math.min(...lngs) - BOUNDS_PADDING_DEG, Math.min(...lats) - BOUNDS_PADDING_DEG],
-      [60, 40, 360, 40],
+      [insets.top + 60, 40, NAV_CLEARANCE + 40, 40],
       0,
     )
   }, [groups])
 
   const geojson = useMemo(() => ({
     type: 'FeatureCollection',
-    features: groups.map(g => {
+    features: groups.filter(g => g[0].lat != null && g[0].lng != null).map(g => {
       const lead = g[0]
       return {
         type: 'Feature',
@@ -131,159 +144,58 @@ export default function MapScreen() {
     }),
   }), [groups])
 
-  const flyToWithSheet = useCallback((lng, lat) => {
-    const sheetHeight = screenHeight * 0.50
-    cameraRef.current?.setCamera({
-      centerCoordinate: [lng, lat],
-      animationDuration: 400,
-      padding: { paddingBottom: sheetHeight, paddingTop: 0, paddingLeft: 0, paddingRight: 0 },
-    })
-  }, [screenHeight])
+  const findGroup = useCallback((catchId, filename, userId) => (
+    catchId
+      ? groups.find(g => g[0].catchId === catchId)
+      : groups.find(g => g[0].filename === filename && g[0].user_id === userId)
+  ), [groups])
 
   const handleMarkerPress = useCallback((e) => {
     const props = e.features?.[0]?.properties
     if (!props) return
-    const group = props.catchId
-      ? groups.find(g => g[0].catchId === props.catchId)
-      : groups.find(g => g[0].filename === props.filename && g[0].user_id === props.userId)
+    const group = findGroup(props.catchId, props.filename, props.userId)
     if (group) {
-      setSelected(group[0])
-      flyToWithSheet(group[0].lng, group[0].lat)
-      sheetRef.current?.snapToIndex(1)
+      Haptics.selectionAsync()
+      setSelectedGroup(group)
+      if (group[0].lat != null) {
+        cameraRef.current?.setCamera({
+          centerCoordinate: [group[0].lng, group[0].lat],
+          animationDuration: 400,
+          padding: { paddingBottom: 260, paddingTop: 0, paddingLeft: 0, paddingRight: 0 },
+        })
+      }
     }
-  }, [groups, flyToWithSheet])
+  }, [findGroup])
 
-  const handleMapPress = useCallback(() => {
-    setSelected(null)
-    sheetRef.current?.snapToIndex(1)
+  const openFromCard = useCallback((group) => {
+    setSelectedGroup(group)
   }, [])
-
-  const selectFromList = useCallback((group) => {
-    const lead = group[0]
-    setSelected(lead)
-    flyToWithSheet(lead.lng, lead.lat)
-    sheetRef.current?.snapToIndex(1)
-  }, [flyToWithSheet])
-
-  const clearSelected = useCallback(() => {
-    setSelected(null)
-    sheetRef.current?.snapToIndex(1)
-  }, [])
-
-  const selectedGroup = useMemo(() => {
-    if (!selected) return null
-    return selected.catchId
-      ? groups.find(g => g[0].catchId === selected.catchId)
-      : groups.find(g => g[0].filename === selected.filename && g[0].user_id === selected.user_id)
-  }, [selected, groups])
-
-  const handleDelete = useCallback((group) => {
-    Alert.alert(
-      'Delete catch?',
-      'This will permanently remove this entry and all its photos.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const catchId = group[0].catchId
-            const photoIds = group.map(p => p.id).filter(Boolean)
-            try {
-              if (catchId) {
-                await supabase.from('photos').delete().eq('catch_id', catchId)
-                await supabase.from('catches').delete().eq('id', catchId)
-              } else if (photoIds.length) {
-                await supabase.from('photos').delete().in('id', photoIds)
-              }
-              const paths = group.map(p =>
-                p.storage_path ?? `${user.id}/${storageKey(p.filename)}`
-              )
-              await supabase.storage.from('catches').remove(paths)
-              removePhotos(group)
-              clearSelected()
-            } catch (err) {
-              console.error('[delete]', err)
-              Alert.alert('Error', 'Failed to delete. Please try again.')
-            }
-          },
-        },
-      ],
-    )
-  }, [user, removePhotos, clearSelected])
-
-  const handleAddPhotos = useCallback(async (groupLead) => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Allow photo library access to add photos.')
-      return
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
-      allowsMultipleSelection: true,
-      quality: 0.85,
-      exif: true,
-    })
-    if (result.canceled) return
-    setAddingPhotos(true)
-    try {
-      const photos = await addPhotosToGroup(result.assets, groupLead, user)
-      addPhotos(photos)
-    } catch (err) {
-      console.error('[addPhotos]', err)
-      Alert.alert('Upload failed', err.message || 'Please try again.')
-    } finally {
-      setAddingPhotos(false)
-    }
-  }, [user, addPhotos])
-
-  const renderCatchItem = useCallback(({ item: group }) => {
-    const lead = group[0]
-    const species = cleanSpecies(lead.species)
-    const locationStr = formatCatchLocation(lead.meta)
-    return (
-      <TouchableOpacity style={styles.item} onPress={() => selectFromList(group)} activeOpacity={0.7}>
-        <Image source={{ uri: photoUrl(lead.user_id, lead.filename, lead.storage_path) }} style={styles.thumb} />
-        <View style={styles.meta}>
-          <AnglerRow user={user} profile={profile} />
-          {species
-            ? <Text style={styles.species} numberOfLines={1}>{species}</Text>
-            : <Text style={styles.speciesEmpty} numberOfLines={1}>Unknown</Text>
-          }
-          {lead.time && <Text style={styles.datetime}>{formatDateShort(lead.time)}</Text>}
-          {locationStr && <Text style={styles.location}>{locationStr}</Text>}
-        </View>
-      </TouchableOpacity>
-    )
-  }, [user, selectFromList])
 
   const keyExtractor = useCallback((group) => group[0].catchId ?? `${group[0].user_id}/${group[0].filename}`, [])
 
-  // Derive display values from selectedGroup[0] so they update after edits via the store
-  const selectedLead = selectedGroup?.[0] ?? selected
-  const selectedSpecies = selectedLead ? cleanSpecies(selectedLead.species) : null
-  const selectedWeatherLocation = selectedLead ? (() => {
-    const w = selectedLead.meta?.weather
-    const loc = formatCatchLocation(selectedLead.meta)
-    const weatherStr = w?.temp != null && w?.condition ? `${w.temp}°F · ${w.condition}` : ''
-    if (weatherStr && loc) return `${weatherStr} · ${loc}`
-    return weatherStr || loc || null
-  })() : null
-  const selectedRod = selectedLead?.meta?.rod || null
-  const selectedFly = selectedLead?.meta?.fly || null
+  const renderItem = useCallback(({ item: group }) => (
+    <CatchCard
+      group={group}
+      profile={profilesById[group[0].user_id]}
+      isOwn={group[0].user_id === user?.id}
+      onPress={openFromCard}
+    />
+  ), [profilesById, user?.id, openFromCard])
+
+  const feedVisible = view === 'list'
 
   return (
     <View style={styles.container}>
+      {/* Map layer — always mounted */}
       <MapboxGL.MapView
-        style={styles.map}
+        style={StyleSheet.absoluteFill}
         styleURL={MAP_STYLE}
-        onPress={handleMapPress}
+        onPress={() => setSelectedGroup(null)}
       >
         <MapboxGL.Camera
           ref={cameraRef}
           defaultSettings={{ centerCoordinate: [-111.891, 40.760], zoomLevel: 11 }}
         />
-
         {!loading && (
           <MapboxGL.ShapeSource id="catches" shape={geojson} onPress={handleMarkerPress}>
             <MapboxGL.CircleLayer
@@ -299,243 +211,151 @@ export default function MapScreen() {
         )}
       </MapboxGL.MapView>
 
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#0891b2" />
-        </View>
-      )}
-
-      {/* Wrapper clips the sheet so it never renders below the nav bar */}
+      {/* Feed layer — hidden (not unmounted) in map view */}
       <View
-        style={[styles.sheetClip, { bottom: sheetBottomInset }]}
-        pointerEvents="box-none"
+        style={[styles.feedLayer, !feedVisible && styles.feedHidden]}
+        pointerEvents={feedVisible ? 'auto' : 'none'}
       >
-      <BottomSheet
-        ref={sheetRef}
-        index={1}
-        snapPoints={snapPoints}
-        backgroundComponent={SheetBackground}
-        handleIndicatorStyle={styles.sheetHandle}
-        onChange={(i) => { if (i >= 0) setSheetIndex(i) }}
-        enableOverDrag={false}
-      >
-        {selected ? (
-          <BottomSheetScrollView contentContainerStyle={[styles.detailContainer, { paddingBottom: tabBarInset }]}>
-            <View style={styles.detailImgWrap}>
-              <Image
-                source={{ uri: photoUrl(selected.user_id, selected.filename, selected.storage_path) }}
-                style={styles.detailImage}
-                resizeMode="cover"
-              />
-              <TouchableOpacity style={styles.imgBtnBack} onPress={clearSelected} hitSlop={4}>
-                <ArrowLeft width={16} height={16} color="#fff" strokeWidth={2} />
-              </TouchableOpacity>
-              {selected.user_id === user?.id && (
-                <TouchableOpacity style={styles.imgBtnEdit} onPress={() => setEditOpen(true)} hitSlop={4}>
-                  <EditPencil width={16} height={16} color="#fff" strokeWidth={2} />
-                </TouchableOpacity>
-              )}
-            </View>
-            <View style={styles.detailBody}>
-              {selected.user_id !== user?.id ? (
-                <TouchableOpacity activeOpacity={0.7} onPress={async () => {
-                  const { data } = await supabase.from('profiles').select('username').eq('id', selected.user_id).single()
-                  if (data?.username) router.push(`/user/${data.username}`)
-                }}>
-                  <AnglerRow user={user} profile={profile} />
-                </TouchableOpacity>
-              ) : (
-                <AnglerRow user={user} profile={profile} />
-              )}
-              <Text style={styles.detailTitle} numberOfLines={1}>
-                {selectedSpecies || '—'}
-              </Text>
-              {selected.time && (
-                <Text style={styles.detailMeta}>{formatDateFull(selected.time)}</Text>
-              )}
-              {selectedWeatherLocation && (
-                <Text style={styles.detailMeta}>{selectedWeatherLocation}</Text>
-              )}
-              {selectedRod && (
-                <Text style={styles.detailMeta}>{selectedRod}</Text>
-              )}
-              {selectedFly && (
-                <Text style={styles.detailMeta}>{selectedFly}</Text>
-              )}
-            </View>
-          </BottomSheetScrollView>
-        ) : (
-          <BottomSheetFlatList
-            data={groups}
-            keyExtractor={keyExtractor}
-            renderItem={renderCatchItem}
-            onEndReached={() => { if (user) loadMore(user.id) }}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={loadingMore
-              ? <ActivityIndicator size="small" color={C.muted} style={styles.loadMoreSpinner} />
-              : null
-            }
-            contentContainerStyle={[styles.listContent, {
-              paddingBottom: sheetIndex > 1 ? tabBarInset + 72 : tabBarInset,
-            }]}
-          />
-        )}
-
-        {sheetIndex > 1 && !selected && (
-          <View
-            pointerEvents="box-none"
-            style={[styles.mapFloatWrap, { bottom: TAB_BAR_TOTAL + 24 }]}
-          >
-            <TouchableOpacity
-              style={styles.mapFloatBtn}
-              onPress={() => sheetRef.current?.snapToIndex(0)}
-              activeOpacity={0.85}
-            >
-              <MapIcon width={14} height={14} color="#fff" strokeWidth={2} />
-              <Text style={styles.mapFloatBtnText}>Map</Text>
-            </TouchableOpacity>
+        <Animated.FlatList
+          data={groups}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.feedContent, {
+            paddingTop: insets.top + 12,
+            paddingBottom: NAV_CLEARANCE + insets.bottom,
+          }]}
+          ListHeaderComponent={<Text style={styles.wordmark}>HookSpot</Text>}
+          ListEmptyComponent={loading ? null : (
+            <Pressable style={styles.addCard} onPress={() => setUploadOpen(true)}>
+              <Plus color={C.cardMuted} size={28} strokeWidth={1.5} />
+              <Text style={styles.addCardText}>Add catches</Text>
+            </Pressable>
+          )}
+          ListFooterComponent={
+            loadingMore
+              ? <ActivityIndicator size="small" color={C.muted} style={styles.footerSpinner} />
+              : groups.length > 0 ? (
+                <Pressable style={styles.addCard} onPress={() => setUploadOpen(true)}>
+                  <Plus color={C.cardMuted} size={28} strokeWidth={1.5} />
+                  <Text style={styles.addCardText}>Add catches</Text>
+                </Pressable>
+              ) : null
+          }
+          onEndReached={() => { if (user) loadMore(user.id) }}
+          onEndReachedThreshold={0.3}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.muted} />
+          }
+        />
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color={C.accent} />
           </View>
         )}
-      </BottomSheet>
       </View>
 
-      <EditCatchModal
-        visible={editOpen}
-        group={selectedGroup}
-        onClose={() => setEditOpen(false)}
-        onSaved={() => {}}
-        onAddPhotos={() => handleAddPhotos(selected)}
-        addingPhotos={addingPhotos}
-        onDelete={() => {
-          setEditOpen(false)
-          selectedGroup && handleDelete(selectedGroup)
-        }}
-      />
+      {/* Wordmark overlay — fixed top-left in map view only */}
+      {!feedVisible && (
+        <Text style={[styles.wordmarkOverlay, { top: insets.top + 14 }]}>HookSpot</Text>
+      )}
 
+      {/* Fixed glass list/map toggle */}
+      <View style={[styles.toggleWrap, { top: insets.top + 10 }]}>
+        <ViewToggle view={view} onChange={setView} />
+      </View>
+
+      <CatchDetailSheet group={selectedGroup} onDismiss={() => setSelectedGroup(null)} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.surface },
+
+  feedLayer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: C.surface,
+  },
+  feedHidden: { opacity: 0 },
+  feedContent: {
+    paddingHorizontal: 16,
+    gap: 28,
+  },
+  wordmark: {
+    fontFamily: FONTS.display,
+    fontSize: 26,
+    color: '#fff',
+    marginBottom: -2, // gap covers the 26px web margin
+  },
+  wordmarkOverlay: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 5,
+    fontFamily: FONTS.display,
+    fontSize: 26,
+    color: '#fff',
+  },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
+  footerSpinner: { paddingVertical: 20 },
 
-  sheetClip: {
-    position: 'absolute',
-    top: 0,
-    left: FLOAT_INSET,
-    right: FLOAT_INSET,
-    // bottom set dynamically
-    overflow: 'hidden',
-    borderBottomLeftRadius: CARD_RADIUS,
-    borderBottomRightRadius: CARD_RADIUS,
-    // Specular highlight + shadow
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.18)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-  },
-  sheetBg: {
-    overflow: 'hidden',
-    borderTopLeftRadius: CARD_RADIUS,
-    borderTopRightRadius: CARD_RADIUS,
-  },
-  sheetHandle: { backgroundColor: 'rgba(255,255,255,0.2)', width: 40 },
-
-  // List
-  listContent: { paddingBottom: 32, paddingHorizontal: 20 },
-loadMoreSpinner: { paddingVertical: 20 },
-
-  item: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 16,
-    paddingVertical: 8,
-    paddingRight: 8,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  thumb: { width: 100, height: 100, borderRadius: 6, backgroundColor: C.border, flexShrink: 0 },
-  meta: { flex: 1, gap: 3, paddingTop: 2 },
-
-  // Angler row
-  angler: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  anglerAvatar: { width: 18, height: 18, borderRadius: 9 },
-  anglerFallback: {
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: C.border,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  anglerInitial: { color: C.muted, fontSize: 10, fontWeight: '700' },
-  anglerName: { fontFamily: 'RobotoCondensed_400Regular', fontSize: 16, color: C.muted },
-
-  species: { fontFamily: 'Roboto_700Bold', fontSize: 22, color: C.text },
-  speciesEmpty: { fontFamily: 'Roboto_400Regular', fontSize: 22, color: C.muted, fontStyle: 'italic' },
-  datetime: { fontFamily: 'RobotoMono_400Regular', fontSize: 14, color: C.muted },
-  location: { fontFamily: 'RobotoMono_400Regular', fontSize: 14, color: C.muted },
-
-  // Detail
-  detailContainer: { paddingBottom: 40 },
-  detailImgWrap: { marginHorizontal: 16, borderRadius: 10, overflow: 'hidden' },
-  detailImage: { aspectRatio: 4 / 3, width: '100%' },
-  imgBtnBack: {
-    position: 'absolute', top: 10, left: 10,
-    width: 44, height: 44, borderRadius: 8,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  imgBtnEdit: {
-    position: 'absolute', top: 10, right: 10,
-    width: 44, height: 44, borderRadius: 8,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  detailBody: { paddingHorizontal: 20, paddingTop: 14, gap: 4 },
-  detailTitle: { fontFamily: 'Roboto_700Bold', fontSize: 28, color: C.text },
-  detailMeta: { fontFamily: 'RobotoMono_400Regular', fontSize: 16, color: C.muted },
-  addPhotosBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    borderWidth: 1,
+  addCard: {
+    aspectRatio: 4 / 3,
+    borderRadius: RADII.card,
+    borderWidth: 1.5,
     borderColor: C.border,
-    alignSelf: 'flex-start',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
-  addPhotosBtnDisabled: { opacity: 0.4 },
-  addPhotosBtnText: { fontFamily: 'Roboto_400Regular', fontSize: 16, color: C.muted },
+  addCardText: {
+    fontFamily: FONTS.condensed,
+    fontSize: 13,
+    color: C.cardMuted,
+  },
 
-  // Floating map button
-  mapFloatWrap: {
+  toggleWrap: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 2,
+    right: 16,
+    zIndex: 5,
   },
-  mapFloatBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#2563eb',
-    borderRadius: 24,
-    paddingVertical: 12,
-    paddingHorizontal: 22,
+  toggleShadow: {
+    borderRadius: RADII.pill,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
     shadowRadius: 12,
   },
-  mapFloatBtnText: { fontFamily: 'Roboto_700Bold', fontSize: 16, color: '#fff' },
+  toggleClip: {
+    borderRadius: RADII.pill,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: GLASS.borderSoft,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    padding: 3,
+  },
+  toggleThumb: {
+    position: 'absolute',
+    top: 3,
+    left: 3,
+    width: TOGGLE_BTN.width,
+    height: TOGGLE_BTN.height,
+    borderRadius: RADII.pill,
+    backgroundColor: GLASS.thumb,
+  },
+  toggleBtn: {
+    width: TOGGLE_BTN.width,
+    height: TOGGLE_BTN.height,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 })

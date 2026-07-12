@@ -1,76 +1,35 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+// Own profile — native port of the web mobile UserProfilePage: contained
+// dither header card (avatar, name, bio, Catches/Followers/Following),
+// segmented Recent Activity / Stats, single-column catch cards. Settings via
+// ActionSheetIOS (native-better than the web dropdown); edit profile/gear stay
+// native pageSheet modals.
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import {
-  View, Text, Image, TouchableOpacity, Modal,
+  View, Text, Image, TouchableOpacity, Pressable, Modal,
   TextInput, ScrollView, StyleSheet, Alert, ActionSheetIOS,
-  Platform, Dimensions, ActivityIndicator, KeyboardAvoidingView,
-  useWindowDimensions,
+  Platform, ActivityIndicator, KeyboardAvoidingView,
 } from 'react-native'
+import Animated from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
-import { Group, Settings } from '../../components/icons.js'
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet'
+import * as Haptics from 'expo-haptics'
 import { BlurView } from 'expo-blur'
+import { Settings } from '../../components/icons.js'
 import { supabase } from '../../lib/supabase'
-import { C } from '../../lib/theme'
-import { photoUrl } from '../../lib/storage'
+import { C, GLASS, RADII, FONTS, SPRINGS, NAV_CLEARANCE } from '../../lib/theme'
 import { uploadAvatar } from '../../lib/upload'
-import { MeshBackground } from '../../components/MeshBackground'
-import { SearchModal } from '../../components/SearchModal'
+import { useNavScrollHandler } from '../../lib/navScroll'
+import { DitherMesh } from '../../components/DitherMesh'
 import { FollowListSheet } from '../../components/FollowListSheet'
 import { StatsCharts } from '../../components/StatsCharts'
+import { CatchCard } from '../../components/CatchCard'
+import { CatchDetailSheet } from '../../components/CatchDetailSheet'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
-import { FLOAT_INSET, TAB_BAR_TOTAL, CARD_RADIUS } from './_layout'
-import { formatDateFull, cleanSpecies, getDisplayName } from '../../lib/formatters'
+import { SegmentedTabs } from '../../components/SegmentedTabs'
+import { getDisplayName } from '../../lib/formatters'
 
-const PROFILE_BLOBS = [
-  { x: 58, y: 33, color: '#2563eb', dx: 0.8,  dy: 0.6,  offset: 0.0 },
-  { x: 27, y: 45, color: '#64748b', dx: 0.7,  dy: -0.8, offset: 1.3 },
-  { x: 74, y: 66, color: '#1A1953', dx: -0.6, dy: 0.5,  offset: 2.6 },
-  { x: 35, y: 67, color: '#a1a1aa', dx: 0.9,  dy: -0.7, offset: 3.9 },
-  { x: 31, y: 18, color: '#2c2c2e', dx: 0.6,  dy: 0.8,  offset: 5.2 },
-  { x: 15, y: 55, color: '#060a1a', dx: -0.5, dy: 0.6,  offset: 6.5 },
-]
-
-const { width: SCREEN_W } = Dimensions.get('window')
-const GRID_PAD = 16
-const GRID_GAP = 8
-const CARD_W = Math.floor((SCREEN_W - FLOAT_INSET * 2 - GRID_PAD * 2 - GRID_GAP) / 2)
-
-function StatBox({ label, value }) {
-  return (
-    <View style={styles.statBox}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  )
-}
-
-function CatchCard({ group }) {
-  const lead = group[0]
-  const uri = photoUrl(lead.user_id, lead.filename, lead.storage_path)
-  const species = cleanSpecies(lead.species)
-  const dateStr = lead.time ? formatDateFull(lead.time).split(' ·')[0] : null
-  return (
-    <View style={styles.catchCard}>
-      <Image source={{ uri }} style={styles.catchImg} resizeMode="cover" />
-      <View style={styles.catchMeta}>
-        {species ? <Text style={styles.catchSpecies} numberOfLines={1}>{species}</Text> : null}
-        {dateStr ? <Text style={styles.catchDate} numberOfLines={1}>{dateStr}</Text> : null}
-      </View>
-    </View>
-  )
-}
-
-function SheetBackground({ style }) {
-  return (
-    <BlurView
-      tint="systemMaterialDark"
-      intensity={85}
-      style={[style, styles.sheetBg]}
-    />
-  )
-}
+const PAGE_SIZE = 24
 
 export default function ProfileScreen() {
   const user = useAuthStore(s => s.user)
@@ -79,20 +38,9 @@ export default function ProfileScreen() {
   const profile = useAuthStore(s => s.profile)
   const setProfile = useAuthStore(s => s.setProfile)
   const groups = usePhotoStore(s => s.groups)
+  const profilesById = usePhotoStore(s => s.profilesById)
   const insets = useSafeAreaInsets()
-  const { height: screenHeight } = useWindowDimensions()
-
-  const sheetRef = useRef(null)
-  const tabBarInset = TAB_BAR_TOTAL + 20
-
-  const snapPoints = useMemo(
-    () => [
-      TAB_BAR_TOTAL + 20,
-      Math.max(100, Math.round(screenHeight * 0.65) - FLOAT_INSET),
-      Math.max(100, Math.round(screenHeight * 0.90) - FLOAT_INSET),
-    ],
-    [screenHeight],
-  )
+  const scrollHandler = useNavScrollHandler()
 
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? null)
   const [uploading, setUploading] = useState(false)
@@ -106,12 +54,17 @@ export default function ProfileScreen() {
   const [newRod, setNewRod] = useState('')
   const [newFly, setNewFly] = useState('')
   const [gearSaving, setGearSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('catches')
-  const [searchOpen, setSearchOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('Recent Activity')
   const [followerCount, setFollowerCount] = useState(null)
   const [followingCount, setFollowingCount] = useState(null)
   const [followListOpen, setFollowListOpen] = useState(false)
   const [followListTab, setFollowListTab] = useState('followers')
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [selectedGroup, setSelectedGroup] = useState(null)
+
+  useEffect(() => {
+    setAvatarUrl(profile?.avatar_url ?? null)
+  }, [profile?.avatar_url])
 
   const ownGroups = useMemo(() =>
     groups
@@ -119,29 +72,6 @@ export default function ProfileScreen() {
       .sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
     [groups, user?.id]
   )
-
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = now.getMonth()
-
-  const statsAll = ownGroups.length
-  const statsYear = useMemo(() =>
-    ownGroups.filter(g => g[0].time && new Date(g[0].time).getFullYear() === currentYear).length,
-    [ownGroups, currentYear]
-  )
-  const statsMonth = useMemo(() =>
-    ownGroups.filter(g => {
-      if (!g[0].time) return false
-      const d = new Date(g[0].time)
-      return d.getFullYear() === currentYear && d.getMonth() === currentMonth
-    }).length,
-    [ownGroups, currentYear, currentMonth]
-  )
-  const statsSpecies = useMemo(() => {
-    const seen = new Set()
-    ownGroups.forEach(g => g.forEach(p => { if (p.species) seen.add(p.species.toLowerCase()) }))
-    return seen.size
-  }, [ownGroups])
 
   const displayName = getDisplayName(user?.user_metadata) || 'Angler'
   const bio = user?.user_metadata?.bio ?? null
@@ -224,6 +154,7 @@ export default function ProfileScreen() {
   }, [user, ownGroups])
 
   const openSettings = useCallback(() => {
+    Haptics.selectionAsync()
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -277,125 +208,114 @@ export default function ProfileScreen() {
     setNewFly('')
   }
 
-  const TabHeader = useCallback(() => (
-    <View style={styles.sheetHeader}>
-      <View style={styles.tabRow}>
+  const openFollowList = useCallback((tab) => {
+    Haptics.selectionAsync()
+    setFollowListTab(tab)
+    setFollowListOpen(true)
+  }, [])
+
+  const visibleGroups = activeTab === 'Recent Activity' ? ownGroups.slice(0, visibleCount) : []
+
+  const renderItem = useCallback(({ item: group }) => (
+    <CatchCard
+      group={group}
+      profile={profilesById[group[0].user_id]}
+      isOwn
+      onPress={setSelectedGroup}
+    />
+  ), [profilesById])
+
+  const keyExtractor = useCallback((group) => group[0].catchId ?? `${group[0].user_id}/${group[0].filename}`, [])
+
+  const header = (
+    <View>
+      {/* Contained dither header card */}
+      <View style={styles.headerCard}>
+        <DitherMesh />
         <TouchableOpacity
-          style={[styles.tabPill, activeTab === 'catches' && styles.tabPillActive]}
-          onPress={() => setActiveTab('catches')}
-          activeOpacity={0.8}
+          style={styles.gearBtn}
+          onPress={openSettings}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
         >
-          <Text style={[styles.tabPillText, activeTab === 'catches' && styles.tabPillTextActive]}>
-            Catches
-          </Text>
+          <BlurView tint="dark" intensity={60} style={StyleSheet.absoluteFill} />
+          <Settings size={16} color="#fff" strokeWidth={2} />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabPill, activeTab === 'stats' && styles.tabPillActive]}
-          onPress={() => setActiveTab('stats')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.tabPillText, activeTab === 'stats' && styles.tabPillTextActive]}>
-            Stats
-          </Text>
-        </TouchableOpacity>
-      </View>
-      {activeTab === 'catches' && ownGroups.length > 0 && (
-        <Text style={styles.sectionLabel}>Recent Catches</Text>
-      )}
-    </View>
-  ), [activeTab, ownGroups.length])
 
-  return (
-    <View style={styles.container}>
-      {/* Full-screen animated mesh background */}
-      <MeshBackground blobs={PROFILE_BLOBS} bgColor={C.bg} />
-
-      {/* Search button */}
-      <TouchableOpacity
-        style={[styles.searchBtn, { top: insets.top + 12 }]}
-        onPress={() => setSearchOpen(true)}
-        hitSlop={12}
-      >
-        <Group width={20} height={20} color={C.text} strokeWidth={1.5} />
-      </TouchableOpacity>
-
-      {/* Settings button */}
-      <TouchableOpacity
-        style={[styles.settingsBtn, { top: insets.top + 12 }]}
-        onPress={openSettings}
-        hitSlop={12}
-      >
-        <Settings width={20} height={20} color={C.text} strokeWidth={1.5} />
-      </TouchableOpacity>
-
-      {/* Avatar, name, bio, stats — visible behind the sheet */}
-      <View style={[styles.profileContent, { paddingTop: insets.top + 56 }]}>
-        <TouchableOpacity style={styles.avatarWrap} onPress={pickAvatar} disabled={uploading}>
-          {avatarUrl
-            ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-            : (
-              <View style={styles.avatarFallback}>
-                <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
+        <View style={styles.headerInner}>
+          <TouchableOpacity onPress={pickAvatar} disabled={uploading} accessibilityLabel="Change profile photo">
+            {avatarUrl
+              ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+              : (
+                <View style={[styles.avatar, styles.avatarFallback]}>
+                  <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
+                </View>
+              )
+            }
+            {uploading && (
+              <View style={styles.avatarOverlay}>
+                <ActivityIndicator color="#fff" size="small" />
               </View>
-            )
-          }
-          {uploading && (
-            <View style={styles.avatarOverlay}>
-              <ActivityIndicator color={C.text} size="small" />
+            )}
+          </TouchableOpacity>
+          <Text style={styles.displayName}>{displayName}</Text>
+          {bio ? <Text style={styles.bio} numberOfLines={2}>{bio}</Text> : null}
+
+          <View style={styles.statsRow}>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{ownGroups.length}</Text>
+              <Text style={styles.statLabel}>Catches</Text>
             </View>
-          )}
-        </TouchableOpacity>
-        <Text style={styles.displayName}>{displayName}</Text>
-        {bio ? <Text style={styles.bio}>{bio}</Text> : null}
-        <View style={styles.statsRow}>
-          <StatBox label="Catches" value={statsAll} />
-          <View style={styles.statDivider} />
-          <StatBox label="Year" value={statsYear} />
-          <View style={styles.statDivider} />
-          <StatBox label="Month" value={statsMonth} />
-          <View style={styles.statDivider} />
-          <StatBox label="Species" value={statsSpecies} />
+            <Pressable style={styles.stat} onPress={() => openFollowList('followers')} accessibilityRole="button">
+              <Text style={styles.statValue}>{followerCount ?? '—'}</Text>
+              <Text style={styles.statLabel}>Followers</Text>
+            </Pressable>
+            <Pressable style={styles.stat} onPress={() => openFollowList('following')} accessibilityRole="button">
+              <Text style={styles.statValue}>{followingCount ?? '—'}</Text>
+              <Text style={styles.statLabel}>Following</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
 
-      {/* Glass sheet — same structure as map tab */}
-      <View
-        style={[styles.sheetClip, { bottom: FLOAT_INSET }]}
-        pointerEvents="box-none"
-      >
-        <BottomSheet
-          ref={sheetRef}
-          index={1}
-          snapPoints={snapPoints}
-          backgroundComponent={SheetBackground}
-          handleIndicatorStyle={styles.sheetHandle}
-          enableOverDrag={false}
-        >
-          <BottomSheetScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: tabBarInset }}
-          >
-            <TabHeader />
-            {activeTab === 'catches' ? (
-              ownGroups.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyText}>No catches yet</Text>
-                </View>
-              ) : (
-                <View style={styles.grid}>
-                  {ownGroups.map(group => (
-                    <CatchCard key={group[0].catchId ?? group[0].filename} group={group} />
-                  ))}
-                </View>
-              )
-            ) : (
-              <View style={{ paddingHorizontal: GRID_PAD }}>
-                <StatsCharts groups={ownGroups} />
-              </View>
-            )}
-          </BottomSheetScrollView>
-        </BottomSheet>
-      </View>
+      <SegmentedTabs
+        tabs={['Recent Activity', 'Stats']}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
+    </View>
+  )
+
+  return (
+    <View style={styles.page}>
+      <Animated.FlatList
+        data={visibleGroups}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingTop: insets.top + 8,
+          paddingBottom: NAV_CLEARANCE + insets.bottom,
+          paddingHorizontal: 12,
+          gap: 28,
+        }}
+        ListHeaderComponent={header}
+        ListEmptyComponent={activeTab === 'Recent Activity' ? (
+          <Text style={styles.emptyText}>No catches yet</Text>
+        ) : null}
+        ListFooterComponent={activeTab === 'Stats' ? (
+          <StatsCharts groups={ownGroups} />
+        ) : null}
+        onEndReached={() => {
+          if (activeTab === 'Recent Activity' && visibleCount < ownGroups.length) {
+            setVisibleCount(c => c + PAGE_SIZE)
+          }
+        }}
+        onEndReachedThreshold={0.4}
+      />
 
       {/* Edit Profile */}
       <Modal
@@ -519,138 +439,139 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      <SearchModal visible={searchOpen} onClose={() => setSearchOpen(false)} />
       <FollowListSheet
         visible={followListOpen}
         onClose={() => setFollowListOpen(false)}
         profileId={user?.id}
         initialTab={followListTab}
       />
+
+      <CatchDetailSheet group={selectedGroup} onDismiss={() => setSelectedGroup(null)} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  page: { flex: 1, backgroundColor: C.surface },
 
-  // Header icon buttons (top-right, over background)
-  settingsBtn: { position: 'absolute', right: 16, zIndex: 10, padding: 4 },
-  searchBtn: { position: 'absolute', right: 52, zIndex: 10, padding: 4 },
-
-  // Profile hero (behind the sheet)
-  profileContent: {
-    alignItems: 'center',
-    paddingHorizontal: 24,
+  // Dither header card
+  headerCard: {
+    borderRadius: RADII.sheet,
+    overflow: 'hidden',
+    marginBottom: 18,
   },
-  avatarWrap: { width: 88, height: 88, borderRadius: 44, marginBottom: 14 },
-  avatar: { width: 88, height: 88, borderRadius: 44 },
-  avatarFallback: {
-    width: 88, height: 88, borderRadius: 44,
-    backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center',
-  },
-  avatarInitial: { fontSize: 38, fontWeight: '600', color: C.text },
-  avatarOverlay: {
-    ...StyleSheet.absoluteFillObject, borderRadius: 44,
-    backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
-  },
-  displayName: { fontSize: 24, fontWeight: '700', color: C.text, textAlign: 'center', marginBottom: 6 },
-  bio: { fontSize: 15, color: C.muted, textAlign: 'center', lineHeight: 21, marginBottom: 18 },
-
-  // Stats row
-  statsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  statBox: { alignItems: 'center', paddingHorizontal: 18 },
-  statValue: { fontSize: 22, fontWeight: '700', color: C.text },
-  statLabel: { fontSize: 11, color: C.muted, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
-  statDivider: { width: 1, height: 28, backgroundColor: C.border },
-
-  // Sheet container (same as map)
-  sheetClip: {
+  gearBtn: {
     position: 'absolute',
-    top: 0,
-    left: FLOAT_INSET,
-    right: FLOAT_INSET,
+    top: 12,
+    left: 12,
+    zIndex: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     overflow: 'hidden',
-    borderBottomLeftRadius: CARD_RADIUS,
-    borderBottomRightRadius: CARD_RADIUS,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.18)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(22,22,24,0.4)',
   },
-  sheetBg: {
-    overflow: 'hidden',
-    borderTopLeftRadius: CARD_RADIUS,
-    borderTopRightRadius: CARD_RADIUS,
+  headerInner: {
+    alignItems: 'center',
+    paddingTop: 48,
+    paddingBottom: 26,
+    paddingHorizontal: 20,
   },
-  sheetHandle: { backgroundColor: 'rgba(255,255,255,0.2)', width: 40 },
-
-  // Sheet header (tab switcher)
-  sheetHeader: { paddingHorizontal: GRID_PAD, paddingTop: 4, paddingBottom: 4 },
-  tabRow: {
+  avatar: { width: 100, height: 100, borderRadius: 50 },
+  avatarFallback: {
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitial: { fontSize: 40, fontFamily: FONTS.sansSemiBold, color: '#fff' },
+  avatarOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  displayName: {
+    fontFamily: FONTS.condensedSemiBold,
+    fontSize: 20,
+    color: '#fff',
+    marginTop: 14,
+    textAlign: 'center',
+  },
+  bio: {
+    fontFamily: FONTS.sans,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  statsRow: {
     flexDirection: 'row',
-    backgroundColor: C.surface,
-    borderRadius: 10,
-    padding: 3,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: C.border,
+    justifyContent: 'center',
+    gap: 36,
+    marginTop: 22,
   },
-  tabPill: { flex: 1, paddingVertical: 7, borderRadius: 8, alignItems: 'center' },
-  tabPillActive: { backgroundColor: '#3a3a3c' },
-  tabPillText: { fontSize: 15, fontWeight: '500', color: C.muted },
-  tabPillTextActive: { color: C.text, fontWeight: '600' },
-  sectionLabel: {
-    fontSize: 13, fontWeight: '600', color: C.muted,
-    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10,
+  stat: { alignItems: 'center' },
+  statValue: {
+    fontFamily: FONTS.mono,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  statLabel: {
+    fontFamily: FONTS.condensed,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
   },
 
-  // Catch grid
-  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: GRID_PAD, gap: GRID_GAP },
-  catchCard: { width: CARD_W, borderRadius: 10, overflow: 'hidden', backgroundColor: C.surface },
-  catchImg: { width: CARD_W, height: CARD_W * 0.75, backgroundColor: C.border },
-  catchMeta: { padding: 8 },
-  catchSpecies: { fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 2 },
-  catchDate: { fontSize: 12, color: C.muted },
+  emptyText: {
+    fontFamily: FONTS.sans,
+    color: C.muted,
+    fontSize: 15,
+    textAlign: 'center',
+    paddingTop: 24,
+  },
 
-  // Empty state
-  emptyState: { alignItems: 'center', paddingTop: 32 },
-  emptyText: { color: C.muted, fontSize: 16 },
-
-  // Modal
+  // Modal (shared by edit profile/gear)
   modalContainer: { flex: 1, backgroundColor: C.bg },
   modalHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: C.border,
   },
-  modalCancel: { color: C.muted, fontSize: 18 },
-  modalTitle: { color: C.text, fontSize: 18, fontWeight: '600' },
-  modalSave: { color: C.accent, fontSize: 18, fontWeight: '600' },
+  modalCancel: { color: C.muted, fontSize: 17, fontFamily: FONTS.sans },
+  modalTitle: { color: C.text, fontSize: 17, fontFamily: FONTS.sansSemiBold },
+  modalSave: { color: C.accent, fontSize: 17, fontFamily: FONTS.sansSemiBold },
   disabledText: { opacity: 0.5 },
   modalBody: { padding: 16 },
   fieldLabel: {
-    fontSize: 12, fontWeight: '600', color: C.muted,
+    fontFamily: FONTS.condensedSemiBold,
+    fontSize: 12, color: C.muted,
     textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8,
   },
   input: {
     backgroundColor: C.surface, color: C.text, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 16,
+    fontFamily: FONTS.sans,
     borderWidth: 1, borderColor: C.border,
   },
   inputMultiline: { height: 100 },
 
-  // Gear
   gearItem: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface,
     borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
     marginBottom: 6, borderWidth: 1, borderColor: C.border,
   },
-  gearItemText: { flex: 1, color: C.text, fontSize: 16 },
+  gearItemText: { flex: 1, color: C.text, fontSize: 16, fontFamily: FONTS.sans },
   gearRemove: { color: C.muted, fontSize: 18, paddingLeft: 8 },
-  gearEmpty: { color: C.muted, fontSize: 16, marginBottom: 8, fontStyle: 'italic' },
+  gearEmpty: { color: C.muted, fontSize: 15, marginBottom: 8, fontStyle: 'italic', fontFamily: FONTS.sans },
   gearAddRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   addBtn: { backgroundColor: C.accent, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 12, justifyContent: 'center' },
-  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  addBtnText: { color: '#fff', fontFamily: FONTS.sansSemiBold, fontSize: 16 },
 })

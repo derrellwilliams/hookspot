@@ -7,11 +7,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import * as Location from 'expo-location'
+import * as Haptics from 'expo-haptics'
 import MapboxGL from '@rnmapbox/maps'
 import Constants from 'expo-constants'
 import { useAuthStore } from '../store/useAuthStore'
 import { usePhotoStore } from '../store/usePhotoStore'
 import { uploadCatch, parseGpsFromAsset } from '../lib/upload'
+import { enrichPhotos } from '../lib/enrich'
 import { supabase } from '../lib/supabase'
 import { C } from '../lib/theme'
 
@@ -151,6 +153,23 @@ export function UploadSheet() {
     setUploadOpen(false)
   }
 
+  // Web parity: append newly used rod/fly names to user_metadata gear lists
+  // (fire-and-forget — never blocks or fails the upload)
+  async function saveNewGear() {
+    try {
+      const newRod = rod.trim()
+      const newFly = fly.trim()
+      const metaUpdate = {}
+      if (newRod && !gearRods.includes(newRod)) metaUpdate.gear_rods = [...gearRods, newRod]
+      if (newFly && !gearFlies.includes(newFly)) metaUpdate.gear_flies = [...gearFlies, newFly]
+      if (!Object.keys(metaUpdate).length) return
+      const { data } = await supabase.auth.updateUser({ data: metaUpdate })
+      if (data?.user) useAuthStore.getState().setUser(data.user)
+    } catch (e) {
+      console.warn('[UploadSheet] gear save failed', e)
+    }
+  }
+
   async function runIdentify(base64Data) {
     if (!base64Data || !identifyUrl) return
     setIdentifying(true)
@@ -185,6 +204,9 @@ export function UploadSheet() {
         user
       )
       photos.forEach(p => addPhoto(p))
+      enrichPhotos(photos, user.id)
+      saveNewGear()
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       close()
     } catch (e) {
       console.error('[UploadSheet] upload failed', e)
