@@ -117,19 +117,6 @@
   border-radius: 50%;
 }
 
-.avatarSpinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 .hiddenInput {
   display: none;
 }
@@ -427,60 +414,6 @@
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-/* ── Skeleton loading ── */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.skeletonCard {
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--dark-surface);
-}
-
-.skeletonImg {
-  aspect-ratio: 1;
-  width: 100%;
-  background: linear-gradient(90deg, #1c1c20 25%, #222228 50%, #1c1c20 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2.2s ease-in-out infinite;
-}
-
-.skeletonMeta {
-  padding: 14px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: #3a3a3c;
-}
-
-.skeletonLine {
-  height: 13px;
-  border-radius: 4px;
-  width: 70%;
-  background: linear-gradient(90deg, #191919 25%, #1f1f23 50%, #191919 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2.2s ease-in-out infinite;
-}
-
-.skeletonLineShort {
-  height: 10px;
-  border-radius: 4px;
-  width: 45%;
-  background: linear-gradient(90deg, #191919 25%, #1f1f23 50%, #191919 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2.2s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skeletonImg, .skeletonLine, .skeletonLineShort {
-    animation: none;
-  }
 }
 
 /* ── Stats tab ── */

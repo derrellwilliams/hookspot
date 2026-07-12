@@ -6,6 +6,7 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { Xmark, MediaImage } from '../icons.js'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
+import { PixelFishLoader } from '../PixelFishLoader.jsx'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { useCanHover } from '../../hooks/useIsMobile.js'
@@ -298,7 +299,7 @@ export function UploadDialog() {
                           onDrop={onZoneDrop}
                         >
                           {loading ? (
-                            <div className={styles.spinner} />
+                            <PixelFishLoader variant="wave" size={64} />
                           ) : canHover ? (
                             <>
                               <MediaImage width={24} height={24} style={{ opacity: 0.4 }} />
@@ -375,7 +376,7 @@ export function UploadDialog() {
                               className={identifying ? styles.inputLoading : ''}
                               autoFocus
                             />
-                            {identifying && <div className={styles.inputSpinner} />}
+                            {identifying && <PixelFishLoader variant="wave" size={14} className={styles.inputSpinner} />}
                           </div>
                           <label>Rod</label>
                           <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="Select your rod" suggestions={prevRods} />

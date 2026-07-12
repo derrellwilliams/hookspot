@@ -198,24 +198,43 @@
   margin: 0;
 }
 
-.loadingCentered {
+/* ── Skeleton loading — sized off .imageWrap/.meta so placeholders match
+   real card height exactly ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeletonImg {
+  width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: linear-gradient(90deg, #1c1c20 25%, #222228 50%, #1c1c20 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
 }
 
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255,255,255,0.15);
-  border-top-color: rgba(255,255,255,0.6);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+.skeletonLine {
+  height: 15px;
+  border-radius: 4px;
+  width: 55%;
+  background: linear-gradient(90deg, #232326 25%, #2b2b30 50%, #232326 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.skeletonLineShort {
+  height: 11px;
+  border-radius: 3px;
+  width: 38%;
+  background: linear-gradient(90deg, #232326 25%, #2b2b30 50%, #232326 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonImg, .skeletonLine, .skeletonLineShort {
+    animation: none;
+  }
 }
 
 /* Small desktop/tablet viewports (above the mobile-web breakpoint): cards get

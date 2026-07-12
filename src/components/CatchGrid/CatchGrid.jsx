@@ -7,6 +7,23 @@ import { formatDateNumeric, cleanSpecies, formatCatchLocation, getDisplayName } 
 import { SPRING } from '../../lib/motion.js'
 import styles from './CatchGrid.module.css'
 
+const SKELETON_COUNT = 8
+
+function SkeletonCard() {
+  return (
+    <div className={styles.card}>
+      <div className={styles.imageWrap}>
+        <div className={styles.skeletonImg} />
+      </div>
+      <div className={styles.meta}>
+        <div className={styles.skeletonLine} />
+        <div className={styles.skeletonLineShort} />
+        <div className={styles.skeletonLineShort} />
+      </div>
+    </div>
+  )
+}
+
 const CatchCard = memo(function CatchCard({ group, index }) {
   const ref = useRef(null)
   const leadName = group[0].name
@@ -86,8 +103,8 @@ export function CatchGrid() {
 
   if (!photosInitialized) {
     return (
-      <div className={styles.loadingCentered}>
-        <div className={styles.spinner} />
+      <div className={styles.grid}>
+        {Array.from({ length: SKELETON_COUNT }, (_, i) => <SkeletonCard key={i} />)}
       </div>
     )
   }

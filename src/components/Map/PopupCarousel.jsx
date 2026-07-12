@@ -11,6 +11,7 @@ import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
 import { formatDateFull, cleanSpecies, cleanGear, formatCatchLocation } from '../../lib/formatters.js'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
+import { PixelFishLoader } from '../PixelFishLoader.jsx'
 import styles from './Map.module.css'
 
 // Static Images API can't render the Standard-based HookSpot style,
@@ -255,7 +256,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
                 title="Add photo to this catch"
               >
                 {addingPhoto
-                  ? <div className={styles.thumbAddSpinner} />
+                  ? <PixelFishLoader variant="wave" size={22} />
                   : <Plus width={22} height={22} />}
               </div>
             )}

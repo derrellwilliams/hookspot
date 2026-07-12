@@ -107,3 +107,44 @@
   gap: 12px;
 }
 
+/* Loading */
+.loaderRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.loaderCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 160px;
+  padding: 20px 12px;
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  border-radius: 10px;
+  min-height: 96px;
+  justify-content: center;
+}
+
+.loaderLabel {
+  font-size: 11px;
+  color: var(--dark-muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid rgba(255,255,255,0.15);
+  border-top-color: rgba(255,255,255,0.7);
+  border-radius: 50%;
+  animation: designSpin 0.75s linear infinite;
+}
+
+@keyframes designSpin {
+  to { transform: rotate(360deg); }
+}
+

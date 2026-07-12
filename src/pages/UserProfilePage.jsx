@@ -12,6 +12,7 @@ import { useIsMobile } from '../hooks/useIsMobile.js'
 import { groupPhotos } from '../lib/groupPhotos.js'
 import { renderStats } from '../stats.js'
 import { DitherMesh } from '../components/DitherMesh.jsx'
+import { PixelFishLoader } from '../components/PixelFishLoader.jsx'
 import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { FollowListDialog } from '../components/FollowListDialog/FollowListDialog.jsx'
@@ -532,7 +533,7 @@ export function UserProfilePage() {
                         ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
                         : <UserCircle width={28} height={28} className={styles.avatarPlaceholder} />
                     }
-                    {uploading && <div className={styles.avatarOverlay}><span className={styles.avatarSpinner} /></div>}
+                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
                   </button>
                   {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={8} height={8} /></div>}
                   <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
@@ -592,11 +593,14 @@ export function UserProfilePage() {
                 isOwnProfile && effectivePhotos.length === 0 && !photosInitialized ? (
                   <div className={`${styles.catchesGrid} ${styles.sheetCatchesGrid}`}>
                     {Array.from({ length: 6 }, (_, i) => (
-                      <div key={i} className={styles.skeletonCard}>
-                        <div className={styles.skeletonImg} />
-                        <div className={styles.skeletonMeta}>
-                          <div className={styles.skeletonLine} />
-                          <div className={styles.skeletonLineShort} />
+                      <div key={i} className={cardStyles.card}>
+                        <div className={cardStyles.imageWrap}>
+                          <div className={cardStyles.skeletonImg} />
+                        </div>
+                        <div className={cardStyles.meta}>
+                          <div className={cardStyles.skeletonLine} />
+                          <div className={cardStyles.skeletonLineShort} />
+                          <div className={cardStyles.skeletonLineShort} />
                         </div>
                       </div>
                     ))}
@@ -710,7 +714,7 @@ export function UserProfilePage() {
                               ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
                               : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
                           }
-                          {uploading && <div className={styles.avatarOverlay}><span className={styles.avatarSpinner} /></div>}
+                          {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
                         </button>
                       </div>
                     </div>
@@ -841,7 +845,7 @@ export function UserProfilePage() {
                         ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
                         : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
                     }
-                    {uploading && <div className={styles.avatarOverlay}><span className={styles.avatarSpinner} /></div>}
+                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
                   </button>
                   {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={10} height={10} /></div>}
                   <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
@@ -910,11 +914,14 @@ export function UserProfilePage() {
         {activeTab === 'profile' && (isOwnProfile && effectivePhotos.length === 0 && !photosInitialized ? (
           <div className={styles.catchesGrid}>
             {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className={styles.skeletonCard}>
-                <div className={styles.skeletonImg} />
-                <div className={styles.skeletonMeta}>
-                  <div className={styles.skeletonLine} />
-                  <div className={styles.skeletonLineShort} />
+              <div key={i} className={cardStyles.card}>
+                <div className={cardStyles.imageWrap}>
+                  <div className={cardStyles.skeletonImg} />
+                </div>
+                <div className={cardStyles.meta}>
+                  <div className={cardStyles.skeletonLine} />
+                  <div className={cardStyles.skeletonLineShort} />
+                  <div className={cardStyles.skeletonLineShort} />
                 </div>
               </div>
             ))}
@@ -1066,7 +1073,7 @@ export function UserProfilePage() {
                             ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
                             : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
                         }
-                        {uploading && <div className={styles.avatarOverlay}><span className={styles.avatarSpinner} /></div>}
+                        {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
                       </button>
                     </div>
                   </div>

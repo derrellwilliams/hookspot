@@ -1,0 +1,60 @@
+.svg {
+  color: var(--accent);
+  overflow: visible;
+  shape-rendering: crispEdges;
+}
+
+.pixel {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Wave: pixels idle as a dim silhouette, a bright accent chase sweeps
+   tail -> head on loop, each pixel phase-shifted off the same keyframes.
+   The plateau (13%-87%) is wide enough relative to the delay spread
+   (11 * 90ms = 990ms) that once the last pixel arrives, all 12 sit fully
+   lit together for a beat before fading back down as one. */
+.wave .pixel {
+  animation: pixelWave 2s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 90ms);
+}
+
+@keyframes pixelWave {
+  0%, 100% { opacity: 0.14; transform: scale(0.55); fill: currentColor; }
+  6% { opacity: 1; transform: scale(1.2); fill: #7fb2ff; }
+  13% { opacity: 1; transform: scale(1); fill: currentColor; }
+  87% { opacity: 1; transform: scale(1); fill: currentColor; }
+  100% { opacity: 0.14; transform: scale(0.55); fill: currentColor; }
+}
+
+/* Assemble: pixels pop in tail -> head, hold fully formed, then fade out
+   together — restarted from React so the group resets in sync. */
+.assemble .pixel {
+  opacity: 0;
+  transform: scale(0.3);
+  animation: pixelPop 420ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+@keyframes pixelPop {
+  0% { opacity: 0; transform: scale(0.3); fill: #7fb2ff; }
+  55% { opacity: 1; transform: scale(1.15); fill: #7fb2ff; }
+  100% { opacity: 1; transform: scale(1); fill: currentColor; }
+}
+
+.assemble.fading .pixel {
+  animation: pixelFadeOut 280ms ease forwards !important;
+  animation-delay: 0ms !important;
+}
+
+@keyframes pixelFadeOut {
+  to { opacity: 0; transform: scale(0.4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}

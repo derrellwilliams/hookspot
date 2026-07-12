@@ -339,7 +339,20 @@ export function SearchPage() {
                   <section>
                     <div className={styles.sectionLabel}>Catches</div>
                     {catchesLoading && catchGroups.length === 0 ? (
-                      <div className={styles.loadingRow}><div className={cardStyles.spinner} /></div>
+                      <div className={styles.catchesGrid}>
+                        {Array.from({ length: 6 }, (_, i) => (
+                          <div key={i} className={cardStyles.card}>
+                            <div className={cardStyles.imageWrap}>
+                              <div className={cardStyles.skeletonImg} />
+                            </div>
+                            <div className={cardStyles.meta}>
+                              <div className={cardStyles.skeletonLine} />
+                              <div className={cardStyles.skeletonLineShort} />
+                              <div className={cardStyles.skeletonLineShort} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <div className={styles.catchesGrid}>
                         {visibleCatches.map((group, i) => {

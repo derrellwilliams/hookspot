@@ -214,19 +214,6 @@
 }
 
 
-.spinner {
-  width: 28px;
-  height: 28px;
-  border: 2.5px solid rgba(255,255,255,0.15);
-  border-top-color: rgba(255,255,255,0.7);
-  border-radius: 50%;
-  animation: dropSpin 0.75s linear infinite;
-}
-
-@keyframes dropSpin {
-  to { transform: rotate(360deg); }
-}
-
 .inputWrap {
   position: relative;
 }
@@ -237,20 +224,10 @@
 
 .inputSpinner {
   position: absolute;
-  left: 10px;
+  left: 8px;
   top: 50%;
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--dark-border);
-  border-top-color: var(--dark-muted);
-  border-radius: 50%;
-  animation: inputSpin 0.75s linear infinite;
+  transform: translateY(-50%);
   pointer-events: none;
-}
-
-@keyframes inputSpin {
-  from { transform: translateY(-50%) rotate(0deg); }
-  to { transform: translateY(-50%) rotate(360deg); }
 }
 
 .actions {

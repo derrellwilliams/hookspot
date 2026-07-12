@@ -4,6 +4,7 @@ import { Xmark, EditPencil } from '../components/icons.js'
 import { tokens } from '../tokens.js'
 import { Button, Input } from '../components/ui/index.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
+import { PixelFishLoader } from '../components/PixelFishLoader.jsx'
 import styles from './DesignPage.module.css'
 import d from '../components/UploadDialog/UploadDialog.module.css'
 
@@ -112,6 +113,33 @@ export function DesignPage() {
         <Section label="Dialog">
           <Button variant="primary" onClick={() => setDialogOpen(true)}>Open dialog</Button>
           <DemoDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+        </Section>
+
+        <Section label="Loading">
+          <div className={styles.loaderRow}>
+            <div className={styles.loaderCard}>
+              <PixelFishLoader variant="wave" size={64} />
+              <span className={styles.loaderLabel}>Wave — ambient chase, loops forever</span>
+            </div>
+            <div className={styles.loaderCard}>
+              <PixelFishLoader variant="assemble" size={64} />
+              <span className={styles.loaderLabel}>Assemble — builds, holds, fades, repeats</span>
+            </div>
+            <div className={styles.loaderCard}>
+              <div className={styles.spinner} />
+              <span className={styles.loaderLabel}>Current — spinner</span>
+            </div>
+          </div>
+          <div className={styles.loaderRow} style={{ marginTop: 16 }}>
+            <div className={styles.loaderCard}>
+              <PixelFishLoader variant="wave" size={20} />
+              <span className={styles.loaderLabel}>Wave @ 20px (inline size)</span>
+            </div>
+            <div className={styles.loaderCard}>
+              <PixelFishLoader variant="assemble" size={20} />
+              <span className={styles.loaderLabel}>Assemble @ 20px (inline size)</span>
+            </div>
+          </div>
         </Section>
 
         <Section label="Toast">
