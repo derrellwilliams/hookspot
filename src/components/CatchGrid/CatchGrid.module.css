@@ -218,6 +218,14 @@
   to { transform: rotate(360deg); }
 }
 
+/* Small desktop/tablet viewports (above the mobile-web breakpoint): cards get
+   cramped at 2-up, so drop to a single column */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Mobile feed: one card per row, Instagram-style vertical rhythm */
 @media (max-width: 600px) {
   .grid {

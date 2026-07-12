@@ -941,9 +941,17 @@
 }
 
 /* ── Responsive ── */
+/* Small desktop/tablet viewports (above the mobile-web breakpoint): 3-up gets
+   cramped, so step down to 2 then 1 column as it narrows */
 @media (max-width: 900px) {
   .catchesGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .catchesGrid {
+    grid-template-columns: 1fr;
   }
 }
 
