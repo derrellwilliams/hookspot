@@ -84,13 +84,11 @@
 }
 
 .navGroup {
+  composes: glassSurface from '../../styles/shared.module.css';
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
   border-radius: 16px;
   pointer-events: auto;
 }

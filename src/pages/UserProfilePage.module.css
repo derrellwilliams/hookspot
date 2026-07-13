@@ -483,18 +483,15 @@
 }
 
 .dialogContent {
+  composes: glassSurface glassShadow from '../styles/shared.module.css';
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 400px;
   max-width: calc(100vw - 32px);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--glass-shadow);
   z-index: 2001;
   outline: none;
 }
@@ -607,18 +604,15 @@
 
 /* ── Gear dialog ── */
 .gearDialogContent {
+  composes: glassSurface glassShadow from '../styles/shared.module.css';
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 440px;
   max-width: calc(100vw - 32px);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--glass-shadow);
   z-index: 2001;
   outline: none;
 }
@@ -769,14 +763,11 @@
 }
 
 .catchDialogContent {
+  composes: glassSurface glassShadow from '../styles/shared.module.css';
   width: 812px;
   max-width: calc(100vw - 120px);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--glass-shadow);
 }
 
 .catchNavArrow {

@@ -280,14 +280,11 @@
 }
 
 .catchDialogContent {
+  composes: glassSurface glassShadow from '../styles/shared.module.css';
   width: 812px;
   max-width: calc(100vw - 120px);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--glass-shadow);
 }
 
 .catchNavArrow {

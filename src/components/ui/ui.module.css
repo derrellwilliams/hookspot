@@ -153,3 +153,28 @@
     font-size: 16px;
   }
 }
+
+/* Avatar — image with initials fallback. Size set via --avatar-size
+   (default 36px, matches the UserRow recipe this was extracted from). */
+.avatar {
+  width: var(--avatar-size, 36px);
+  height: var(--avatar-size, 36px);
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  width: var(--avatar-size, 36px);
+  height: var(--avatar-size, 36px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--avatar-size, 36px) * 0.389);
+  font-weight: 600;
+  font-family: var(--font-sans);
+  color: var(--dark-muted);
+  flex-shrink: 0;
+}

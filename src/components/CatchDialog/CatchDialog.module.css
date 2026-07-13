@@ -20,16 +20,13 @@
 }
 
 .content {
+  composes: glassSurface glassShadow from '../../styles/shared.module.css';
   /* Image matches the profile dialog's: 812px × 5/7 (the image's flex share
      there) — this dialog just drops the mini-map's 2/7 */
   width: 580px;
   max-width: calc(100vw - 120px);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--glass-shadow);
 }
 
 .navArrow {

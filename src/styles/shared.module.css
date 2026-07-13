@@ -1,0 +1,12 @@
+/* Glass surface recipe — sidebar, nav pill, dialogs, map popup.
+   Mirrors --glass-* custom properties in src/style.css. Compose this instead
+   of hand-copying the declarations; a change here reaches every consumer. */
+.glassSurface {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+}
+
+.glassShadow {
+  box-shadow: var(--glass-shadow);
+}

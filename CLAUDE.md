@@ -50,6 +50,7 @@
 - **Marker lifecycle**: Call `rebuildMarkers` only when necessary; use `identify.js` for batch processing outside React
 - **Design tokens**: Use CSS custom properties from `src/tokens.js` — no hardcoded hex values in `.module.css`
 - **Desktop isolation**: Mobile web changes go behind `@media (max-width: 600px)` / `useIsMobile()` guards; verify desktop (1440px) is untouched before committing
+- **Design system**: `/design` (`src/pages/DesignPage.jsx`) is the reference for desktop + mobile web components/styles — it must only render real components/CSS classes (imported), never hand-rolled copies, so it can't drift from production. Shared visual recipes live in one place and are composed, not hand-copied: glass surface → `composes: glassSurface from 'src/styles/shared.module.css'`; avatar-with-fallback → `<Avatar>` from `src/components/ui/`. When adding a new shared recipe, put it there and add it to `/design` in the same change.
 
 ## Supabase Constraints
 - **`user_metadata` must stay small** — it is embedded in the JWT on every request. Never store blobs, base64 data URLs, or large arrays here. Scalars only (display_name, bio, gear lists). Violations bloat the JWT past nginx's header buffer limit on the Storage API, causing silent 400 rejections on photo uploads while REST calls continue to work.
