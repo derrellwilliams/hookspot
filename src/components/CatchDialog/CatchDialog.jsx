@@ -6,6 +6,7 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { deletePhotos } from '../../lib/fileLoader.js'
 import { PopupCarousel } from '../Map/PopupCarousel.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
+import { sortByRecency } from '../../lib/groupPhotos.js'
 import { EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../../lib/motion.js'
 import styles from './CatchDialog.module.css'
 
@@ -18,10 +19,7 @@ export function CatchDialog() {
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
   const isMobile = useIsMobile()
 
-  const sorted = useMemo(
-    () => [...groups].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
-    [groups]
-  )
+  const sorted = useMemo(() => [...groups].sort(sortByRecency), [groups])
   const idx = activeGroup ? sorted.findIndex(g => g[0].name === activeGroup[0].name) : -1
 
   async function handleDelete(toDelete) {

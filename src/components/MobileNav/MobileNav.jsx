@@ -87,14 +87,14 @@ export function MobileNav() {
                   transition={stadiumSpring}
                 />
               )}
-              <motion.div
-                className={styles.iconWrap}
-                style={{ scale: iconScale }}
-                variants={iconVariants}
-                animate={isActive ? 'active' : 'inactive'}
-                transition={iconTransition}
-              >
-                <Icon width={24} height={24} strokeWidth={isActive ? 2.5 : 2} />
+              <motion.div className={styles.iconWrap} style={{ scale: iconScale }}>
+                <motion.div
+                  variants={iconVariants}
+                  animate={isActive ? 'active' : 'inactive'}
+                  transition={iconTransition}
+                >
+                  <Icon width={24} height={24} strokeWidth={isActive ? 2.5 : 2} />
+                </motion.div>
               </motion.div>
             </motion.button>
           )

@@ -57,6 +57,11 @@
   cursor: default;
 }
 
+.navArrow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Mobile: bottom sheet, same pattern as the search/profile catch dialogs */
 @media (max-width: 600px) {
   .positioner {

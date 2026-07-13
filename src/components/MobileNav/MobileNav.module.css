@@ -47,6 +47,12 @@
   color: #fff;
 }
 
+.tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+  border-radius: 999px;
+}
+
 /* Instagram's selected-tab stadium: fills the whole tab cell, hugging the
    bar's edges like IG (their bar has ~5px padding and cell-wide capsules) */
 .stadium {
@@ -85,4 +91,9 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.28),
     inset 0 -1px 0 rgba(255, 255, 255, 0.06),
     0 4px 16px rgba(0, 0, 0, 0.30);
+}
+
+.addBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

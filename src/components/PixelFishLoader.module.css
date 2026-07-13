@@ -21,7 +21,7 @@
 
 @keyframes pixelWave {
   0%, 100% { opacity: 0.14; transform: scale(0.55); fill: currentColor; }
-  6% { opacity: 1; transform: scale(1.2); fill: #7fb2ff; }
+  6% { opacity: 1; transform: scale(1.2); fill: var(--accent-bright); }
   13% { opacity: 1; transform: scale(1); fill: currentColor; }
   87% { opacity: 1; transform: scale(1); fill: currentColor; }
   100% { opacity: 0.14; transform: scale(0.55); fill: currentColor; }
@@ -37,8 +37,8 @@
 }
 
 @keyframes pixelPop {
-  0% { opacity: 0; transform: scale(0.3); fill: #7fb2ff; }
-  55% { opacity: 1; transform: scale(1.15); fill: #7fb2ff; }
+  0% { opacity: 0; transform: scale(0.3); fill: var(--accent-bright); }
+  55% { opacity: 1; transform: scale(1.15); fill: var(--accent-bright); }
   100% { opacity: 1; transform: scale(1); fill: currentColor; }
 }
 

@@ -6,6 +6,7 @@
 
 :root {
   --accent: #2563eb;
+  --accent-bright: #7fb2ff; /* PixelFishLoader flash highlight */
   --ios-blue: #0a84ff; /* iOS system blue (dark) — selected-control tint on glass */
   --radius: 8px;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* mirrors EASE_OUT in src/lib/motion.js */

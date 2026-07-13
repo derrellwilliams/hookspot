@@ -4,12 +4,13 @@ import { Plus } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { formatDateNumeric, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'
+import { sortByRecency } from '../../lib/groupPhotos.js'
 import { SPRING } from '../../lib/motion.js'
 import styles from './CatchGrid.module.css'
 
 const SKELETON_COUNT = 8
 
-function SkeletonCard() {
+export function SkeletonCard() {
   return (
     <div className={styles.card}>
       <div className={styles.imageWrap}>
@@ -96,10 +97,7 @@ export function CatchGrid() {
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
 
-  const sorted = useMemo(
-    () => [...groups].sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
-    [groups]
-  )
+  const sorted = useMemo(() => [...groups].sort(sortByRecency), [groups])
 
   if (!photosInitialized) {
     return (

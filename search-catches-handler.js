@@ -1,6 +1,7 @@
 import { serviceHeaders, sendJson } from './handler-utils.js'
 
-// Searches everyone's catch photos by species / rod / fly text and date range.
+// Searches everyone's catch photos by species / rod / fly / location (water body,
+// city, state) text and date range.
 // GET /api/search-catches?q=<text>&userId=<uuid>&mine=true|false&from=YYYY-MM-DD&to=YYYY-MM-DD
 // → { rows, profiles } (same shape as /api/photos)
 //
@@ -14,14 +15,19 @@ export function createSearchCatchesHandler(env) {
     const q = (url.searchParams.get('q') || '').replace(/[,()%]/g, '').trim()
     const userId = url.searchParams.get('userId')
     const mine = url.searchParams.get('mine') === 'true'
-    const from = url.searchParams.get('from')
-    const to = url.searchParams.get('to')
+    // from/to come from <input type="date">; reject anything that isn't a
+    // plain date so it can't break out of the and=() filter grammar below.
+    const isDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v)
+    const fromRaw = url.searchParams.get('from')
+    const toRaw = url.searchParams.get('to')
+    const from = isDate(fromRaw) ? fromRaw : null
+    const to = isDate(toRaw) ? toRaw : null
     if (!q && !from && !to) { sendJson(res, { rows: [], profiles: [] }); return }
     const headers = serviceHeaders(env)
     try {
       const params = ['select=*', 'order=time.desc', 'limit=300']
       if (q) {
-        params.push(`or=${encodeURIComponent(`(species.ilike.*${q}*,meta->>rod.ilike.*${q}*,meta->>fly.ilike.*${q}*)`)}`)
+        params.push(`or=${encodeURIComponent(`(species.ilike.*${q}*,meta->>rod.ilike.*${q}*,meta->>fly.ilike.*${q}*,meta->waterBody->>name.ilike.*${q}*,meta->location->>city.ilike.*${q}*,meta->location->>state.ilike.*${q}*)`)}`)
       }
       if (mine && userId) params.push(`user_id=eq.${encodeURIComponent(userId)}`)
       const timeFilters = []
@@ -39,6 +45,10 @@ export function createSearchCatchesHandler(env) {
         sendJson(res, { rows: [], profiles: [] })
         return
       }
+      // limit=300 above caps the primary match set; surface that to the client
+      // so it can tell the user results were truncated instead of implying
+      // there's nothing more to load.
+      const truncated = rows.length >= 300
 
       // Pull in sibling photos of matched catches so the carousel shows the
       // whole catch, not just the photo that matched the text filter.
@@ -66,7 +76,7 @@ export function createSearchCatchesHandler(env) {
       )
       if (!profilesRes.ok) throw new Error(`Supabase profiles error: ${profilesRes.status}`)
       const profiles = await profilesRes.json()
-      sendJson(res, { rows, profiles: Array.isArray(profiles) ? profiles : [] })
+      sendJson(res, { rows, profiles: Array.isArray(profiles) ? profiles : [], truncated })
     } catch (err) {
       console.error('[search-catches] error:', err.message)
       sendJson(res, { error: err.message }, 500)

@@ -34,6 +34,7 @@ export function FollowListDialog({ open, onClose, profileId, initialTab }) {
     if (!open || !profileId) return
     setLoading(true)
     setList([])
+    let stale = false
     ;(async () => {
       try {
         let data, error
@@ -44,6 +45,7 @@ export function FollowListDialog({ open, onClose, profileId, initialTab }) {
             .select('profiles!follower_id(id,username,display_name,avatar_url)')
             .eq('following_id', profileId)
           data = res.data; error = res.error
+          if (stale) return
           if (!error && data) setList(data.map(r => r.profiles).filter(Boolean))
         } else {
           // People profileId is following
@@ -52,6 +54,7 @@ export function FollowListDialog({ open, onClose, profileId, initialTab }) {
             .select('profiles!following_id(id,username,display_name,avatar_url)')
             .eq('follower_id', profileId)
           data = res.data; error = res.error
+          if (stale) return
           if (!error && data) setList(data.map(r => r.profiles).filter(Boolean))
         }
         if (error) {
@@ -59,16 +62,19 @@ export function FollowListDialog({ open, onClose, profileId, initialTab }) {
           const idsRes = activeTab === 'followers'
             ? await supabase.from('follows').select('follower_id').eq('following_id', profileId)
             : await supabase.from('follows').select('following_id').eq('follower_id', profileId)
+          if (stale) return
           const ids = (idsRes.data || []).map(r => r.follower_id || r.following_id)
           if (ids.length > 0) {
             const profilesRes = await supabase.from('profiles').select('id,username,display_name,avatar_url').in('id', ids)
+            if (stale) return
             setList(profilesRes.data || [])
           }
         }
       } finally {
-        setLoading(false)
+        if (!stale) setLoading(false)
       }
     })()
+    return () => { stale = true }
   }, [open, activeTab, profileId])
 
   function goToUser(username) {

@@ -5,6 +5,7 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import styles from './Map.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 import { MOBILE_QUERY } from '../../hooks/useIsMobile.js'
+import { sortByRecency } from '../../lib/groupPhotos.js'
 
 const MAP_CENTER = [-111.891, 40.760]
 const MAP_ZOOM = 11
@@ -190,9 +191,7 @@ export function MapView({ active }) {
       return
     }
 
-    const recent = [...groups]
-      .sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0))
-      .slice(0, INITIAL_FIT_COUNT)
+    const recent = [...groups].sort(sortByRecency).slice(0, INITIAL_FIT_COUNT)
 
     const points = recent.map(g => ({
       lng: avg(g.map(p => p.exif.longitude)),

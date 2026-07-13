@@ -7,7 +7,7 @@ import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { deletePhotos } from '../lib/fileLoader.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
-import { groupPhotos } from '../lib/groupPhotos.js'
+import { groupPhotos, mapPhotoRow } from '../lib/groupPhotos.js'
 import { Select } from '../components/ui/index.js'
 import { DitherMesh } from '../components/DitherMesh.jsx'
 import { UserRow } from '../components/UserRow/UserRow.jsx'
@@ -16,6 +16,7 @@ import { formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/for
 import { EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../lib/motion.js'
 import styles from './SearchPage.module.css'
 import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
+import { SkeletonCard } from '../components/CatchGrid/CatchGrid.jsx'
 
 const TABS = [
   { id: 'all', label: 'All' },
@@ -29,22 +30,14 @@ function groupShareId(group) {
   return String(group[0].catchId ?? group[0].name)
 }
 
-// Same row → photo mapping as UserProfilePage, plus id/storagePath (needed by
-// deletePhotos) and isOwn/ownerProfile (PopupCarousel edit gating + attribution).
+// Adds id/storagePath (needed by deletePhotos) and isOwn/ownerProfile
+// (PopupCarousel edit gating + attribution) on top of the shared row mapping.
 function mapRows(rows, profiles, myId) {
   const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
   return rows.map(row => ({
+    ...mapPhotoRow(row),
     id: row.id,
-    name: row.filename,
-    userId: row.user_id,
-    catchId: row.catch_id ?? null,
-    url: row.url,
     storagePath: row.storage_path ?? null,
-    time: row.time ? new Date(row.time).getTime() : null,
-    hasGps: row.lat != null && row.lng != null,
-    exif: row.lat != null && row.lng != null ? { latitude: row.lat, longitude: row.lng } : null,
-    species: row.species || undefined,
-    meta: row.meta || {},
     isOwn: row.user_id === myId,
     ownerProfile: profileMap[row.user_id] ?? null,
   }))
@@ -66,6 +59,7 @@ export function SearchPage() {
 
   const [userResults, setUserResults] = useState([])
   const [catchRows, setCatchRows] = useState([])
+  const [catchesTruncated, setCatchesTruncated] = useState(false)
   const [usersLoading, setUsersLoading] = useState(false)
   const [catchesLoading, setCatchesLoading] = useState(false)
 
@@ -97,6 +91,7 @@ export function SearchPage() {
     if (!hasCatchFilters) {
       setUserResults([])
       setCatchRows([])
+      setCatchesTruncated(false)
       setUsersLoading(false)
       setCatchesLoading(false)
       if (lastUrlQ.current !== '') {
@@ -124,6 +119,7 @@ export function SearchPage() {
           })
       } else {
         setUserResults([])
+        setUsersLoading(false)
       }
       setCatchesLoading(true)
       const params = new URLSearchParams()
@@ -136,12 +132,14 @@ export function SearchPage() {
         .then(res => res.json())
         .then(json => {
           setCatchRows(mapRows(json.rows || [], json.profiles, myUser?.id))
+          setCatchesTruncated(!!json.truncated)
           setCatchesLoading(false)
         })
         .catch(err => {
           if (err.name === 'AbortError') return
           console.error('[search] catches failed:', err)
           setCatchRows([])
+          setCatchesTruncated(false)
           setCatchesLoading(false)
         })
     }, 300)
@@ -266,7 +264,7 @@ export function SearchPage() {
             className={styles.input}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search anglers, species, flies, rods…"
+            placeholder="Search anglers, species, flies, rods, locations…"
             autoFocus
             autoComplete="off"
             spellCheck={false}
@@ -310,7 +308,7 @@ export function SearchPage() {
                       </svg>
                     </div>
                     <div className={styles.idleTitle}>Search HookSpot</div>
-                    <p className={styles.idleHint}>Find anglers by name, or catches by species, fly, rod, or date range.</p>
+                    <p className={styles.idleHint}>Find anglers by name, or catches by species, fly, rod, location, or date range.</p>
                   </div>
                 </div>
               </div>
@@ -340,18 +338,7 @@ export function SearchPage() {
                     <div className={styles.sectionLabel}>Catches</div>
                     {catchesLoading && catchGroups.length === 0 ? (
                       <div className={styles.catchesGrid}>
-                        {Array.from({ length: 6 }, (_, i) => (
-                          <div key={i} className={cardStyles.card}>
-                            <div className={cardStyles.imageWrap}>
-                              <div className={cardStyles.skeletonImg} />
-                            </div>
-                            <div className={cardStyles.meta}>
-                              <div className={cardStyles.skeletonLine} />
-                              <div className={cardStyles.skeletonLineShort} />
-                              <div className={cardStyles.skeletonLineShort} />
-                            </div>
-                          </div>
-                        ))}
+                        {Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} />)}
                       </div>
                     ) : (
                       <div className={styles.catchesGrid}>
@@ -396,6 +383,9 @@ export function SearchPage() {
                           <div ref={sentinelRef} className={styles.loadSentinel} />
                         )}
                       </div>
+                    )}
+                    {catchesTruncated && visibleCount >= catchGroups.length && (
+                      <div className={styles.emptyText}>Showing the first {catchGroups.length} matches — narrow your search to see more.</div>
                     )}
                   </section>
                 )}

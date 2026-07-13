@@ -4,6 +4,7 @@
 export const tokens = {
   // Colors
   accent: '#2563eb',
+  accentBright: '#7fb2ff', // PixelFishLoader flash highlight
   iosBlue: '#0a84ff', // iOS system blue (dark) — selected-control tint on glass
 
   // Dark UI

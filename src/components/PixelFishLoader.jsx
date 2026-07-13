@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useReducedMotion } from '../hooks/useIsMobile.js'
 import styles from './PixelFishLoader.module.css'
 
 // Same pixel-grid fish as SearchPage's idle icon, split into its 12 individual
@@ -44,8 +45,10 @@ function WaveFish({ size, className }) {
 function AssembleFish({ size, className }) {
   const [cycle, setCycle] = useState(0)
   const [fading, setFading] = useState(false)
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
+    if (reducedMotion) return
     const buildTime = PIXELS.length * PIXEL_DELAY + POP_DURATION
     const fadeStart = setTimeout(() => setFading(true), buildTime + HOLD)
     const reset = setTimeout(() => {
@@ -53,7 +56,7 @@ function AssembleFish({ size, className }) {
       setCycle(c => c + 1)
     }, buildTime + HOLD + FADE_OUT)
     return () => { clearTimeout(fadeStart); clearTimeout(reset) }
-  }, [cycle])
+  }, [cycle, reducedMotion])
 
   return (
     <svg

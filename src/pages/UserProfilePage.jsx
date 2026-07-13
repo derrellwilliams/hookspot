@@ -9,7 +9,7 @@ import { useAuthStore } from '../store/useAuthStore.js'
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { initPhotos, deletePhotos } from '../lib/fileLoader.js'
 import { useIsMobile } from '../hooks/useIsMobile.js'
-import { groupPhotos } from '../lib/groupPhotos.js'
+import { groupPhotos, sortByRecency, mapPhotoRow } from '../lib/groupPhotos.js'
 import { renderStats } from '../stats.js'
 import { DitherMesh } from '../components/DitherMesh.jsx'
 import { PixelFishLoader } from '../components/PixelFishLoader.jsx'
@@ -22,6 +22,7 @@ import { uploadAvatar } from '../lib/avatarUpload.js'
 import { SPRING, SPRING_TIGHT, SPRING_POP, EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../lib/motion.js'
 import styles from './UserProfilePage.module.css'
 import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
+import { SkeletonCard } from '../components/CatchGrid/CatchGrid.jsx'
 
 // Stable share identifier for a catch group; photos without a catches row
 // fall back to the lead photo's filename.
@@ -125,10 +126,12 @@ export function UserProfilePage() {
     setError(null)
     setFetchedProfile(null)
     setOtherPhotos([])
+    let stale = false
     ;(async () => {
       try {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles').select('*').eq('username', urlUsername).single()
+        if (stale) return
         if (profileError || !profileData) { setError('Profile not found'); return }
         setFetchedProfile(profileData)
         const [followResult, photosRes, followerRes, followingRes] = await Promise.all([
@@ -139,29 +142,22 @@ export function UserProfilePage() {
           supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
           supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
         ])
+        if (stale) return
         setFollowerCount(followerRes.count ?? 0)
         setFollowingCount(followingRes.count ?? 0)
         setIsFollowing(!!followResult.data)
         const { rows = [] } = await photosRes.json()
-        setOtherPhotos(rows.map(row => ({
-          name: row.filename,
-          userId: row.user_id,
-          catchId: row.catch_id ?? null,
-          url: row.url,
-          time: row.time ? new Date(row.time).getTime() : null,
-          hasGps: row.lat != null && row.lng != null,
-          exif: row.lat != null && row.lng != null ? { latitude: row.lat, longitude: row.lng } : null,
-          species: row.species || undefined,
-          meta: row.meta || {},
-          isOwn: false,
-        })))
+        if (stale) return
+        setOtherPhotos(rows.map(row => ({ ...mapPhotoRow(row), isOwn: false })))
       } catch (err) {
+        if (stale) return
         setError('Failed to load profile')
         console.error('[user-profile] load failed', err)
       } finally {
-        setLoading(false)
+        if (!stale) setLoading(false)
       }
     })()
+    return () => { stale = true }
   }, [authLoading, isAuthResolving, urlUsername, myUser?.id, isOwnProfile])
 
   useEffect(() => {
@@ -195,8 +191,8 @@ export function UserProfilePage() {
   const sentinelRef = useRef(null)
 
   const recentCatches = useMemo(
-    () => groupPhotos(effectivePhotos).sort((a, b) => (b[0].time ?? 0) - (a[0].time ?? 0)),
-    [effectivePhotos]
+    () => [...catchGroups].sort(sortByRecency),
+    [catchGroups]
   )
 
   const visibleCatches = useMemo(
@@ -475,516 +471,12 @@ export function UserProfilePage() {
   const avatarUrl = profile.avatar_url
   const bio = profile.bio
 
-  if (isMobile) {
-    return (
-      <div className={styles.pageMobile}>
-        <div className={styles.mobileScroll}>
-        {/* Contained profile header card with dither background */}
-        <div className={styles.mobileHeaderCard}>
-          <DitherMesh className={styles.headerMesh} aria-hidden="true" />
-          <div className={styles.headerGrain} aria-hidden="true" />
-
-          {isOwnProfile ? (
-            <div className={styles.mobileHeaderBtnsLeft}>
-              <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
-                <DropdownMenu.Trigger asChild>
-                  <Button variant="icon-sm" className={`${styles.headerIconBtn} ${styles.mobileIconBtn}`} aria-label="Profile settings">
-                    <Settings width={16} height={16} />
-                  </Button>
-                </DropdownMenu.Trigger>
-                <AnimatePresence>
-                  {settingsOpen && (
-                    <DropdownMenu.Portal forceMount>
-                      <DropdownMenu.Content forceMount sideOffset={6} align="start" asChild>
-                        <motion.div
-                          className={styles.dropdownContent}
-                          initial={{ opacity: 0, scale: 0.92, y: -6 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.92, y: -6 }}
-                          transition={SPRING_POP}
-                          style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
-                        >
-                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>Edit profile</DropdownMenu.Item>
-                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>Edit gear</DropdownMenu.Item>
-                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>Log out</DropdownMenu.Item>
-                        </motion.div>
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Portal>
-                  )}
-                </AnimatePresence>
-              </DropdownMenu.Root>
-            </div>
-          ) : (
-            <div className={styles.mobileHeaderBtns}>
-              <Button variant="secondary" onClick={isFollowing ? handleUnfollow : handleFollow} disabled={followLoading}>
-                {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
-              </Button>
-            </div>
-          )}
-
-          <div className={styles.mobileProfileInfo}>
-            <div className={styles.mobileAvatarWrap}>
-              {isOwnProfile ? (
-                <>
-                  <button className={styles.mobileAvatarBtn} onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-label="Change profile photo">
-                    {avatarUrl
-                      ? <img src={avatarUrl} alt={displayName || 'Profile'} className={styles.mobileAvatarImg} />
-                      : displayName
-                        ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
-                        : <UserCircle width={28} height={28} className={styles.avatarPlaceholder} />
-                    }
-                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
-                  </button>
-                  {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={8} height={8} /></div>}
-                  <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
-                </>
-              ) : (
-                avatarUrl
-                  ? <img src={avatarUrl} alt={displayName} className={styles.mobileAvatarImg} />
-                  : <div className={styles.mobileAvatarFallback}>{displayName?.[0]?.toUpperCase() ?? '?'}</div>
-              )}
-            </div>
-            <span className={styles.mobileDisplayName}>{displayName}</span>
-            {bio && <p className={styles.mobileBio}>{bio}</p>}
-            <div className={styles.headerStats}>
-              <div className={styles.headerStat}>
-                <span className={styles.headerStatNum}>{catchGroups.length}</span>
-                <span className={styles.headerStatLabel}>Catches</span>
-              </div>
-              <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
-                <span className={styles.headerStatNum}>{followerCount ?? 0}</span>
-                <span className={styles.headerStatLabel}>Followers</span>
-              </button>
-              <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
-                <span className={styles.headerStatNum}>{followingCount ?? 0}</span>
-                <span className={styles.headerStatLabel}>Following</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Segmented control: Recent Activity / Stats */}
-        <div className={styles.sheetTabBar}>
-              {[{ id: 'profile', label: 'Recent Activity' }, { id: 'stats', label: 'Stats' }].map(({ id, label }) => {
-                const isTabActive = activeTab === id
-                return (
-                  <motion.button
-                    key={id}
-                    className={`${styles.sheetTab} ${isTabActive ? styles.sheetTabActive : ''}`}
-                    onClick={() => setActiveTab(id)}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    {isTabActive && (
-                      <motion.div
-                        layoutId="profile-sheet-tab-indicator"
-                        className={styles.sheetTabIndicator}
-                        initial={false}
-                        transition={SPRING_TIGHT}
-                      />
-                    )}
-                    <span className={styles.tabLabel}>{label}</span>
-                  </motion.button>
-                )
-              })}
-            </div>
-
-            <div className={styles.mobileTabContent}>
-              {activeTab === 'profile' && (
-                isOwnProfile && effectivePhotos.length === 0 && !photosInitialized ? (
-                  <div className={`${styles.catchesGrid} ${styles.sheetCatchesGrid}`}>
-                    {Array.from({ length: 6 }, (_, i) => (
-                      <div key={i} className={cardStyles.card}>
-                        <div className={cardStyles.imageWrap}>
-                          <div className={cardStyles.skeletonImg} />
-                        </div>
-                        <div className={cardStyles.meta}>
-                          <div className={cardStyles.skeletonLine} />
-                          <div className={cardStyles.skeletonLineShort} />
-                          <div className={cardStyles.skeletonLineShort} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : recentCatches.length > 0 ? (
-                  <div className={`${styles.catchesGrid} ${styles.sheetCatchesGrid}`}>
-                    {visibleCatches.map((group, i) => {
-                      const lead = group.find(p => p.species) ?? group[0]
-                      const species = cleanSpecies(lead.species)
-                      const locationStr = formatCatchLocation(lead.meta)
-                      return (
-                        <motion.button
-                          key={group[0].name}
-                          className={cardStyles.card}
-                          onClick={() => setCatchPopupIdx(i)}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.25, ease: 'easeOut' }}
-                        >
-                          <div className={cardStyles.imageWrap}>
-                            <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
-                          </div>
-                          <div className={cardStyles.meta}>
-                            {species && <div className={cardStyles.species}>{species}</div>}
-                            {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
-                            {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
-                          </div>
-                        </motion.button>
-                      )
-                    })}
-                    {visibleCount < recentCatches.length && <div ref={sentinelRef} className={styles.loadSentinel} />}
-                  </div>
-                ) : null
-              )}
-
-              {activeTab === 'stats' && (
-                catchGroups.length > 0 ? (
-                  <div className={styles.grid}>
-                    <div className={styles.card}><div className={styles.cardLabel}>Catches per Month</div><div ref={monthlyRef} /></div>
-                    <div className={styles.card}><div className={styles.cardLabel}>Time of Day</div><div ref={hourlyRef} /></div>
-                    <div className={styles.card}><div className={styles.cardLabel}>Species</div><div ref={speciesRef} /></div>
-                    <div className={styles.card}><div className={styles.cardLabel}>Species by Month</div><div ref={speciesMonthlyRef} /></div>
-                    <div className={styles.card}><div className={styles.cardLabel}>Catches by Rod</div><div ref={rodsRef} /></div>
-                    <div className={styles.card}><div className={styles.cardLabel}>Catches by Fly</div><div ref={fliesRef} /></div>
-                    <div className={styles.card}><div className={styles.cardLabel}>Catches by Condition</div><div ref={weatherCondRef} /></div>
-                    <div className={styles.card}><div className={styles.cardLabel}>Catches by Temp</div><div ref={weatherTempRef} /></div>
-                  </div>
-                ) : (
-                  <div className={styles.emptyStats}>No catch data yet.</div>
-                )
-              )}
-            </div>
-        </div>
-
-        {/* Catch popup dialog */}
-        <Dialog.Root open={!!catchPopupGroup} onOpenChange={o => { if (!o) setCatchPopupIdx(null) }}>
-          <Dialog.Portal forceMount>
-            <AnimatePresence>
-              {catchPopupGroup && (
-                <>
-                  <Dialog.Overlay asChild>
-                    <motion.div className={styles.catchDialogBackdrop} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
-                  </Dialog.Overlay>
-                  <Dialog.Content className={styles.catchDialogPositioner} aria-describedby={undefined}>
-                    <Dialog.Title className={styles.srOnly}>Catch details</Dialog.Title>
-                    <motion.div
-                      className={styles.catchDialogContent}
-                      initial={{ y: '100%' }}
-                      animate={{ y: 0 }}
-                      exit={{ y: '100%', transition: { duration: 0.3, ease: EASE_DRAWER } }}
-                      transition={{ duration: 0.35, ease: EASE_DRAWER }}
-                    >
-                      <PopupCarousel
-                        key={catchPopupIdx}
-                        showMap={false}
-                        sheet
-                        initialGroup={catchPopupGroup}
-                        shareUrl={`${window.location.origin}/user/${profile.username}?catch=${encodeURIComponent(groupShareId(catchPopupGroup))}`}
-                        onClose={() => setCatchPopupIdx(null)}
-                        onDelete={handleCatchDelete}
-                      />
-                    </motion.div>
-                  </Dialog.Content>
-                </>
-              )}
-            </AnimatePresence>
-          </Dialog.Portal>
-        </Dialog.Root>
-
-        {isOwnProfile && (
-          <>
-            <FavoritePickerDialog
-              open={pickerSlot !== null}
-              current={pickerSlot !== null ? favorites[pickerSlot] : null}
-              onSelect={handleSelectFavorite}
-              onRemove={handleRemoveFavorite}
-              onClose={() => setPickerSlot(null)}
-            />
-            <Dialog.Root open={dialogOpen} onOpenChange={o => { if (!o) setDialogOpen(false) }}>
-              <Dialog.Portal>
-                <Dialog.Overlay className={styles.dialogBackdrop} />
-                <Dialog.Content className={styles.dialogContent} aria-describedby={undefined}>
-                  <Dialog.Title className={styles.dialogTitle}>Edit profile</Dialog.Title>
-                  <div className={styles.editForm}>
-                    <div className={styles.dialogAvatarRow}>
-                      <div className={styles.avatarWrap}>
-                        <button className={styles.avatarBtn} onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-label="Change profile photo" type="button">
-                          {avatarUrl
-                            ? <img src={avatarUrl} alt={displayName || 'Profile'} className={styles.avatarImg} />
-                            : displayName
-                              ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
-                              : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
-                          }
-                          {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
-                        </button>
-                      </div>
-                    </div>
-                    <input className={styles.editNameInput} value={editName} onChange={e => setEditName(e.target.value)} placeholder="What's your name?" maxLength={60} autoFocus />
-                    <textarea className={styles.editBioInput} value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="Tell us about yourself" maxLength={200} rows={4} />
-                  </div>
-                  <div className={styles.dialogFooter}>
-                    <button className={styles.cancelBtn} onClick={() => setDialogOpen(false)} disabled={saving}>Cancel</button>
-                    <button className={styles.saveBtn} onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
-                  </div>
-                </Dialog.Content>
-              </Dialog.Portal>
-            </Dialog.Root>
-
-            <Dialog.Root open={gearDialogOpen} onOpenChange={o => { if (!o) setGearDialogOpen(false) }}>
-              <Dialog.Portal>
-                <Dialog.Overlay className={styles.dialogBackdrop} />
-                <Dialog.Content className={styles.gearDialogContent} aria-describedby={undefined}>
-                  <Dialog.Title className={styles.dialogTitle}>Edit gear</Dialog.Title>
-                  <div className={styles.gearForm}>
-                    <div className={styles.gearSection}>
-                      <div className={styles.gearSectionLabel}>Rods</div>
-                      <div className={styles.gearList}>
-                        {editRods.length === 0 && <div className={styles.gearEmpty}>No rods added yet</div>}
-                        {editRods.map((rod, i) => (
-                          <div key={i} className={styles.gearItem}>
-                            <span className={styles.gearItemLabel}>{rod}</span>
-                            <button className={styles.gearItemRemove} type="button" aria-label="Remove" onClick={() => setEditRods(prev => prev.filter((_, j) => j !== i))}>×</button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className={styles.gearAddRow}>
-                        <input className={styles.gearAddInput} value={newRod} onChange={e => setNewRod(e.target.value)} onKeyDown={e => e.key === 'Enter' && addRod()} placeholder="Add a rod…" />
-                        <button className={styles.gearAddBtn} type="button" onClick={addRod}>Add</button>
-                      </div>
-                    </div>
-                    <div className={styles.gearSection}>
-                      <div className={styles.gearSectionLabel}>Flies</div>
-                      <div className={styles.gearList}>
-                        {editFlies.length === 0 && <div className={styles.gearEmpty}>No flies added yet</div>}
-                        {editFlies.map((fly, i) => (
-                          <div key={i} className={styles.gearItem}>
-                            <span className={styles.gearItemLabel}>{fly}</span>
-                            <button className={styles.gearItemRemove} type="button" aria-label="Remove" onClick={() => setEditFlies(prev => prev.filter((_, j) => j !== i))}>×</button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className={styles.gearAddRow}>
-                        <input className={styles.gearAddInput} value={newFly} onChange={e => setNewFly(e.target.value)} onKeyDown={e => e.key === 'Enter' && addFly()} placeholder="Add a fly…" />
-                        <button className={styles.gearAddBtn} type="button" onClick={addFly}>Add</button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.dialogFooter}>
-                    <button className={styles.cancelBtn} onClick={() => setGearDialogOpen(false)} disabled={gearSaving}>Cancel</button>
-                    <button className={styles.saveBtn} onClick={saveGear} disabled={gearSaving}>{gearSaving ? 'Saving…' : 'Save'}</button>
-                  </div>
-                </Dialog.Content>
-              </Dialog.Portal>
-            </Dialog.Root>
-          </>
-        )}
-
-        <FollowListDialog open={followListOpen} onClose={() => setFollowListOpen(false)} profileId={profile?.id} initialTab={followListTab} />
-      </div>
-    )
-  }
-
-  return (
-    <div className={styles.page}>
-      <aside className={styles.profilePane}>
-        {/* Profile header */}
-        <div className={styles.profileHeader}>
-          <DitherMesh className={styles.headerMesh} aria-hidden="true" />
-          <div className={styles.headerGrain} aria-hidden="true" />
-          <div className={styles.headerBtns}>
-            {isOwnProfile ? (
-              <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
-                <DropdownMenu.Trigger asChild>
-                  <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Profile settings">
-                    <Settings width={16} height={16} />
-                  </Button>
-                </DropdownMenu.Trigger>
-                <AnimatePresence>
-                  {settingsOpen && (
-                    <DropdownMenu.Portal forceMount>
-                      <DropdownMenu.Content forceMount sideOffset={6} align="start" asChild>
-                        <motion.div
-                          className={styles.dropdownContent}
-                          initial={{ opacity: 0, scale: 0.92, y: -6 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.92, y: -6 }}
-                          transition={SPRING_POP}
-                          style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
-                        >
-                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>Edit profile</DropdownMenu.Item>
-                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>Edit gear</DropdownMenu.Item>
-                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>Log out</DropdownMenu.Item>
-                        </motion.div>
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Portal>
-                  )}
-                </AnimatePresence>
-              </DropdownMenu.Root>
-            ) : (
-              <Button
-                variant="secondary"
-                onClick={isFollowing ? handleUnfollow : handleFollow}
-                disabled={followLoading}
-              >
-                {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
-              </Button>
-            )}
-          </div>
-          <div className={styles.headerLeft}>
-            <div className={styles.avatarWrap}>
-              {isOwnProfile ? (
-                <>
-                  <button
-                    className={styles.avatarBtn}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    aria-label="Change profile photo"
-                  >
-                    {avatarUrl
-                      ? <img src={avatarUrl} alt={displayName || 'Profile'} className={styles.avatarImg} />
-                      : displayName
-                        ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
-                        : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
-                    }
-                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
-                  </button>
-                  {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={10} height={10} /></div>}
-                  <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
-                </>
-              ) : (
-                avatarUrl
-                  ? <img src={avatarUrl} alt={displayName} className={styles.avatarImg} />
-                  : <div className={styles.avatarFallback}>{displayName?.[0]?.toUpperCase() ?? '?'}</div>
-              )}
-            </div>
-
-            <div className={styles.headerMid}>
-              <span className={styles.headerUsername}>{displayName}</span>
-              {bio && <p className={styles.headerBio}>{bio}</p>}
-              <div className={styles.headerStats}>
-                <div className={styles.headerStat}>
-                  <span className={styles.headerStatNum}>{catchGroups.length}</span>
-                  <span className={styles.headerStatLabel}>Catches</span>
-                </div>
-                <div className={styles.headerStatDivider} />
-                <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
-                  <span className={styles.headerStatNum}>{followerCount ?? 0}</span>
-                  <span className={styles.headerStatLabel}>Followers</span>
-                </button>
-                <div className={styles.headerStatDivider} />
-                <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
-                  <span className={styles.headerStatNum}>{followingCount ?? 0}</span>
-                  <span className={styles.headerStatLabel}>Following</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </aside>
-
-      <div className={styles.contentPane}>
-        {/* Tab bar */}
-        <div className={styles.tabBar}>
-          {[{ id: 'profile', label: 'Recent Activity' }, { id: 'stats', label: 'Stats' }].map(({ id, label }) => {
-            const isActive = activeTab === id
-            return (
-              <motion.button
-                key={id}
-                className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(id)}
-                whileHover={{ scale: 1.007 }}
-                whileTap={{ scale: 0.975 }}
-                transition={SPRING}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="tab-highlight"
-                    className={styles.tabHighlight}
-                    initial={false}
-                    transition={SPRING_TIGHT}
-                  />
-                )}
-                <span className={styles.tabLabel}>{label}</span>
-              </motion.button>
-            )
-          })}
-        </div>
-
-        {/* Profile tab */}
-        {activeTab === 'profile' && (isOwnProfile && effectivePhotos.length === 0 && !photosInitialized ? (
-          <div className={styles.catchesGrid}>
-            {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className={cardStyles.card}>
-                <div className={cardStyles.imageWrap}>
-                  <div className={cardStyles.skeletonImg} />
-                </div>
-                <div className={cardStyles.meta}>
-                  <div className={cardStyles.skeletonLine} />
-                  <div className={cardStyles.skeletonLineShort} />
-                  <div className={cardStyles.skeletonLineShort} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : recentCatches.length > 0 ? (
-          <div className={styles.catchesGrid}>
-            {visibleCatches.map((group, i) => {
-              const lead = group.find(p => p.species) ?? group[0]
-              const species = cleanSpecies(lead.species)
-              const locationStr = formatCatchLocation(lead.meta)
-              return (
-                <motion.button
-                  key={group[0].name}
-                  className={cardStyles.card}
-                  onClick={() => setCatchPopupIdx(i)}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                >
-                  <div className={cardStyles.imageWrap}>
-                    <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
-                  </div>
-                  <div className={cardStyles.meta}>
-                    {species && <div className={cardStyles.species}>{species}</div>}
-                    {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
-                    {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
-                  </div>
-                </motion.button>
-              )
-            })}
-            {visibleCount < recentCatches.length && (
-              <div ref={sentinelRef} className={styles.loadSentinel} />
-            )}
-          </div>
-        ) : null)}
-
-        {/* Stats tab */}
-        {activeTab === 'stats' && (
-          catchGroups.length > 0 ? (
-            <>
-              <div className={styles.grid}>
-                <div className={styles.card}><div className={styles.cardLabel}>Catches per Month</div><div ref={monthlyRef} /></div>
-                <div className={styles.card}><div className={styles.cardLabel}>Time of Day</div><div ref={hourlyRef} /></div>
-                <div className={styles.row2}>
-                  <div className={styles.card}><div className={styles.cardLabel}>Species</div><div ref={speciesRef} /></div>
-                  <div className={styles.card}><div className={styles.cardLabel}>Species by Month</div><div ref={speciesMonthlyRef} /></div>
-                </div>
-                <div className={styles.row2}>
-                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Rod</div><div ref={rodsRef} /></div>
-                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Fly</div><div ref={fliesRef} /></div>
-                </div>
-                <div className={styles.row2}>
-                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Condition</div><div ref={weatherCondRef} /></div>
-                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Temperature</div><div ref={weatherTempRef} /></div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className={styles.emptyStats}>No catch data yet.</div>
-          )
-        )}
-      </div>
-
+  // Catch popup, edit-profile, edit-gear, favorite-picker and follow-list
+  // dialogs are identical on mobile and desktop — CatchDialog's own isMobile
+  // checks handle the sheet-vs-centered presentation, so one shared block
+  // covers both layouts below instead of two copies drifting apart.
+  const sharedDialogs = (
+    <>
       <Dialog.Root open={!!catchPopupGroup} onOpenChange={o => { if (!o) setCatchPopupIdx(null) }}>
         <Dialog.Portal forceMount>
           <AnimatePresence>
@@ -1155,6 +647,375 @@ export function UserProfilePage() {
         profileId={profile?.id}
         initialTab={followListTab}
       />
+    </>
+  )
+
+  if (isMobile) {
+    return (
+      <div className={styles.pageMobile}>
+        <div className={styles.mobileScroll}>
+        {/* Contained profile header card with dither background */}
+        <div className={styles.mobileHeaderCard}>
+          <DitherMesh className={styles.headerMesh} aria-hidden="true" />
+          <div className={styles.headerGrain} aria-hidden="true" />
+
+          {isOwnProfile ? (
+            <div className={styles.mobileHeaderBtnsLeft}>
+              <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <DropdownMenu.Trigger asChild>
+                  <Button variant="icon-sm" className={`${styles.headerIconBtn} ${styles.mobileIconBtn}`} aria-label="Profile settings">
+                    <Settings width={16} height={16} />
+                  </Button>
+                </DropdownMenu.Trigger>
+                <AnimatePresence>
+                  {settingsOpen && (
+                    <DropdownMenu.Portal forceMount>
+                      <DropdownMenu.Content forceMount sideOffset={6} align="start" asChild>
+                        <motion.div
+                          className={styles.dropdownContent}
+                          initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                          transition={SPRING_POP}
+                          style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
+                        >
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>Edit profile</DropdownMenu.Item>
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>Edit gear</DropdownMenu.Item>
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>Log out</DropdownMenu.Item>
+                        </motion.div>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  )}
+                </AnimatePresence>
+              </DropdownMenu.Root>
+            </div>
+          ) : (
+            <div className={styles.mobileHeaderBtns}>
+              <Button variant="secondary" onClick={isFollowing ? handleUnfollow : handleFollow} disabled={followLoading}>
+                {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
+              </Button>
+            </div>
+          )}
+
+          <div className={styles.mobileProfileInfo}>
+            <div className={styles.mobileAvatarWrap}>
+              {isOwnProfile ? (
+                <>
+                  <button className={styles.mobileAvatarBtn} onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-label="Change profile photo">
+                    {avatarUrl
+                      ? <img src={avatarUrl} alt={displayName || 'Profile'} className={styles.mobileAvatarImg} />
+                      : displayName
+                        ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
+                        : <UserCircle width={28} height={28} className={styles.avatarPlaceholder} />
+                    }
+                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
+                  </button>
+                  {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={8} height={8} /></div>}
+                  <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
+                </>
+              ) : (
+                avatarUrl
+                  ? <img src={avatarUrl} alt={displayName} className={styles.mobileAvatarImg} />
+                  : <div className={styles.mobileAvatarFallback}>{displayName?.[0]?.toUpperCase() ?? '?'}</div>
+              )}
+            </div>
+            <span className={styles.mobileDisplayName}>{displayName}</span>
+            {bio && <p className={styles.mobileBio}>{bio}</p>}
+            <div className={styles.headerStats}>
+              <div className={styles.headerStat}>
+                <span className={styles.headerStatNum}>{catchGroups.length}</span>
+                <span className={styles.headerStatLabel}>Catches</span>
+              </div>
+              <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
+                <span className={styles.headerStatNum}>{followerCount ?? 0}</span>
+                <span className={styles.headerStatLabel}>Followers</span>
+              </button>
+              <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
+                <span className={styles.headerStatNum}>{followingCount ?? 0}</span>
+                <span className={styles.headerStatLabel}>Following</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Segmented control: Recent Activity / Stats */}
+        <div className={styles.sheetTabBar}>
+              {[{ id: 'profile', label: 'Recent Activity' }, { id: 'stats', label: 'Stats' }].map(({ id, label }) => {
+                const isTabActive = activeTab === id
+                return (
+                  <motion.button
+                    key={id}
+                    className={`${styles.sheetTab} ${isTabActive ? styles.sheetTabActive : ''}`}
+                    onClick={() => setActiveTab(id)}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {isTabActive && (
+                      <motion.div
+                        layoutId="profile-sheet-tab-indicator"
+                        className={styles.sheetTabIndicator}
+                        initial={false}
+                        transition={SPRING_TIGHT}
+                      />
+                    )}
+                    <span className={styles.tabLabel}>{label}</span>
+                  </motion.button>
+                )
+              })}
+            </div>
+
+            <div className={styles.mobileTabContent}>
+              {activeTab === 'profile' && (
+                isOwnProfile && effectivePhotos.length === 0 && !photosInitialized ? (
+                  <div className={`${styles.catchesGrid} ${styles.sheetCatchesGrid}`}>
+                    {Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} />)}
+                  </div>
+                ) : recentCatches.length > 0 ? (
+                  <div className={`${styles.catchesGrid} ${styles.sheetCatchesGrid}`}>
+                    {visibleCatches.map((group, i) => {
+                      const lead = group.find(p => p.species) ?? group[0]
+                      const species = cleanSpecies(lead.species)
+                      const locationStr = formatCatchLocation(lead.meta)
+                      return (
+                        <motion.button
+                          key={group[0].name}
+                          className={cardStyles.card}
+                          onClick={() => setCatchPopupIdx(i)}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.25, ease: 'easeOut' }}
+                        >
+                          <div className={cardStyles.imageWrap}>
+                            <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
+                          </div>
+                          <div className={cardStyles.meta}>
+                            {species && <div className={cardStyles.species}>{species}</div>}
+                            {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
+                            {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
+                          </div>
+                        </motion.button>
+                      )
+                    })}
+                    {visibleCount < recentCatches.length && <div ref={sentinelRef} className={styles.loadSentinel} />}
+                  </div>
+                ) : null
+              )}
+
+              {activeTab === 'stats' && (
+                catchGroups.length > 0 ? (
+                  <div className={styles.grid}>
+                    <div className={styles.card}><div className={styles.cardLabel}>Catches per Month</div><div ref={monthlyRef} /></div>
+                    <div className={styles.card}><div className={styles.cardLabel}>Time of Day</div><div ref={hourlyRef} /></div>
+                    <div className={styles.card}><div className={styles.cardLabel}>Species</div><div ref={speciesRef} /></div>
+                    <div className={styles.card}><div className={styles.cardLabel}>Species by Month</div><div ref={speciesMonthlyRef} /></div>
+                    <div className={styles.card}><div className={styles.cardLabel}>Catches by Rod</div><div ref={rodsRef} /></div>
+                    <div className={styles.card}><div className={styles.cardLabel}>Catches by Fly</div><div ref={fliesRef} /></div>
+                    <div className={styles.card}><div className={styles.cardLabel}>Catches by Condition</div><div ref={weatherCondRef} /></div>
+                    <div className={styles.card}><div className={styles.cardLabel}>Catches by Temp</div><div ref={weatherTempRef} /></div>
+                  </div>
+                ) : (
+                  <div className={styles.emptyStats}>No catch data yet.</div>
+                )
+              )}
+            </div>
+        </div>
+
+        {sharedDialogs}
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.page}>
+      <aside className={styles.profilePane}>
+        {/* Profile header */}
+        <div className={styles.profileHeader}>
+          <DitherMesh className={styles.headerMesh} aria-hidden="true" />
+          <div className={styles.headerGrain} aria-hidden="true" />
+          <div className={styles.headerBtns}>
+            {isOwnProfile ? (
+              <DropdownMenu.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <DropdownMenu.Trigger asChild>
+                  <Button variant="icon-sm" className={styles.headerIconBtn} aria-label="Profile settings">
+                    <Settings width={16} height={16} />
+                  </Button>
+                </DropdownMenu.Trigger>
+                <AnimatePresence>
+                  {settingsOpen && (
+                    <DropdownMenu.Portal forceMount>
+                      <DropdownMenu.Content forceMount sideOffset={6} align="start" asChild>
+                        <motion.div
+                          className={styles.dropdownContent}
+                          initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                          transition={SPRING_POP}
+                          style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
+                        >
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openDialog}>Edit profile</DropdownMenu.Item>
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={openGearDialog}>Edit gear</DropdownMenu.Item>
+                          <DropdownMenu.Item className={styles.dropdownItem} onSelect={signOut}>Log out</DropdownMenu.Item>
+                        </motion.div>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  )}
+                </AnimatePresence>
+              </DropdownMenu.Root>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={isFollowing ? handleUnfollow : handleFollow}
+                disabled={followLoading}
+              >
+                {followLoading ? '…' : isFollowing ? 'Unfollow' : 'Follow'}
+              </Button>
+            )}
+          </div>
+          <div className={styles.headerLeft}>
+            <div className={styles.avatarWrap}>
+              {isOwnProfile ? (
+                <>
+                  <button
+                    className={styles.avatarBtn}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    aria-label="Change profile photo"
+                  >
+                    {avatarUrl
+                      ? <img src={avatarUrl} alt={displayName || 'Profile'} className={styles.avatarImg} />
+                      : displayName
+                        ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
+                        : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
+                    }
+                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
+                  </button>
+                  {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={10} height={10} /></div>}
+                  <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
+                </>
+              ) : (
+                avatarUrl
+                  ? <img src={avatarUrl} alt={displayName} className={styles.avatarImg} />
+                  : <div className={styles.avatarFallback}>{displayName?.[0]?.toUpperCase() ?? '?'}</div>
+              )}
+            </div>
+
+            <div className={styles.headerMid}>
+              <span className={styles.headerUsername}>{displayName}</span>
+              {bio && <p className={styles.headerBio}>{bio}</p>}
+              <div className={styles.headerStats}>
+                <div className={styles.headerStat}>
+                  <span className={styles.headerStatNum}>{catchGroups.length}</span>
+                  <span className={styles.headerStatLabel}>Catches</span>
+                </div>
+                <div className={styles.headerStatDivider} />
+                <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('followers'); setFollowListOpen(true) }}>
+                  <span className={styles.headerStatNum}>{followerCount ?? 0}</span>
+                  <span className={styles.headerStatLabel}>Followers</span>
+                </button>
+                <div className={styles.headerStatDivider} />
+                <button className={`${styles.headerStat} ${styles.headerStatBtn}`} onClick={() => { setFollowListTab('following'); setFollowListOpen(true) }}>
+                  <span className={styles.headerStatNum}>{followingCount ?? 0}</span>
+                  <span className={styles.headerStatLabel}>Following</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <div className={styles.contentPane}>
+        {/* Tab bar */}
+        <div className={styles.tabBar}>
+          {[{ id: 'profile', label: 'Recent Activity' }, { id: 'stats', label: 'Stats' }].map(({ id, label }) => {
+            const isActive = activeTab === id
+            return (
+              <motion.button
+                key={id}
+                className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab(id)}
+                whileHover={{ scale: 1.007 }}
+                whileTap={{ scale: 0.975 }}
+                transition={SPRING}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="tab-highlight"
+                    className={styles.tabHighlight}
+                    initial={false}
+                    transition={SPRING_TIGHT}
+                  />
+                )}
+                <span className={styles.tabLabel}>{label}</span>
+              </motion.button>
+            )
+          })}
+        </div>
+
+        {/* Profile tab */}
+        {activeTab === 'profile' && (isOwnProfile && effectivePhotos.length === 0 && !photosInitialized ? (
+          <div className={styles.catchesGrid}>
+            {Array.from({ length: 8 }, (_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : recentCatches.length > 0 ? (
+          <div className={styles.catchesGrid}>
+            {visibleCatches.map((group, i) => {
+              const lead = group.find(p => p.species) ?? group[0]
+              const species = cleanSpecies(lead.species)
+              const locationStr = formatCatchLocation(lead.meta)
+              return (
+                <motion.button
+                  key={group[0].name}
+                  className={cardStyles.card}
+                  onClick={() => setCatchPopupIdx(i)}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                >
+                  <div className={cardStyles.imageWrap}>
+                    <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
+                  </div>
+                  <div className={cardStyles.meta}>
+                    {species && <div className={cardStyles.species}>{species}</div>}
+                    {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
+                    {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
+                  </div>
+                </motion.button>
+              )
+            })}
+            {visibleCount < recentCatches.length && (
+              <div ref={sentinelRef} className={styles.loadSentinel} />
+            )}
+          </div>
+        ) : null)}
+
+        {/* Stats tab */}
+        {activeTab === 'stats' && (
+          catchGroups.length > 0 ? (
+            <>
+              <div className={styles.grid}>
+                <div className={styles.card}><div className={styles.cardLabel}>Catches per Month</div><div ref={monthlyRef} /></div>
+                <div className={styles.card}><div className={styles.cardLabel}>Time of Day</div><div ref={hourlyRef} /></div>
+                <div className={styles.row2}>
+                  <div className={styles.card}><div className={styles.cardLabel}>Species</div><div ref={speciesRef} /></div>
+                  <div className={styles.card}><div className={styles.cardLabel}>Species by Month</div><div ref={speciesMonthlyRef} /></div>
+                </div>
+                <div className={styles.row2}>
+                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Rod</div><div ref={rodsRef} /></div>
+                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Fly</div><div ref={fliesRef} /></div>
+                </div>
+                <div className={styles.row2}>
+                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Condition</div><div ref={weatherCondRef} /></div>
+                  <div className={styles.card}><div className={styles.cardLabel}>Catches by Temperature</div><div ref={weatherTempRef} /></div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className={styles.emptyStats}>No catch data yet.</div>
+          )
+        )}
+      </div>
+
+      {sharedDialogs}
     </div>
   )
 }
