@@ -76,7 +76,7 @@ Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `
   - [CSS Modules](https://github.com/css-modules/css-modules) — component-scoped styling
 
 - **Mobile**
-  - [Expo](https://expo.dev) 54 (bare workflow) + React Native 0.81.5
+  - [Expo](https://expo.dev) 56 (bare workflow) + React Native 0.85.3
   - [Mapbox Maps SDK for React Native](https://github.com/rnmapbox/maps)
 
 - **Maps & Charts**

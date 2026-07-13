@@ -12,10 +12,10 @@
 ## Key Files
 - **Entry**: `src/main.jsx` → `src/App.jsx`
 - **Pages**: `src/pages/` — MapPage, LoginPage, OnboardingPage, UserProfilePage, SearchPage, DesignPage, NotFoundPage, FeedPage (WIP, unrouted)
-- **Components**: `src/components/` — Map, CatchGrid, CatchDialog, Nav (desktop), MobileNav (mobile web), UploadDialog, DropOverlay, FavoritePicker, FollowListDialog, Toast, UserRow, ui/; root-level `DitherMesh.jsx`, `RequireAuth.jsx`, `ErrorBoundary.jsx`, `icons.js`
+- **Components**: `src/components/` — Map, CatchGrid, CatchDialog, Nav (desktop), MobileNav (mobile web), UploadDialog, DropOverlay, FavoritePicker, FollowListDialog, Toast, UserRow, PixelFishLoader, ui/; root-level `DitherMesh.jsx`, `RequireAuth.jsx`, `ErrorBoundary.jsx`, `icons.js`
 - **Orphans** (unused since the 2026-07-11 dock removal, safe to delete): `src/components/Sidebar/`, `src/hooks/useSafeAreaInsets.js`
 - **Stores**: `usePhotoStore` (photos, groups, flyToPhoto, activeGroup, toast, uploadOpen, bulkUploading, pendingUploadFiles, ownOnly, photosInitialized); `useAuthStore` (user, session, username, loading)
-- **Lib**: `src/lib/` — fileLoader.js, groupPhotos.js, formatters.js, supabase.js, geocode.js, weather.js, validation.js, imageUtils.js
+- **Lib**: `src/lib/` — fileLoader.js, groupPhotos.js, groupByTime.js, formatters.js, supabase.js, geocode.js, weather.js, waterbody.js, validation.js, imageUtils.js, mapbox.js, avatarUpload.js, motion.js
 - **Utilities**: `src/cache.js` (IndexedDB), `src/exif.js`, `src/identify.js`, `src/stats.js` — keep pure (no React)
 - **API**: Vite middleware in `vite.config.js` — `/identify` (Claude AI via Anthropic SDK, requires `ANTHROPIC_API_KEY`), `/api/check-username`, `/api/save-profile`, `/api/profile`, `/api/photos`, `/api/search-users`, `/api/search-catches`
 
@@ -39,9 +39,10 @@
 - Profile: contained dither header card + segmented Recent Activity/Stats in normal page flow; Search: filters in one horizontally scrolling row.
 
 ## Mobile (`mobile/`)
-- Expo 54 bare workflow, React Native 0.81.5
-- `mobile/store` and `mobile/lib` are symlinks → `../src/store` and `../src/lib` (shared code)
+- Expo 56 bare workflow, React Native 0.85.3, new arch
+- Only some `mobile/lib` files are symlinks into `src/lib` (formatters, groupByTime, groupPhotos, imageUtils, validation) — the rest of `mobile/lib` and all of `mobile/store` are independent real files, not shared with `src/`
 - Map screen (`mobile/app/(tabs)/map.js`) fetches photos, maps `catch_id → catchId` + ISO → ms, calls `groupPhotos()`, renders one marker/list item per group
+- Environment gotchas (Fabric layout quirks, Skia canvas limits, Metro/Supabase resolution, prebuild caveats) live in `mobile/AGENTS.md` — read it before touching native config or full-screen canvases
 
 ## Standards
 - **No browser automation unless asked**: Don't use Chrome DevTools MCP / browser tools to verify changes unless explicitly requested
