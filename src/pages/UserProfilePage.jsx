@@ -785,7 +785,7 @@ export function UserProfilePage() {
                           transition={{ duration: 0.25, ease: 'easeOut' }}
                         >
                           <div className={cardStyles.imageWrap}>
-                            <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
+                            <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
                           </div>
                           <div className={cardStyles.meta}>
                             {species && <div className={cardStyles.species}>{species}</div>}
@@ -972,7 +972,7 @@ export function UserProfilePage() {
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                 >
                   <div className={cardStyles.imageWrap}>
-                    <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
+                    <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
                   </div>
                   <div className={cardStyles.meta}>
                     {species && <div className={cardStyles.species}>{species}</div>}

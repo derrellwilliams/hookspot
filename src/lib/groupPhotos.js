@@ -12,6 +12,7 @@ export function mapPhotoRow(row) {
     userId: row.user_id,
     catchId: row.catch_id ?? null,
     url: row.url,
+    thumbUrl: row.thumb_url ?? row.url,
     time: row.time ? new Date(row.time).getTime() : null,
     hasGps: row.lat != null && row.lng != null,
     exif: row.lat != null && row.lng != null ? { latitude: row.lat, longitude: row.lng } : null,

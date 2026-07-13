@@ -362,7 +362,7 @@ export function SearchPage() {
                               transition={{ duration: 0.25, ease: 'easeOut' }}
                             >
                               <div className={cardStyles.imageWrap}>
-                                <img src={lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
+                                <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
                               </div>
                               <div className={cardStyles.meta}>
                                 {ownerName && (
