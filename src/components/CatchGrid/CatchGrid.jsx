@@ -5,7 +5,7 @@ import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
 import { formatDateNumeric, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'
 import { sortByRecency } from '../../lib/groupPhotos.js'
-import { SPRING } from '../../lib/motion.js'
+import { SPRING, EASE_OUT } from '../../lib/motion.js'
 import styles from './CatchGrid.module.css'
 
 const SKELETON_COUNT = 8
@@ -65,7 +65,8 @@ const CatchCard = memo(function CatchCard({ group, index }) {
       onMouseLeave={() => setHoveredPhotoName(null)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.25, ease: 'easeOut', delay: index < 9 ? index * 0.04 : 0 }}
+      transition={{ duration: 0.25, ease: EASE_OUT, delay: index < 9 ? index * 0.04 : 0 }}
+      whileTap={{ scale: 0.975, transition: SPRING }}
     >
       <div className={styles.imageWrap}>
         <img
@@ -121,7 +122,7 @@ export function CatchGrid() {
       <motion.button
         className={styles.addCard}
         onClick={() => setUploadOpen(true)}
-        whileHover={{ scale: 1.007 }}
+        whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.975 }}
         transition={SPRING}
       >

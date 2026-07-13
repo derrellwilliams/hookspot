@@ -4,6 +4,7 @@
 export const SPRING = { type: 'spring', stiffness: 300, damping: 24 }       // default interactive spring (hover/tap)
 export const SPRING_TIGHT = { type: 'spring', stiffness: 400, damping: 35 } // layoutId indicators (nav highlight, tabs)
 export const SPRING_POP = { type: 'spring', stiffness: 400, damping: 25 }   // slight overshoot — dropdowns, chips
+export const SPRING_SNAPPY = { type: 'spring', stiffness: 500, damping: 38 } // fast layoutId indicators — mobile stadium/toggle thumbs
 
 export const EASE_OUT = [0.23, 1, 0.32, 1]      // strong ease-out — UI entrances/exits
 export const EASE_ENTER = [0.17, 0.67, 0.51, 1] // existing dialog entrance curve (kept as-is)

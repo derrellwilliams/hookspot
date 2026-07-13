@@ -782,7 +782,7 @@ export function UserProfilePage() {
                           onClick={() => setCatchPopupIdx(i)}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ duration: 0.25, ease: 'easeOut' }}
+                          transition={{ duration: 0.25, ease: EASE_OUT, delay: i < 9 ? i * 0.04 : 0 }}
                         >
                           <div className={cardStyles.imageWrap}>
                             <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
@@ -933,7 +933,7 @@ export function UserProfilePage() {
                 key={id}
                 className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
                 onClick={() => setActiveTab(id)}
-                whileHover={{ scale: 1.007 }}
+                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.975 }}
                 transition={SPRING}
               >
@@ -969,7 +969,7 @@ export function UserProfilePage() {
                   onClick={() => setCatchPopupIdx(i)}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  transition={{ duration: 0.25, ease: EASE_OUT, delay: i < 9 ? i * 0.04 : 0 }}
                 >
                   <div className={cardStyles.imageWrap}>
                     <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />

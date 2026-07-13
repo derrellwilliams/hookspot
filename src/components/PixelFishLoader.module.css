@@ -54,7 +54,7 @@
 @media (prefers-reduced-motion: reduce) {
   .pixel {
     animation: none !important;
-    opacity: 1;
-    transform: none;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

@@ -5,7 +5,7 @@ import { NavArrowLeft, NavArrowRight } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { deletePhotos } from '../../lib/fileLoader.js'
 import { PopupCarousel } from '../Map/PopupCarousel.jsx'
-import { useIsMobile } from '../../hooks/useIsMobile.js'
+import { useIsMobile, useReducedMotion } from '../../hooks/useIsMobile.js'
 import { sortByRecency } from '../../lib/groupPhotos.js'
 import { EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../../lib/motion.js'
 import styles from './CatchDialog.module.css'
@@ -18,6 +18,7 @@ export function CatchDialog() {
   const groups = usePhotoStore(s => s.groups)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
   const isMobile = useIsMobile()
+  const reducedMotion = useReducedMotion()
 
   const sorted = useMemo(() => [...groups].sort(sortByRecency), [groups])
   const idx = activeGroup ? sorted.findIndex(g => g[0].name === activeGroup[0].name) : -1
@@ -62,14 +63,28 @@ export function CatchDialog() {
                 )}
                 <motion.div
                   className={styles.content}
-                  initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.97, y: 4 }}
-                  animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
-                  exit={isMobile
-                    ? { y: '100%', transition: { duration: 0.3, ease: EASE_DRAWER } }
-                    : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: EASE_OUT } }}
-                  transition={isMobile
-                    ? { duration: 0.35, ease: EASE_DRAWER }
-                    : { duration: 0.25, ease: EASE_ENTER }}
+                  initial={
+                    isMobile
+                      ? (reducedMotion ? { opacity: 0 } : { y: '100%' })
+                      : { opacity: 0, scale: 0.97, y: 4 }
+                  }
+                  animate={
+                    isMobile
+                      ? (reducedMotion ? { opacity: 1 } : { y: 0 })
+                      : { opacity: 1, scale: 1, y: 0 }
+                  }
+                  exit={
+                    isMobile
+                      ? (reducedMotion
+                          ? { opacity: 0, transition: { duration: 0.2, ease: EASE_OUT } }
+                          : { y: '100%', transition: { duration: 0.3, ease: EASE_DRAWER } })
+                      : { opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: EASE_OUT } }
+                  }
+                  transition={
+                    isMobile
+                      ? (reducedMotion ? { duration: 0.2, ease: EASE_OUT } : { duration: 0.35, ease: EASE_DRAWER })
+                      : { duration: 0.25, ease: EASE_ENTER }
+                  }
                 >
                   <PopupCarousel
                     key={activeGroup[0].catchId ?? activeGroup[0].name}

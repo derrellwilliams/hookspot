@@ -359,7 +359,7 @@ export function SearchPage() {
                               onClick={() => openCatch(i)}
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
-                              transition={{ duration: 0.25, ease: 'easeOut' }}
+                              transition={{ duration: 0.25, ease: EASE_OUT, delay: i < 9 ? i * 0.04 : 0 }}
                             >
                               <div className={cardStyles.imageWrap}>
                                 <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />

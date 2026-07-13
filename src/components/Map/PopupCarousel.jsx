@@ -12,6 +12,7 @@ import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
 import { formatDateFull, cleanSpecies, cleanGear, formatCatchLocation } from '../../lib/formatters.js'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 import { PixelFishLoader } from '../PixelFishLoader.jsx'
+import { EASE_OUT } from '../../lib/motion.js'
 import styles from './Map.module.css'
 
 // Static Images API can't render the Standard-based HookSpot style,
@@ -222,7 +223,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
             initial={{ opacity: 0, filter: 'blur(4px)' }}
             animate={{ opacity: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, filter: 'blur(4px)' }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
+            transition={{ duration: 0.15, ease: EASE_OUT }}
           />
         </AnimatePresence>
         {((isOwn && editing) || orderedGroup.length > 1) && (

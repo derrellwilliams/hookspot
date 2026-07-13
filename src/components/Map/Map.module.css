@@ -141,7 +141,7 @@
   overflow: visible;
   cursor: grab;
   border: 2px solid rgba(0,0,0,0.7);
-  transition: border-color 0.1s, opacity 0.1s;
+  transition: border-color 0.1s, opacity 0.1s, transform 0.1s;
   position: relative;
 }
 

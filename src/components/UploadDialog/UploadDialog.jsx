@@ -20,7 +20,13 @@ import styles from './UploadDialog.module.css'
 import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
 import { SPRING, EASE_OUT, EASE_ENTER } from '../../lib/motion.js'
 
-const STEP_FADE = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
+const STEP_SLIDE_DISTANCE = '6%'
+const stepVariants = {
+  enter: (direction) => ({ opacity: 0, x: direction > 0 ? STEP_SLIDE_DISTANCE : `-${STEP_SLIDE_DISTANCE}` }),
+  center: { opacity: 1, x: 0 },
+  exit: (direction) => ({ opacity: 0, x: direction > 0 ? `-${STEP_SLIDE_DISTANCE}` : STEP_SLIDE_DISTANCE }),
+}
+const STEP_TRANSITION = { duration: 0.2, ease: EASE_OUT }
 
 function computeHomeCenter(photos) {
   const pts = photos.filter(p => p.isOwn && p.hasGps && p.exif?.latitude != null && p.exif?.longitude != null)
@@ -41,7 +47,8 @@ export function UploadDialog() {
   const prevRods = gearRods
   const prevFlys = gearFlies
 
-  const [step, setStep] = useState(1)
+  const [step, setStepRaw] = useState(1)
+  const [stepDirection, setStepDirection] = useState(1)
   const [manualPin, setManualPin] = useState(null)
   const [pendingFiles, setPendingFiles] = useState([])
   const [pendingBlobs, setPendingBlobs] = useState([])
@@ -106,8 +113,13 @@ export function UploadDialog() {
     setPendingFiles([]); setPendingBlobs([]); setPendingUrls([])
     setSpecies(''); setRod(''); setFly('')
     setManualPin(null)
-    setStep(1)
+    setStepRaw(1)
     setUploadOpen(false)
+  }
+
+  function goToStep(next) {
+    setStepDirection(next > step ? 1 : -1)
+    setStepRaw(next)
   }
 
   async function goToNextStep(files) {
@@ -129,7 +141,7 @@ export function UploadDialog() {
     const hasGps = firstExif?.latitude != null && firstExif?.longitude != null
     setManualPin(null)
     if (!hasGps) mapCenterRef.current = computeHomeCenter(usePhotoStore.getState().photos)
-    setStep(hasGps ? 3 : 2)
+    goToStep(hasGps ? 3 : 2)
     identifyFirst(blobs[0])
   }
 
@@ -149,7 +161,7 @@ export function UploadDialog() {
     const newFiles = pendingFiles.filter((_, idx) => idx !== i)
     const newBlobs = pendingBlobs.filter((_, idx) => idx !== i)
     const newUrls = pendingUrls.filter((_, idx) => idx !== i)
-    if (!newFiles.length) { setStep(1); setPendingFiles([]); setPendingBlobs([]); setPendingUrls([]); return }
+    if (!newFiles.length) { goToStep(1); setPendingFiles([]); setPendingBlobs([]); setPendingUrls([]); return }
     setPendingFiles(newFiles)
     setPendingBlobs(newBlobs)
     setPendingUrls(newUrls)
@@ -288,9 +300,9 @@ export function UploadDialog() {
                     <Dialog.Close asChild><Button variant="icon-sm" aria-label="Close"><Xmark width={20} height={20} /></Button></Dialog.Close>
                   </div>
 
-                  <AnimatePresence mode="wait" initial={false}>
+                  <AnimatePresence mode="wait" initial={false} custom={stepDirection}>
                     {step === 1 && (
-                      <motion.div key="step-1" {...STEP_FADE}>
+                      <motion.div key="step-1" custom={stepDirection} variants={stepVariants} initial="enter" animate="center" exit="exit" transition={STEP_TRANSITION}>
                         <div
                           className={`${styles.dropZone} ${dropOver ? styles.dragOver : ''}`}
                           onDragOver={e => { e.preventDefault(); setDropOver(true) }}
@@ -335,7 +347,7 @@ export function UploadDialog() {
                     )}
 
                     {step === 2 && (
-                      <motion.div key="step-2" {...STEP_FADE} className={styles.locationStep}>
+                      <motion.div key="step-2" custom={stepDirection} variants={stepVariants} initial="enter" animate="center" exit="exit" transition={STEP_TRANSITION} className={styles.locationStep}>
                         <div className={styles.locationBanner}>No GPS data found — pin your catch location</div>
                         <div ref={locationMapRef} className={styles.locationMap} />
                         <div className={styles.locationFooter}>
@@ -345,15 +357,15 @@ export function UploadDialog() {
                               : 'Click the map to place a pin'}
                           </div>
                           <div className={styles.locationActions}>
-                            <Button variant="secondary" onClick={() => { setStep(1); setManualPin(null) }}>Back</Button>
-                            <Button variant="primary" onClick={() => setStep(3)} disabled={!manualPin}>Next</Button>
+                            <Button variant="secondary" onClick={() => { goToStep(1); setManualPin(null) }}>Back</Button>
+                            <Button variant="primary" onClick={() => goToStep(3)} disabled={!manualPin}>Next</Button>
                           </div>
                         </div>
                       </motion.div>
                     )}
 
                     {step === 3 && (
-                      <motion.div key="step-3" {...STEP_FADE}>
+                      <motion.div key="step-3" custom={stepDirection} variants={stepVariants} initial="enter" animate="center" exit="exit" transition={STEP_TRANSITION}>
                         <div className={styles.previewWrap}>
                           <img className={styles.previewImg} src={pendingUrls[0]} alt="preview" />
                         </div>

@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Home, Plus, Search, User } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
+import { useReducedMotion } from '../../hooks/useIsMobile.js'
+import { SPRING_SNAPPY } from '../../lib/motion.js'
 import styles from './MobileNav.module.css'
 
 const TABS = [
@@ -12,17 +14,19 @@ const TABS = [
   { path: '/search', label: 'Search', Icon: Search },
 ]
 
-const stadiumSpring = { type: 'spring', stiffness: 500, damping: 38 }
 const iconVariants = {
   active:   { scale: [1, 1.2, 0.88, 1.06, 1] },
   inactive: { scale: 1 },
 }
 const iconTransition = { duration: 0.38, times: [0, 0.2, 0.5, 0.7, 1] }
+const REDUCED_ICON_TRANSITION = { duration: 0.15 }
 
 // Instagram-metric geometry: full-size ↔ compact, driven by scroll direction.
-// `add` matches the active stadium's height (barH minus its 6px insets).
-const FULL = { inset: 20, barH: 58, add: 46 }
-const COMPACT = { inset: 44, barH: 46, add: 34 }
+// SHRINK_RATIO is the compact/full bar-height ratio (46px / 58px) — applied
+// as a uniform transform scale on .wrap instead of animating padding/height/width
+// (layout properties). Full-size dimensions now live as static CSS in
+// MobileNav.module.css (.pill height, .wrap padding, .addBtn size).
+const SHRINK_RATIO = 46 / 58
 const SHRINK_SPRING = { stiffness: 320, damping: 34 }
 const SCROLL_SLOP = 12
 const TOP_ZONE = 24
@@ -33,19 +37,17 @@ export function MobileNav() {
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
   const user = useAuthStore(s => s.user)
   const path = location.pathname
+  const reducedMotion = useReducedMotion()
 
   // 0 = full size, 1 = compact
   const t = useSpring(0, SHRINK_SPRING)
-  const sideInset = useTransform(t, [0, 1], [FULL.inset, COMPACT.inset])
-  const barH = useTransform(t, [0, 1], [FULL.barH, COMPACT.barH])
-  const addSize = useTransform(t, [0, 1], [FULL.add, COMPACT.add])
-  const iconScale = useTransform(t, [0, 1], [1, 0.9])
-  const plusScale = useTransform(t, [0, 1], [1, 0.85])
+  const navScale = useTransform(t, [0, 1], [1, SHRINK_RATIO])
 
   // Instagram behavior: shrink on scroll down, expand on scroll up or near top.
   // Capture-phase listener sees scrolls from any nested scroller (feed, profile,
   // search results); per-target last positions keep deltas independent.
   useEffect(() => {
+    if (reducedMotion) return
     const lastTops = new WeakMap()
     function onScroll(e) {
       const el = e.target === document ? document.scrollingElement : e.target
@@ -60,7 +62,7 @@ export function MobileNav() {
     }
     window.addEventListener('scroll', onScroll, true)
     return () => window.removeEventListener('scroll', onScroll, true)
-  }, [t])
+  }, [t, reducedMotion])
 
   // Fresh page starts at full size
   useEffect(() => {
@@ -68,8 +70,8 @@ export function MobileNav() {
   }, [path, t])
 
   return (
-    <motion.div className={styles.wrap} style={{ paddingLeft: sideInset, paddingRight: sideInset }}>
-      <motion.nav className={styles.pill} style={{ height: barH }} aria-label="Main">
+    <motion.div className={styles.wrap} style={{ scale: reducedMotion ? 1 : navScale }}>
+      <motion.nav className={styles.pill} aria-label="Main">
         {TABS.map(({ path: itemPath, label, Icon }) => {
           const isActive = path === itemPath || (itemPath === '/profile' && path.startsWith('/user/'))
           return (
@@ -84,14 +86,14 @@ export function MobileNav() {
                 <motion.div
                   className={styles.stadium}
                   layoutId="mobile-nav-stadium"
-                  transition={stadiumSpring}
+                  transition={SPRING_SNAPPY}
                 />
               )}
-              <motion.div className={styles.iconWrap} style={{ scale: iconScale }}>
+              <motion.div className={styles.iconWrap}>
                 <motion.div
                   variants={iconVariants}
                   animate={isActive ? 'active' : 'inactive'}
-                  transition={iconTransition}
+                  transition={reducedMotion ? REDUCED_ICON_TRANSITION : iconTransition}
                 >
                   <Icon width={24} height={24} strokeWidth={isActive ? 2.5 : 2} />
                 </motion.div>
@@ -102,12 +104,11 @@ export function MobileNav() {
       </motion.nav>
       <motion.button
         className={styles.addBtn}
-        style={{ width: addSize, height: addSize }}
         onClick={() => user ? setUploadOpen(true) : navigate('/login')}
         aria-label="Add catch"
         whileTap={{ scale: 0.92 }}
       >
-        <motion.div className={styles.iconWrap} style={{ scale: plusScale }}>
+        <motion.div className={styles.iconWrap}>
           <Plus width={26} height={26} strokeWidth={2.5} />
         </motion.div>
       </motion.button>

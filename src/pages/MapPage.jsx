@@ -5,6 +5,7 @@ import { CatchDialog } from '../components/CatchDialog/CatchDialog.jsx'
 import { MapView } from '../components/Map/MapView.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
 import { ListView, MapPin } from '../components/icons.js'
+import { SPRING_SNAPPY } from '../lib/motion.js'
 import styles from './MapPage.module.css'
 
 const VIEWS = [
@@ -55,7 +56,7 @@ export function MapPage({ active }) {
                       <motion.div
                         className={styles.viewToggleThumb}
                         layoutId="feed-view-thumb"
-                        transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                        transition={SPRING_SNAPPY}
                       />
                     )}
                     <Icon width={17} height={17} className={styles.viewToggleIcon} />

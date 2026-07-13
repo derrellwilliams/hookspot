@@ -11,11 +11,15 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  padding-left: 20px;
+  padding-right: 20px;
+  transform-origin: center;
 }
 
 .pill {
   flex: 1;
   min-width: 0;
+  height: 58px;
   display: flex;
   align-items: stretch;
   padding: 0 5px;
@@ -75,6 +79,8 @@
 /* Isolated blue + circle to the right of the pill — accent tint over glass */
 .addBtn {
   flex-shrink: 0;
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;

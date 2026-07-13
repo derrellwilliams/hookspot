@@ -7,7 +7,7 @@ export function Button({ variant = 'primary', icon, children, className = '', ..
   return (
     <motion.button
       className={`${styles.btn} ${styles[`btn-${variant}`]} ${icon ? styles.btnWithIcon : ''} ${className}`}
-      whileHover={disabled ? undefined : { scale: 1.007 }}
+      whileHover={disabled ? undefined : { scale: 1.02 }}
       whileTap={disabled ? undefined : { scale: 0.975 }}
       transition={SPRING}
       {...props}

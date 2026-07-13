@@ -64,7 +64,7 @@ export function Nav() {
               className={`${styles.navItem} ${isActive ? styles.active : ''}`}
               onClick={() => navigate(itemPath)}
               aria-label={label}
-              whileHover={{ scale: 1.007 }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.975 }}
               transition={SPRING}
             >

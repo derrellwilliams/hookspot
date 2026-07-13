@@ -4,10 +4,8 @@ import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { supabase } from '../../lib/supabase.js'
 import { UserRow } from '../UserRow/UserRow.jsx'
-import { EASE_OUT, EASE_ENTER } from '../../lib/motion.js'
+import { EASE_OUT, EASE_ENTER, SPRING, SPRING_TIGHT } from '../../lib/motion.js'
 import styles from './FollowListDialog.module.css'
-
-const spring = { type: 'spring', stiffness: 400, damping: 35 }
 
 export function FollowListDialog({ open, onClose, profileId, initialTab }) {
   const navigate = useNavigate()
@@ -117,16 +115,16 @@ export function FollowListDialog({ open, onClose, profileId, initialTab }) {
                             key={id}
                             className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
                             onClick={() => setActiveTab(id)}
-                            whileHover={{ scale: 1.007 }}
+                            whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.975 }}
-                            transition={spring}
+                            transition={SPRING}
                           >
                             {isActive && (
                               <motion.div
                                 layoutId="follow-tab-highlight"
                                 className={styles.tabHighlight}
                                 initial={false}
-                                transition={animateTabs ? spring : { duration: 0 }}
+                                transition={animateTabs ? SPRING_TIGHT : { duration: 0 }}
                               />
                             )}
                             <span className={styles.tabLabel}>{label}</span>
