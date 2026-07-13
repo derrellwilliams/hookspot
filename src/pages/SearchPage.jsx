@@ -122,6 +122,8 @@ export function SearchPage() {
         setUsersLoading(false)
       }
       setCatchesLoading(true)
+      setCatchRows([])
+      setCatchesTruncated(false)
       const params = new URLSearchParams()
       if (trimmedQuery) params.set('q', trimmedQuery)
       if (myUser?.id) params.set('userId', myUser.id)

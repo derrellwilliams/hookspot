@@ -25,7 +25,7 @@ export function createSearchCatchesHandler(env) {
     if (!q && !from && !to) { sendJson(res, { rows: [], profiles: [] }); return }
     const headers = serviceHeaders(env)
     try {
-      const params = ['select=*', 'order=time.desc', 'limit=300']
+      const params = ['select=*', 'order=time.desc', 'limit=301']
       if (q) {
         params.push(`or=${encodeURIComponent(`(species.ilike.*${q}*,meta->>rod.ilike.*${q}*,meta->>fly.ilike.*${q}*,meta->waterBody->>name.ilike.*${q}*,meta->location->>city.ilike.*${q}*,meta->location->>state.ilike.*${q}*)`)}`)
       }
@@ -45,10 +45,11 @@ export function createSearchCatchesHandler(env) {
         sendJson(res, { rows: [], profiles: [] })
         return
       }
-      // limit=300 above caps the primary match set; surface that to the client
-      // so it can tell the user results were truncated instead of implying
-      // there's nothing more to load.
-      const truncated = rows.length >= 300
+      // limit=301 above fetches one past the 300 cap so we can tell "exactly
+      // 300 matches" apart from "more than 300 exist" and surface that to the
+      // client instead of implying there's nothing more to load.
+      const truncated = rows.length > 300
+      if (truncated) rows = rows.slice(0, 300)
 
       // Pull in sibling photos of matched catches so the carousel shows the
       // whole catch, not just the photo that matched the text filter.
