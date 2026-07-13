@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { View, Pressable, StyleSheet } from 'react-native'
 import Animated, {
   useAnimatedStyle, useSharedValue, interpolate,
-  withSpring, withSequence, withTiming,
+  withSequence, withTiming,
 } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router, usePathname } from 'expo-router'
@@ -15,6 +15,8 @@ import * as Haptics from 'expo-haptics'
 import { Home, Plus, Search, User } from './icons.js'
 import { usePhotoStore } from '../store/usePhotoStore'
 import { navT, resetNav } from '../lib/navScroll'
+import { spring } from '../lib/motion'
+import { reducedMotion } from '../lib/reducedMotion'
 import { GLASS, SPRINGS, RADII, C } from '../lib/theme'
 
 const TABS = [
@@ -29,7 +31,10 @@ const COMPACT = { inset: 44, barH: 46, add: 34 }
 const PILL_PAD = 5 // pill's internal horizontal padding
 
 // Web icon bounce: scale [1, 1.2, 0.88, 1.06, 1], 0.38s, times [0,.2,.5,.7,1]
+// Skipped under reduced motion — it's a decorative overshoot, not information
+// (the stadium capsule + label already show the switch happened).
 function bounce(scale) {
+  if (reducedMotion.value) return
   scale.value = withSequence(
     withTiming(1.2, { duration: 76 }),
     withTiming(0.88, { duration: 114 }),
@@ -46,7 +51,7 @@ function Tab({ path, label, Icon, isActive, onPress }) {
 
   return (
     <Pressable
-      style={styles.tab}
+      style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
       accessibilityRole="tab"
       accessibilityLabel={label}
       accessibilityState={{ selected: isActive }}
@@ -96,7 +101,7 @@ export function MobileNav() {
 
   const cellWidth = pillWidth > 0 ? (pillWidth - PILL_PAD * 2) / TABS.length : 0
   const stadiumStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: withSpring(PILL_PAD + cellWidth * activeIndex + 2, SPRINGS.nav) }],
+    transform: [{ translateX: spring(PILL_PAD + cellWidth * activeIndex + 2, SPRINGS.nav) }],
   }), [cellWidth, activeIndex])
 
   return (
@@ -134,7 +139,7 @@ export function MobileNav() {
         <View style={styles.addClip}>
           <BlurView tint="dark" intensity={GLASS.navBlur} style={StyleSheet.absoluteFill} />
           <Pressable
-            style={styles.addBtn}
+            style={({ pressed }) => [styles.addBtn, pressed && styles.addBtnPressed]}
             accessibilityRole="button"
             accessibilityLabel="Add catch"
             onPress={() => {
@@ -197,6 +202,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  tabPressed: { opacity: 0.6 },
   stadium: {
     position: 'absolute',
     top: 5,
@@ -227,4 +233,5 @@ const styles = StyleSheet.create({
     // web: color-mix(in srgb, var(--accent) 72%, transparent) over glass
     backgroundColor: 'rgba(37, 99, 235, 0.72)',
   },
+  addBtnPressed: { opacity: 0.7 },
 })

@@ -4,6 +4,7 @@ import {
   Image, StyleSheet, Alert, ActivityIndicator,
   Platform, ActionSheetIOS, KeyboardAvoidingView, Dimensions,
 } from 'react-native'
+import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import * as Location from 'expo-location'
@@ -15,7 +16,13 @@ import { usePhotoStore } from '../store/usePhotoStore'
 import { uploadCatch, parseGpsFromAsset } from '../lib/upload'
 import { enrichPhotos } from '../lib/enrich'
 import { supabase } from '../lib/supabase'
+import { reducedMotion } from '../lib/reducedMotion'
 import { C } from '../lib/theme'
+
+// Forward step transition (location -> details). Falls back to a plain
+// cross-fade under reduced motion — no directional slide.
+const stepEnter = () => (reducedMotion.value ? FadeIn.duration(150) : SlideInRight.duration(220))
+const stepExit = () => (reducedMotion.value ? FadeOut.duration(150) : SlideOutLeft.duration(220))
 
 MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
@@ -239,31 +246,35 @@ export function UploadSheet() {
         </View>
 
         {step === 'location' && (
-          <LocationStep
-            locating={locating}
-            pin={manualPin}
-            onPin={setManualPin}
-            onNext={() => setStep('details')}
-            onSkip={() => { setManualPin(null); setStep('details') }}
-          />
+          <Animated.View style={styles.flex} exiting={stepExit()}>
+            <LocationStep
+              locating={locating}
+              pin={manualPin}
+              onPin={setManualPin}
+              onNext={() => setStep('details')}
+              onSkip={() => { setManualPin(null); setStep('details') }}
+            />
+          </Animated.View>
         )}
 
         {step === 'details' && (
-          <DetailsStep
-            assets={assets}
-            onRemoveAsset={removeAsset}
-            species={species}
-            onSpeciesChange={setSpecies}
-            rod={rod}
-            onRodChange={setRod}
-            fly={fly}
-            onFlyChange={setFly}
-            gearRods={gearRods}
-            gearFlies={gearFlies}
-            uploading={uploading}
-            onSubmit={submit}
-            identifying={identifying}
-          />
+          <Animated.View style={styles.flex} entering={stepEnter()}>
+            <DetailsStep
+              assets={assets}
+              onRemoveAsset={removeAsset}
+              species={species}
+              onSpeciesChange={setSpecies}
+              rod={rod}
+              onRodChange={setRod}
+              fly={fly}
+              onFlyChange={setFly}
+              gearRods={gearRods}
+              gearFlies={gearFlies}
+              uploading={uploading}
+              onSubmit={submit}
+              identifying={identifying}
+            />
+          </Animated.View>
         )}
       </KeyboardAvoidingView>
     </Modal>

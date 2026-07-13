@@ -37,7 +37,7 @@ function GlassBackground({ style }) {
 function IconButton({ Icon, label, onPress }) {
   return (
     <Pressable
-      style={styles.iconBtn}
+      style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
       onPress={onPress}
       hitSlop={6}
       accessibilityRole="button"
@@ -224,7 +224,11 @@ export function CatchDetailSheet({ group, onDismiss }) {
                   <View style={styles.stripScrim}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stripRow}>
                       {liveGroup.map((p, i) => (
-                        <Pressable key={p.id ?? p.filename} onPress={() => setCurrent(i)}>
+                        <Pressable
+                          key={p.id ?? p.filename}
+                          onPress={() => setCurrent(i)}
+                          style={({ pressed }) => pressed && styles.stripThumbPressed}
+                        >
                           <Image
                             source={{ uri: photoUrl(p.user_id, p.filename, p.storage_path) }}
                             style={[styles.stripThumb, i === current && styles.stripThumbActive]}
@@ -321,6 +325,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconBtnPressed: { opacity: 0.6 },
   stripScrim: {
     position: 'absolute',
     left: 0,
@@ -344,6 +349,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
+  stripThumbPressed: { opacity: 0.6 },
   body: {
     padding: 20,
     gap: 4,

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Stack } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { useReducedMotion } from 'react-native-reanimated'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { StyleSheet, LogBox } from 'react-native'
 
@@ -11,10 +12,16 @@ import { RobotoCondensed_400Regular, RobotoCondensed_500Medium, RobotoCondensed_
 import { RobotoMono_400Regular, RobotoMono_500Medium } from '@expo-google-fonts/roboto-mono'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/useAuthStore'
+import { reducedMotion } from '../lib/reducedMotion'
 
 export default function RootLayout() {
   const setUser = useAuthStore(s => s.setUser)
   const setSession = useAuthStore(s => s.setSession)
+  const reduceMotionEnabled = useReducedMotion()
+
+  useEffect(() => {
+    reducedMotion.value = reduceMotionEnabled
+  }, [reduceMotionEnabled])
 
   const [fontsLoaded] = useFonts({
     Roboto_400Regular,

@@ -218,11 +218,19 @@ export default function UserProfileScreen() {
               <Text style={styles.statValue}>{groups.length}</Text>
               <Text style={styles.statLabel}>Catches</Text>
             </View>
-            <Pressable style={styles.stat} onPress={() => openFollowList('followers')} accessibilityRole="button">
+            <Pressable
+              style={({ pressed }) => [styles.stat, pressed && styles.statPressed]}
+              onPress={() => openFollowList('followers')}
+              accessibilityRole="button"
+            >
               <Text style={styles.statValue}>{followerCount ?? '—'}</Text>
               <Text style={styles.statLabel}>Followers</Text>
             </Pressable>
-            <Pressable style={styles.stat} onPress={() => openFollowList('following')} accessibilityRole="button">
+            <Pressable
+              style={({ pressed }) => [styles.stat, pressed && styles.statPressed]}
+              onPress={() => openFollowList('following')}
+              accessibilityRole="button"
+            >
               <Text style={styles.statValue}>{followingCount ?? '—'}</Text>
               <Text style={styles.statLabel}>Following</Text>
             </Pressable>
@@ -335,7 +343,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
-    lineHeight: 20,
+    // No fixed lineHeight: it wouldn't scale with Dynamic Type and would clip
+    // wrapped text at larger accessibility text sizes.
     marginTop: 6,
   },
   statsRow: {
@@ -345,6 +354,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   stat: { alignItems: 'center' },
+  statPressed: { opacity: 0.6 },
   statValue: {
     fontFamily: FONTS.mono,
     fontSize: 20,

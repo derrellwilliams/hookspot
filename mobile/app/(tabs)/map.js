@@ -4,7 +4,7 @@
 // never re-initializes.
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { StyleSheet, View, Text, Pressable, ActivityIndicator, RefreshControl } from 'react-native'
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import MapboxGL from '@rnmapbox/maps'
 import { BlurView } from 'expo-blur'
@@ -12,6 +12,7 @@ import Constants from 'expo-constants'
 import * as Haptics from 'expo-haptics'
 import { ListView, MapPin, Plus } from '../../components/icons.js'
 import { C, GLASS, RADII, FONTS, SPRINGS, NAV_CLEARANCE } from '../../lib/theme'
+import { spring } from '../../lib/motion'
 import { enrichPhotos } from '../../lib/enrich'
 import { useNavScrollHandler } from '../../lib/navScroll'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -30,7 +31,7 @@ const TOGGLE_BTN = { width: 46, height: 30 }
 function ViewToggle({ view, onChange }) {
   const activeIndex = view === 'list' ? 0 : 1
   const thumbStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: withSpring(activeIndex * TOGGLE_BTN.width, SPRINGS.nav) }],
+    transform: [{ translateX: spring(activeIndex * TOGGLE_BTN.width, SPRINGS.nav) }],
   }), [activeIndex])
 
   return (
@@ -46,7 +47,7 @@ function ViewToggle({ view, onChange }) {
           ].map(({ key, Icon, label }) => (
             <Pressable
               key={key}
-              style={styles.toggleBtn}
+              style={({ pressed }) => [styles.toggleBtn, pressed && styles.toggleBtnPressed]}
               accessibilityRole="button"
               accessibilityLabel={label}
               onPress={() => {
@@ -358,4 +359,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  toggleBtnPressed: { opacity: 0.6 },
 })

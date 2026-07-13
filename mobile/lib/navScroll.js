@@ -2,8 +2,9 @@
 // capture-phase window scroll listener in src/components/MobileNav/MobileNav.jsx).
 // Each screen attaches useNavScrollHandler() to its scroller; MobileNav
 // animates from navT. 0 = full size, 1 = compact.
-import { makeMutable, useAnimatedScrollHandler, withSpring } from 'react-native-reanimated'
+import { makeMutable, useAnimatedScrollHandler } from 'react-native-reanimated'
 import { SPRINGS } from './theme'
+import { spring } from './motion'
 
 export const navT = makeMutable(0)
 
@@ -24,7 +25,7 @@ export function useNavScrollHandler() {
       else if (delta < -SCROLL_SLOP) target = 0
       if (target !== null && ctx.target !== target) {
         ctx.target = target
-        navT.value = withSpring(target, SPRINGS.soft)
+        navT.value = spring(target, SPRINGS.soft)
       }
     },
   })
@@ -32,5 +33,5 @@ export function useNavScrollHandler() {
 
 // Fresh page starts at full size (web resets on route change)
 export function resetNav() {
-  navT.value = withSpring(0, SPRINGS.soft)
+  navT.value = spring(0, SPRINGS.soft)
 }

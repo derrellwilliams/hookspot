@@ -1,16 +1,17 @@
 // Segmented control with sprung underline — native port of the web profile's
 // Recent Activity / Stats tab bar (layoutId underline, spring 400/35).
 import { View, Text, Pressable, StyleSheet, useWindowDimensions } from 'react-native'
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import { C, FONTS, SPRINGS } from '../lib/theme'
+import { spring } from '../lib/motion'
 
 export function SegmentedTabs({ tabs, active, onChange, horizontalInset = 24 }) {
   const { width } = useWindowDimensions()
   const tabWidth = (width - horizontalInset) / tabs.length
   const activeIndex = Math.max(0, tabs.indexOf(active))
   const underlineStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: withSpring(activeIndex * tabWidth, SPRINGS.segment) }],
+    transform: [{ translateX: spring(activeIndex * tabWidth, SPRINGS.segment) }],
   }), [activeIndex, tabWidth])
 
   return (

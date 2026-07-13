@@ -47,7 +47,7 @@ export const CatchCard = memo(function CatchCard({
 
   return (
     <Pressable
-      style={styles.card}
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={() => onPress?.(group)}
       onLongPress={openActions}
       accessibilityRole="button"
@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
   card: {
     gap: 3,
   },
+  cardPressed: { opacity: 0.85 },
   imageWrap: {
     aspectRatio: 4 / 3,
     borderRadius: RADII.card,

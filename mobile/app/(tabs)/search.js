@@ -42,7 +42,7 @@ const fmtChipDate = d => d
 function Chip({ label, active, onPress }) {
   return (
     <Pressable
-      style={[styles.chip, active && styles.chipActive]}
+      style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.chipPressed]}
       onPress={() => { Haptics.selectionAsync(); onPress() }}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -349,6 +349,7 @@ const styles = StyleSheet.create({
   chipActive: {
     borderColor: C.accent,
   },
+  chipPressed: { opacity: 0.6 },
   chipText: {
     fontFamily: FONTS.condensed,
     fontSize: 13,
