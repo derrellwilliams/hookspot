@@ -36,6 +36,53 @@
   border-radius: 8px;
 }
 
+.logoText {
+  display: inline-flex;
+}
+
+.logoLetter {
+  display: inline-block;
+  color: inherit;
+}
+
+/* Tail-to-head chase, echoing the pixel wave loader's stagger. waveIn
+   sweeps left-to-right and settles on accent (held via forwards while
+   hovered); waveOut is the exact mirror — right-to-left, back to white. */
+/* both (not just forwards): during each letter's staggered delay, hold
+   the animation's starting frame instead of snapping back to the base
+   color — otherwise delayed letters flash white-blue-white on unhover. */
+.waveIn .logoLetter {
+  animation: logoWaveIn 420ms ease-in-out both;
+  animation-delay: calc(var(--i) * 26ms);
+}
+
+.waveOut .logoLetter {
+  animation: logoWaveOut 420ms ease-in-out both;
+  animation-delay: calc(var(--ri) * 26ms);
+}
+
+@keyframes logoWaveIn {
+  0% { transform: translateY(0); color: #fff; }
+  45% { transform: translateY(-2px); color: var(--accent); }
+  100% { transform: translateY(0); color: var(--accent); }
+}
+
+@keyframes logoWaveOut {
+  0% { transform: translateY(0); color: var(--accent); }
+  45% { transform: translateY(-2px); color: var(--accent); }
+  100% { transform: translateY(0); color: #fff; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logoLetter {
+    animation: none !important;
+  }
+
+  .logo:hover .logoLetter {
+    color: var(--accent);
+  }
+}
+
 .navGroup {
   display: flex;
   align-items: center;
