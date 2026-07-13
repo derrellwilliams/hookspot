@@ -25,11 +25,16 @@ export function SkeletonCard() {
   )
 }
 
-const CatchCard = memo(function CatchCard({ group, index }) {
-  const ref = useRef(null)
-  const leadName = group[0].name
-  const isActive = usePhotoStore(s => s.activeGroup?.[0]?.name === leadName)
-  const setHoveredPhotoName = usePhotoStore(s => s.setHoveredPhotoName)
+// Shared catch card — reused verbatim (not copy-pasted) by CatchGrid, SearchPage,
+// and UserProfilePage's catch grids, so the animation/press-feedback recipe stays
+// in one place. `cardRef` is an optional callback ref for callers that need to
+// track the DOM node externally (e.g. SearchPage's keyboard-nav item list);
+// isActive-triggered scrollIntoView is handled internally either way.
+export const CatchCard = memo(function CatchCard({
+  group, index, onClick, isActive = false, cardRef, showAngler = true,
+  onMouseEnter, onMouseLeave,
+}) {
+  const internalRef = useRef(null)
   const user = useAuthStore(s => s.user)
 
   const lead = group.find(p => p.species) ?? group[0]
@@ -45,24 +50,23 @@ const CatchCard = memo(function CatchCard({ group, index }) {
   const locationStr = formatCatchLocation(lead.meta)
 
   useEffect(() => {
-    if (isActive && ref.current) {
-      ref.current.scrollIntoView({ block: 'nearest' })
+    if (isActive && internalRef.current) {
+      internalRef.current.scrollIntoView({ block: 'nearest' })
     }
   }, [isActive])
 
-  function handleClick() {
-    const { setActiveGroup, flyToPhoto } = usePhotoStore.getState()
-    setActiveGroup(group)
-    flyToPhoto?.(group[0])
+  function setRef(node) {
+    internalRef.current = node
+    cardRef?.(node)
   }
 
   return (
     <motion.button
-      ref={ref}
+      ref={setRef}
       className={`${styles.card} ${isActive ? styles.cardActive : ''}`}
-      onClick={handleClick}
-      onMouseEnter={() => setHoveredPhotoName(leadName)}
-      onMouseLeave={() => setHoveredPhotoName(null)}
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.25, ease: EASE_OUT, delay: index < 9 ? index * 0.04 : 0 }}
@@ -71,19 +75,21 @@ const CatchCard = memo(function CatchCard({ group, index }) {
       <div className={styles.imageWrap}>
         <img
           className={styles.image}
-          src={lead.url}
+          src={lead.thumbUrl ?? lead.url}
           alt={species ? `${species} catch` : 'Fishing catch photo'}
           loading="lazy"
         />
       </div>
       <div className={styles.meta}>
-        <div className={styles.angler}>
-          {avatarUrl
-            ? <img src={avatarUrl} alt={displayName} className={styles.anglerAvatar} />
-            : <div className={styles.anglerAvatarFallback}>{initial}</div>
-          }
-          {displayName && <span className={styles.anglerName}>{displayName}</span>}
-        </div>
+        {showAngler && (displayName || avatarUrl) && (
+          <div className={styles.angler}>
+            {avatarUrl
+              ? <img src={avatarUrl} alt={displayName} className={styles.anglerAvatar} />
+              : <div className={styles.anglerAvatarFallback}>{initial}</div>
+            }
+            {displayName && <span className={styles.anglerName}>{displayName}</span>}
+          </div>
+        )}
         {species && <div className={styles.species}>{species}</div>}
         {lead.time && <div className={styles.datetime}>{formatDateNumeric(lead.time)}</div>}
         {locationStr && <div className={styles.location}>{locationStr}</div>}
@@ -97,6 +103,8 @@ export function CatchGrid() {
   const hasPhotos = usePhotoStore(s => s.photos.length > 0)
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
   const setUploadOpen = usePhotoStore(s => s.setUploadOpen)
+  const activeGroupName = usePhotoStore(s => s.activeGroup?.[0]?.name)
+  const setHoveredPhotoName = usePhotoStore(s => s.setHoveredPhotoName)
 
   const sorted = useMemo(() => [...groups].sort(sortByRecency), [groups])
 
@@ -111,7 +119,19 @@ export function CatchGrid() {
   return (
     <div className={styles.grid}>
       {sorted.map((group, i) => (
-        <CatchCard key={`${group[0].userId}/${group[0].name}`} group={group} index={i} />
+        <CatchCard
+          key={`${group[0].userId}/${group[0].name}`}
+          group={group}
+          index={i}
+          isActive={activeGroupName === group[0].name}
+          onClick={() => {
+            const { setActiveGroup, flyToPhoto } = usePhotoStore.getState()
+            setActiveGroup(group)
+            flyToPhoto?.(group[0])
+          }}
+          onMouseEnter={() => setHoveredPhotoName(group[0].name)}
+          onMouseLeave={() => setHoveredPhotoName(null)}
+        />
       ))}
       {!hasPhotos && (
         <div className={styles.empty}>

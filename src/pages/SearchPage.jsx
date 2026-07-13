@@ -12,11 +12,9 @@ import { Select } from '../components/ui/index.js'
 import { DitherMesh } from '../components/DitherMesh.jsx'
 import { UserRow } from '../components/UserRow/UserRow.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
-import { formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/formatters.js'
 import { EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../lib/motion.js'
 import styles from './SearchPage.module.css'
-import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
-import { SkeletonCard } from '../components/CatchGrid/CatchGrid.jsx'
+import { SkeletonCard, CatchCard } from '../components/CatchGrid/CatchGrid.jsx'
 
 const TABS = [
   { id: 'all', label: 'All' },
@@ -345,40 +343,16 @@ export function SearchPage() {
                     ) : (
                       <div className={styles.catchesGrid}>
                         {visibleCatches.map((group, i) => {
-                          const lead = group.find(p => p.species) ?? group[0]
-                          const species = cleanSpecies(lead.species)
-                          const locationStr = formatCatchLocation(lead.meta)
-                          const owner = group[0].ownerProfile
                           const flatIdx = (anglersVisible ? userResults.length : 0) + i
-                          const ownerName = owner?.display_name || owner?.username
                           return (
-                            <motion.button
+                            <CatchCard
                               key={group[0].name}
-                              ref={el => { itemRefs.current[flatIdx] = el }}
-                              className={`${cardStyles.card} ${activeIdx === flatIdx ? cardStyles.cardActive : ''}`}
+                              group={group}
+                              index={i}
+                              isActive={activeIdx === flatIdx}
+                              cardRef={el => { itemRefs.current[flatIdx] = el }}
                               onClick={() => openCatch(i)}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.25, ease: EASE_OUT, delay: i < 9 ? i * 0.04 : 0 }}
-                            >
-                              <div className={cardStyles.imageWrap}>
-                                <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
-                              </div>
-                              <div className={cardStyles.meta}>
-                                {ownerName && (
-                                  <div className={cardStyles.angler}>
-                                    {owner?.avatar_url
-                                      ? <img src={owner.avatar_url} alt="" className={cardStyles.anglerAvatar} />
-                                      : <div className={cardStyles.anglerAvatarFallback}>{ownerName[0].toUpperCase()}</div>
-                                    }
-                                    <span className={cardStyles.anglerName}>{ownerName}</span>
-                                  </div>
-                                )}
-                                {species && <div className={cardStyles.species}>{species}</div>}
-                                {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
-                                {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
-                              </div>
-                            </motion.button>
+                            />
                           )
                         })}
                         {visibleCount < catchGroups.length && (

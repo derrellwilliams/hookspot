@@ -17,12 +17,10 @@ import { Button } from '../components/ui/index.js'
 import { FavoritePickerDialog } from '../components/FavoritePicker/FavoritePickerDialog.jsx'
 import { FollowListDialog } from '../components/FollowListDialog/FollowListDialog.jsx'
 import { PopupCarousel } from '../components/Map/PopupCarousel.jsx'
-import { formatDateNumeric, formatCatchLocation, cleanSpecies } from '../lib/formatters.js'
 import { uploadAvatar } from '../lib/avatarUpload.js'
 import { SPRING, SPRING_TIGHT, SPRING_POP, EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../lib/motion.js'
 import styles from './UserProfilePage.module.css'
-import cardStyles from '../components/CatchGrid/CatchGrid.module.css'
-import { SkeletonCard } from '../components/CatchGrid/CatchGrid.jsx'
+import { SkeletonCard, CatchCard } from '../components/CatchGrid/CatchGrid.jsx'
 
 // Stable share identifier for a catch group; photos without a catches row
 // fall back to the lead photo's filename.
@@ -771,30 +769,15 @@ export function UserProfilePage() {
                   </div>
                 ) : recentCatches.length > 0 ? (
                   <div className={`${styles.catchesGrid} ${styles.sheetCatchesGrid}`}>
-                    {visibleCatches.map((group, i) => {
-                      const lead = group.find(p => p.species) ?? group[0]
-                      const species = cleanSpecies(lead.species)
-                      const locationStr = formatCatchLocation(lead.meta)
-                      return (
-                        <motion.button
-                          key={group[0].name}
-                          className={cardStyles.card}
-                          onClick={() => setCatchPopupIdx(i)}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.25, ease: EASE_OUT, delay: i < 9 ? i * 0.04 : 0 }}
-                        >
-                          <div className={cardStyles.imageWrap}>
-                            <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
-                          </div>
-                          <div className={cardStyles.meta}>
-                            {species && <div className={cardStyles.species}>{species}</div>}
-                            {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
-                            {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
-                          </div>
-                        </motion.button>
-                      )
-                    })}
+                    {visibleCatches.map((group, i) => (
+                      <CatchCard
+                        key={group[0].name}
+                        group={group}
+                        index={i}
+                        showAngler={false}
+                        onClick={() => setCatchPopupIdx(i)}
+                      />
+                    ))}
                     {visibleCount < recentCatches.length && <div ref={sentinelRef} className={styles.loadSentinel} />}
                   </div>
                 ) : null
@@ -958,30 +941,15 @@ export function UserProfilePage() {
           </div>
         ) : recentCatches.length > 0 ? (
           <div className={styles.catchesGrid}>
-            {visibleCatches.map((group, i) => {
-              const lead = group.find(p => p.species) ?? group[0]
-              const species = cleanSpecies(lead.species)
-              const locationStr = formatCatchLocation(lead.meta)
-              return (
-                <motion.button
-                  key={group[0].name}
-                  className={cardStyles.card}
-                  onClick={() => setCatchPopupIdx(i)}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.25, ease: EASE_OUT, delay: i < 9 ? i * 0.04 : 0 }}
-                >
-                  <div className={cardStyles.imageWrap}>
-                    <img src={lead.thumbUrl ?? lead.url} alt={species ? `${species} catch` : 'Fishing catch photo'} className={cardStyles.image} loading="lazy" />
-                  </div>
-                  <div className={cardStyles.meta}>
-                    {species && <div className={cardStyles.species}>{species}</div>}
-                    {lead.time && <div className={cardStyles.datetime}>{formatDateNumeric(lead.time)}</div>}
-                    {locationStr && <div className={cardStyles.location}>{locationStr}</div>}
-                  </div>
-                </motion.button>
-              )
-            })}
+            {visibleCatches.map((group, i) => (
+              <CatchCard
+                key={group[0].name}
+                group={group}
+                index={i}
+                showAngler={false}
+                onClick={() => setCatchPopupIdx(i)}
+              />
+            ))}
             {visibleCount < recentCatches.length && (
               <div ref={sentinelRef} className={styles.loadSentinel} />
             )}
