@@ -456,7 +456,7 @@ export function UserProfilePage() {
     showToast('Catch deleted')
   }
 
-  if (isLoading) return <div className={styles.page}><div className={styles.loading}>Loading…</div></div>
+  if (isLoading) return <div className={styles.page}><div className={styles.loading}><PixelFishLoader variant="wave" size={28} /></div></div>
 
   if (error) {
     return (

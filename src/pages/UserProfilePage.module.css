@@ -845,10 +845,11 @@
 
 /* ── States ── */
 .loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   padding: 60px;
-  font-size: 14px;
-  color: var(--dark-muted);
-  font-family: var(--font-sans);
 }
 
 .errorState {
