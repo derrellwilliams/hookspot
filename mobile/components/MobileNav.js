@@ -3,7 +3,7 @@
 // Shrinks on scroll down / expands on scroll up via the shared navT signal
 // (lib/navScroll.js). Geometry and springs mirror the web values 1:1.
 import { useEffect, useState } from 'react'
-import { View, Pressable, StyleSheet } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import Animated, {
   useAnimatedStyle, useSharedValue, interpolate,
   withSequence, withTiming,
@@ -17,6 +17,7 @@ import { usePhotoStore } from '../store/usePhotoStore'
 import { navT, resetNav } from '../lib/navScroll'
 import { spring } from '../lib/motion'
 import { reducedMotion } from '../lib/reducedMotion'
+import { PressableFeedback } from './PressableFeedback'
 import { GLASS, SPRINGS, RADII, C } from '../lib/theme'
 
 const TABS = [
@@ -50,8 +51,9 @@ function Tab({ path, label, Icon, isActive, onPress }) {
   }))
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
+    <PressableFeedback
+      style={styles.tab}
+      pressedStyle={styles.tabPressed}
       accessibilityRole="tab"
       accessibilityLabel={label}
       accessibilityState={{ selected: isActive }}
@@ -69,7 +71,7 @@ function Tab({ path, label, Icon, isActive, onPress }) {
           strokeWidth={isActive ? 2.5 : 2}
         />
       </Animated.View>
-    </Pressable>
+    </PressableFeedback>
   )
 }
 
@@ -83,7 +85,7 @@ export function MobileNav() {
     pathname === t.path || (t.path === '/profile' && pathname.startsWith('/user/'))
   )
 
-  useEffect(() => { resetNav() }, [pathname])
+  useEffect(() => { resetNav(pathname) }, [pathname])
 
   const wrapStyle = useAnimatedStyle(() => ({
     paddingHorizontal: interpolate(navT.value, [0, 1], [FULL.inset, COMPACT.inset]),
@@ -138,8 +140,9 @@ export function MobileNav() {
       <Animated.View style={[styles.addShadow, addStyle]}>
         <View style={styles.addClip}>
           <BlurView tint="dark" intensity={GLASS.navBlur} style={StyleSheet.absoluteFill} />
-          <Pressable
-            style={({ pressed }) => [styles.addBtn, pressed && styles.addBtnPressed]}
+          <PressableFeedback
+            style={styles.addBtn}
+            pressedStyle={styles.addBtnPressed}
             accessibilityRole="button"
             accessibilityLabel="Add catch"
             onPress={() => {
@@ -150,7 +153,7 @@ export function MobileNav() {
             <Animated.View style={plusStyle}>
               <Plus color="#fff" size={26} strokeWidth={2.5} />
             </Animated.View>
-          </Pressable>
+          </PressableFeedback>
         </View>
       </Animated.View>
     </Animated.View>

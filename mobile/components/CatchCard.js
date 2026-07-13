@@ -1,10 +1,15 @@
 // Native port of the web CatchGrid card (src/components/CatchGrid/): 4:3 image,
 // angler row, species, date, location. Shared by home feed, profile, and search.
 import { memo } from 'react'
-import { View, Text, Image, Pressable, StyleSheet, ActionSheetIOS, Platform } from 'react-native'
+import { View, Text, Image, StyleSheet } from 'react-native'
 import { photoUrl } from '../lib/storage'
 import { formatDateNumeric, formatCatchLocation, cleanSpecies, getDisplayName } from '../lib/formatters'
 import { C, RADII, FONTS } from '../lib/theme'
+import { selectFromActionSheet } from '../lib/actionSheet'
+import { shareCatch, deleteCatch } from '../lib/catchActions'
+import { useAuthStore } from '../store/useAuthStore'
+import { usePhotoStore } from '../store/usePhotoStore'
+import { PressableFeedback } from './PressableFeedback'
 
 function Avatar({ profile }) {
   const name = getDisplayName(profile)
@@ -23,31 +28,27 @@ export const CatchCard = memo(function CatchCard({
   profile, // owner profile row from profilesById
   isOwn = false,
   onPress,
-  onEdit,
-  onShare,
-  onDelete,
 }) {
+  const user = useAuthStore(s => s.user)
+  const removePhotos = usePhotoStore(s => s.removePhotos)
   const lead = group[0]
   const species = cleanSpecies(lead.species)
   const location = formatCatchLocation(lead.meta)
   const anglerName = getDisplayName(profile)
 
   const openActions = () => {
-    if (!isOwn || Platform.OS !== 'ios') return
-    const options = ['Edit', 'Share', 'Delete', 'Cancel']
-    ActionSheetIOS.showActionSheetWithOptions(
-      { options, destructiveButtonIndex: 2, cancelButtonIndex: 3 },
-      i => {
-        if (i === 0) onEdit?.(group)
-        else if (i === 1) onShare?.(group)
-        else if (i === 2) onDelete?.(group)
-      },
-    )
+    if (!isOwn) return
+    selectFromActionSheet(species || 'Catch', ['Edit', 'Share', 'Delete'], option => {
+      if (option === 'Edit') onPress?.(group)
+      else if (option === 'Share') shareCatch(lead)
+      else if (option === 'Delete') deleteCatch(group, user, { removePhotos })
+    }, { destructiveIndex: 2 })
   }
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+    <PressableFeedback
+      style={styles.card}
+      pressedStyle={styles.cardPressed}
       onPress={() => onPress?.(group)}
       onLongPress={openActions}
       accessibilityRole="button"
@@ -71,7 +72,7 @@ export const CatchCard = memo(function CatchCard({
       </Text>
       {lead.time ? <Text style={styles.meta}>{formatDateNumeric(lead.time)}</Text> : null}
       {location ? <Text style={styles.meta} numberOfLines={1}>{location}</Text> : null}
-    </Pressable>
+    </PressableFeedback>
   )
 })
 

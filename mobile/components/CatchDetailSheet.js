@@ -4,22 +4,23 @@
 // add photos) so screens only pass a group.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  View, Text, Image, Pressable, StyleSheet, Alert, Share,
+  View, Text, Image, Pressable, StyleSheet, Alert,
   ActivityIndicator, ScrollView, useWindowDimensions,
 } from 'react-native'
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BlurView } from 'expo-blur'
 import { router } from 'expo-router'
-import * as Haptics from 'expo-haptics'
 import * as ImagePicker from 'expo-image-picker'
 import { supabase } from '../lib/supabase'
-import { storageKey, photoUrl } from '../lib/storage'
+import { photoUrl } from '../lib/storage'
 import { addPhotosToGroup } from '../lib/upload'
 import { enrichPhotos } from '../lib/enrich'
+import { shareCatch, deleteCatch } from '../lib/catchActions'
 import { useAuthStore } from '../store/useAuthStore'
 import { usePhotoStore } from '../store/usePhotoStore'
 import { EditCatchModal } from './EditCatchModal'
+import { PressableFeedback } from './PressableFeedback'
 import { EditPencil, ShareIos, Xmark } from './icons.js'
 import { formatDateFull, formatCatchLocation, cleanSpecies, getDisplayName } from '../lib/formatters'
 import { C, GLASS, RADII, FONTS } from '../lib/theme'
@@ -36,19 +37,20 @@ function GlassBackground({ style }) {
 
 function IconButton({ Icon, label, onPress }) {
   return (
-    <Pressable
-      style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
+    <PressableFeedback
+      style={styles.iconBtn}
+      pressedStyle={styles.iconBtnPressed}
       onPress={onPress}
       hitSlop={6}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
       <Icon color="#fff" size={16} strokeWidth={2} />
-    </Pressable>
+    </PressableFeedback>
   )
 }
 
-export function CatchDetailSheet({ group, onDismiss }) {
+export function CatchDetailSheet({ group, onDismiss, onDeleted }) {
   const sheetRef = useRef(null)
   const user = useAuthStore(s => s.user)
   const profilesById = usePhotoStore(s => s.profilesById)
@@ -101,47 +103,18 @@ export function CatchDetailSheet({ group, onDismiss }) {
   const gearLine = rod && fly ? `${rod} · ${fly}` : rod || fly
 
   const handleShare = useCallback(() => {
-    if (!photo) return
-    Haptics.selectionAsync()
-    Share.share({ url: photoUrl(photo.user_id, photo.filename, photo.storage_path) })
+    shareCatch(photo)
   }, [photo])
 
   const handleDelete = useCallback(() => {
-    if (!liveGroup) return
-    Alert.alert(
-      'Delete catch?',
-      'This will permanently remove this entry and all its photos.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const catchId = liveGroup[0].catchId
-            const photoIds = liveGroup.map(p => p.id).filter(Boolean)
-            try {
-              if (catchId) {
-                await supabase.from('photos').delete().eq('catch_id', catchId)
-                await supabase.from('catches').delete().eq('id', catchId)
-              } else if (photoIds.length) {
-                await supabase.from('photos').delete().in('id', photoIds)
-              }
-              const paths = liveGroup.map(p =>
-                p.storage_path ?? `${user.id}/${storageKey(p.filename)}`
-              )
-              await supabase.storage.from('catches').remove(paths)
-              removePhotos(liveGroup)
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-              sheetRef.current?.dismiss()
-            } catch (err) {
-              console.error('[delete]', err)
-              Alert.alert('Error', 'Failed to delete. Please try again.')
-            }
-          },
-        },
-      ],
-    )
-  }, [liveGroup, user, removePhotos])
+    deleteCatch(liveGroup, user, {
+      removePhotos,
+      onDeleted: () => {
+        onDeleted?.(liveGroup)
+        sheetRef.current?.dismiss()
+      },
+    })
+  }, [liveGroup, user, removePhotos, onDeleted])
 
   const handleAddPhotos = useCallback(async () => {
     if (!lead) return
@@ -224,16 +197,16 @@ export function CatchDetailSheet({ group, onDismiss }) {
                   <View style={styles.stripScrim}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stripRow}>
                       {liveGroup.map((p, i) => (
-                        <Pressable
+                        <PressableFeedback
                           key={p.id ?? p.filename}
                           onPress={() => setCurrent(i)}
-                          style={({ pressed }) => pressed && styles.stripThumbPressed}
+                          pressedStyle={styles.stripThumbPressed}
                         >
                           <Image
                             source={{ uri: photoUrl(p.user_id, p.filename, p.storage_path) }}
                             style={[styles.stripThumb, i === current && styles.stripThumbActive]}
                           />
-                        </Pressable>
+                        </PressableFeedback>
                       ))}
                     </ScrollView>
                   </View>

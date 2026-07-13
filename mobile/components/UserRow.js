@@ -1,14 +1,16 @@
 // Native port of web UserRow (src/components/UserRow/): 36px avatar, display
 // name, @username. Used by search results and follow lists.
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native'
+import { View, Text, Image, StyleSheet } from 'react-native'
 import { C, FONTS } from '../lib/theme'
+import { PressableFeedback } from './PressableFeedback'
 
 export function UserRow({ user, onPress, right = null }) {
   const name = user.display_name || user.username
   const initial = (name || '?')[0].toUpperCase()
   return (
-    <Pressable
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+    <PressableFeedback
+      style={styles.row}
+      pressedStyle={styles.rowPressed}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={name}
@@ -26,7 +28,7 @@ export function UserRow({ user, onPress, right = null }) {
         <Text style={styles.username} numberOfLines={1}>@{user.username}</Text>
       </View>
       {right}
-    </Pressable>
+    </PressableFeedback>
   )
 }
 

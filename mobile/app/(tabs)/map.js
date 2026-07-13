@@ -4,6 +4,7 @@
 // never re-initializes.
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { StyleSheet, View, Text, Pressable, ActivityIndicator, RefreshControl } from 'react-native'
+import { PressableFeedback } from '../../components/PressableFeedback'
 import Animated, { useAnimatedStyle } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import MapboxGL from '@rnmapbox/maps'
@@ -45,9 +46,10 @@ function ViewToggle({ view, onChange }) {
             { key: 'list', Icon: ListView, label: 'List view' },
             { key: 'map', Icon: MapPin, label: 'Map view' },
           ].map(({ key, Icon, label }) => (
-            <Pressable
+            <PressableFeedback
               key={key}
-              style={({ pressed }) => [styles.toggleBtn, pressed && styles.toggleBtnPressed]}
+              style={styles.toggleBtn}
+              pressedStyle={styles.toggleBtnPressed}
               accessibilityRole="button"
               accessibilityLabel={label}
               onPress={() => {
@@ -57,7 +59,7 @@ function ViewToggle({ view, onChange }) {
               }}
             >
               <Icon size={17} color={view === key ? '#fff' : 'rgba(255,255,255,0.7)'} strokeWidth={2} />
-            </Pressable>
+            </PressableFeedback>
           ))}
         </View>
       </View>
@@ -98,7 +100,7 @@ export default function HomeScreen() {
   useEffect(() => {
     if (loading || !user || !photos.length) return
     enrichPhotos(photos, user.id)
-  }, [loading, user?.id])
+  }, [loading, user?.id, photos.length])
 
   const onRefresh = useCallback(async () => {
     if (!user) return

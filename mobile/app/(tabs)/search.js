@@ -18,6 +18,7 @@ import { useNavScrollHandler } from '../../lib/navScroll'
 import { useAuthStore } from '../../store/useAuthStore'
 import { usePhotoStore } from '../../store/usePhotoStore'
 import { DitherMesh } from '../../components/DitherMesh'
+import { PressableFeedback } from '../../components/PressableFeedback'
 import { UserRow } from '../../components/UserRow'
 import { CatchCard } from '../../components/CatchCard'
 import { CatchDetailSheet } from '../../components/CatchDetailSheet'
@@ -41,14 +42,15 @@ const fmtChipDate = d => d
 
 function Chip({ label, active, onPress }) {
   return (
-    <Pressable
-      style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.chipPressed]}
+    <PressableFeedback
+      style={[styles.chip, active && styles.chipActive]}
+      pressedStyle={styles.chipPressed}
       onPress={() => { Haptics.selectionAsync(); onPress() }}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
       <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
-    </Pressable>
+    </PressableFeedback>
   )
 }
 
@@ -99,9 +101,25 @@ export default function SearchScreen() {
   const [catchGroups, setCatchGroups] = useState([])
   const [searching, setSearching] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState(null)
+  const [following, setFollowing] = useState([])
 
   const q = query.trim()
   const hasFilters = !!(q || fromDate || toDate)
+
+  // Default idle listing: people you already follow, so browsing them
+  // doesn't require typing anything.
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    supabase
+      .from('follows')
+      .select('profiles!following_id(id,username,display_name,avatar_url)')
+      .eq('follower_id', user.id)
+      .then(({ data }) => {
+        if (!cancelled && data) setFollowing(data.map(r => r.profiles).filter(Boolean))
+      })
+    return () => { cancelled = true }
+  }, [user?.id])
 
   useEffect(() => {
     if (!hasFilters) {
@@ -160,6 +178,16 @@ export default function SearchScreen() {
     }, 300)
     return () => { cancelled = true; clearTimeout(timer) }
   }, [q, show, scope, fromDate, toDate, hasFilters])
+
+  const handleCatchDeleted = useCallback((deletedGroup) => {
+    const deadLead = deletedGroup[0]
+    setCatchGroups(gs => gs.filter(g => {
+      const lead = g[0]
+      return deadLead.catchId
+        ? lead.catchId !== deadLead.catchId
+        : !(lead.filename === deadLead.filename && lead.user_id === deadLead.user_id)
+    }))
+  }, [])
 
   const pickShow = useCallback(() => {
     ActionSheetIOS.showActionSheetWithOptions(
@@ -236,13 +264,24 @@ export default function SearchScreen() {
         </ScrollView>
 
         {!hasFilters ? (
-          // Idle state
-          <View style={styles.idlePanel}>
-            <DitherMesh />
-            <SearchIcon color="#fff" size={40} strokeWidth={1.6} />
-            <Text style={styles.idleTitle}>Search HookSpot</Text>
-            <Text style={styles.idleHint}>Find anglers, species, flies, and rods</Text>
-          </View>
+          following.length > 0 ? (
+            <>
+              <Text style={styles.sectionLabel}>People you follow</Text>
+              <View style={styles.listCard}>
+                {following.map(u => (
+                  <UserRow key={u.id} user={u} onPress={() => router.push(`/user/${u.username}`)} />
+                ))}
+              </View>
+            </>
+          ) : (
+            // Idle state
+            <View style={styles.idlePanel}>
+              <DitherMesh />
+              <SearchIcon color="#fff" size={40} strokeWidth={1.6} />
+              <Text style={styles.idleTitle}>Search HookSpot</Text>
+              <Text style={styles.idleHint}>Find anglers, species, flies, and rods</Text>
+            </View>
+          )
         ) : (
           <>
             {visibleAnglers.length > 0 && (
@@ -301,7 +340,11 @@ export default function SearchScreen() {
         onClose={() => setPickerOpen(null)}
       />
 
-      <CatchDetailSheet group={selectedGroup} onDismiss={() => setSelectedGroup(null)} />
+      <CatchDetailSheet
+        group={selectedGroup}
+        onDismiss={() => setSelectedGroup(null)}
+        onDeleted={handleCatchDeleted}
+      />
     </View>
   )
 }

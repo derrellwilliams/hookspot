@@ -5,7 +5,7 @@
 // native pageSheet modals.
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import {
-  View, Text, Image, TouchableOpacity, Pressable, Modal,
+  View, Text, TouchableOpacity, Modal,
   TextInput, ScrollView, StyleSheet, Alert, ActionSheetIOS,
   Platform, ActivityIndicator, KeyboardAvoidingView,
 } from 'react-native'
@@ -15,11 +15,11 @@ import * as ImagePicker from 'expo-image-picker'
 import * as Haptics from 'expo-haptics'
 import { BlurView } from 'expo-blur'
 import { Settings } from '../../components/icons.js'
+import { ProfileHeaderCard } from '../../components/ProfileHeaderCard'
 import { supabase } from '../../lib/supabase'
-import { C, GLASS, RADII, FONTS, SPRINGS, NAV_CLEARANCE } from '../../lib/theme'
+import { C, GLASS, FONTS, SPRINGS, NAV_CLEARANCE } from '../../lib/theme'
 import { uploadAvatar } from '../../lib/upload'
 import { useNavScrollHandler } from '../../lib/navScroll'
-import { DitherMesh } from '../../components/DitherMesh'
 import { FollowListSheet } from '../../components/FollowListSheet'
 import { StatsCharts } from '../../components/StatsCharts'
 import { CatchCard } from '../../components/CatchCard'
@@ -229,63 +229,29 @@ export default function ProfileScreen() {
 
   const header = (
     <View>
-      {/* Contained dither header card */}
-      <View style={styles.headerCard}>
-        <DitherMesh />
-        <TouchableOpacity
-          style={styles.gearBtn}
-          onPress={openSettings}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Settings"
-        >
-          <BlurView tint="dark" intensity={60} style={StyleSheet.absoluteFill} />
-          <Settings size={16} color="#fff" strokeWidth={2} />
-        </TouchableOpacity>
-
-        <View style={styles.headerInner}>
-          <TouchableOpacity onPress={pickAvatar} disabled={uploading} accessibilityLabel="Change profile photo">
-            {avatarUrl
-              ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-              : (
-                <View style={[styles.avatar, styles.avatarFallback]}>
-                  <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
-                </View>
-              )
-            }
-            {uploading && (
-              <View style={styles.avatarOverlay}>
-                <ActivityIndicator color="#fff" size="small" />
-              </View>
-            )}
+      <ProfileHeaderCard
+        cornerAction={
+          <TouchableOpacity
+            style={styles.gearBtn}
+            onPress={openSettings}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+          >
+            <BlurView tint="dark" intensity={60} style={StyleSheet.absoluteFill} />
+            <Settings size={16} color="#fff" strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={styles.displayName}>{displayName}</Text>
-          {bio ? <Text style={styles.bio} numberOfLines={2}>{bio}</Text> : null}
-
-          <View style={styles.statsRow}>
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>{ownGroups.length}</Text>
-              <Text style={styles.statLabel}>Catches</Text>
-            </View>
-            <Pressable
-              style={({ pressed }) => [styles.stat, pressed && styles.statPressed]}
-              onPress={() => openFollowList('followers')}
-              accessibilityRole="button"
-            >
-              <Text style={styles.statValue}>{followerCount ?? '—'}</Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [styles.stat, pressed && styles.statPressed]}
-              onPress={() => openFollowList('following')}
-              accessibilityRole="button"
-            >
-              <Text style={styles.statValue}>{followingCount ?? '—'}</Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
+        }
+        avatarUrl={avatarUrl}
+        displayName={displayName}
+        avatarUploading={uploading}
+        onAvatarPress={pickAvatar}
+        bio={bio}
+        catchCount={ownGroups.length}
+        followerCount={followerCount}
+        followingCount={followingCount}
+        onOpenFollowList={openFollowList}
+      />
 
       <SegmentedTabs
         tabs={['Recent Activity', 'Stats']}
@@ -462,12 +428,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: C.surface },
 
-  // Dither header card
-  headerCard: {
-    borderRadius: RADII.sheet,
-    overflow: 'hidden',
-    marginBottom: 18,
-  },
   gearBtn: {
     position: 'absolute',
     top: 12,
@@ -480,64 +440,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(22,22,24,0.4)',
-  },
-  headerInner: {
-    alignItems: 'center',
-    paddingTop: 48,
-    paddingBottom: 26,
-    paddingHorizontal: 20,
-  },
-  avatar: { width: 100, height: 100, borderRadius: 50 },
-  avatarFallback: {
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitial: { fontSize: 40, fontFamily: FONTS.sansSemiBold, color: '#fff' },
-  avatarOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 50,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  displayName: {
-    fontFamily: FONTS.condensedSemiBold,
-    fontSize: 20,
-    color: '#fff',
-    marginTop: 14,
-    textAlign: 'center',
-  },
-  bio: {
-    fontFamily: FONTS.sans,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
-    textAlign: 'center',
-    // No fixed lineHeight: it wouldn't scale with Dynamic Type and would clip
-    // wrapped text at larger accessibility text sizes.
-    marginTop: 6,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 36,
-    marginTop: 22,
-  },
-  stat: { alignItems: 'center' },
-  statPressed: { opacity: 0.6 },
-  statValue: {
-    fontFamily: FONTS.mono,
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  statLabel: {
-    fontFamily: FONTS.condensed,
-    fontSize: 11,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 2,
   },
 
   emptyText: {

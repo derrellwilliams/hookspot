@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity, Modal, ScrollView,
   Image, StyleSheet, Alert, ActivityIndicator,
-  Platform, ActionSheetIOS, KeyboardAvoidingView, Dimensions,
+  Platform, KeyboardAvoidingView, Dimensions,
 } from 'react-native'
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -17,6 +17,7 @@ import { uploadCatch, parseGpsFromAsset } from '../lib/upload'
 import { enrichPhotos } from '../lib/enrich'
 import { supabase } from '../lib/supabase'
 import { reducedMotion } from '../lib/reducedMotion'
+import { selectFromActionSheet } from '../lib/actionSheet'
 import { C } from '../lib/theme'
 
 // Forward step transition (location -> details). Falls back to a plain
@@ -28,20 +29,6 @@ MapboxGL.setAccessToken(Constants.expoConfig.extra.mapboxToken)
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const THUMB_SIZE = 72
-
-function selectFromActionSheet(title, options, onSelect) {
-  if (Platform.OS === 'ios') {
-    ActionSheetIOS.showActionSheetWithOptions(
-      { options: ['Cancel', ...options], cancelButtonIndex: 0 },
-      idx => { if (idx > 0) onSelect(options[idx - 1]) }
-    )
-  } else {
-    Alert.alert(title, undefined, [
-      ...options.map(o => ({ text: o, onPress: () => onSelect(o) })),
-      { text: 'Cancel', style: 'cancel' },
-    ])
-  }
-}
 
 function ThumbRow({ assets, onRemove }) {
   if (!assets.length) return null

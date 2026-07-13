@@ -4,7 +4,7 @@
 // get_user_catches RPC so non-followed profiles show their grid (web parity).
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
-  View, Text, Image, TouchableOpacity, Pressable,
+  View, Text, TouchableOpacity,
   StyleSheet, Alert, ActivityIndicator,
 } from 'react-native'
 import Animated from 'react-native-reanimated'
@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import { supabase } from '../../lib/supabase'
 import { C, RADII, FONTS, NAV_CLEARANCE } from '../../lib/theme'
-import { DitherMesh } from '../../components/DitherMesh'
+import { ProfileHeaderCard } from '../../components/ProfileHeaderCard'
 import { FollowListSheet } from '../../components/FollowListSheet'
 import { StatsCharts } from '../../components/StatsCharts'
 import { CatchCard } from '../../components/CatchCard'
@@ -186,57 +186,28 @@ export default function UserProfileScreen() {
 
   const header = (
     <View>
-      <View style={styles.headerCard}>
-        <DitherMesh />
-
-        <TouchableOpacity
-          style={[styles.followBtn, isFollowing && styles.followBtnFollowing]}
-          onPress={handleFollowToggle}
-          disabled={followLoading}
-          activeOpacity={0.85}
-        >
-          {followLoading
-            ? <ActivityIndicator size="small" color="#fff" />
-            : <Text style={styles.followBtnText}>{isFollowing ? 'Following' : 'Follow'}</Text>
-          }
-        </TouchableOpacity>
-
-        <View style={styles.headerInner}>
-          {profile.avatar_url
-            ? <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-            : (
-              <View style={[styles.avatar, styles.avatarFallback]}>
-                <Text style={styles.avatarInitial}>{displayName[0].toUpperCase()}</Text>
-              </View>
-            )
-          }
-          <Text style={styles.displayName}>{displayName}</Text>
-          {profile.bio ? <Text style={styles.bio} numberOfLines={2}>{profile.bio}</Text> : null}
-
-          <View style={styles.statsRow}>
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>{groups.length}</Text>
-              <Text style={styles.statLabel}>Catches</Text>
-            </View>
-            <Pressable
-              style={({ pressed }) => [styles.stat, pressed && styles.statPressed]}
-              onPress={() => openFollowList('followers')}
-              accessibilityRole="button"
-            >
-              <Text style={styles.statValue}>{followerCount ?? '—'}</Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [styles.stat, pressed && styles.statPressed]}
-              onPress={() => openFollowList('following')}
-              accessibilityRole="button"
-            >
-              <Text style={styles.statValue}>{followingCount ?? '—'}</Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
+      <ProfileHeaderCard
+        cornerAction={
+          <TouchableOpacity
+            style={[styles.followBtn, isFollowing && styles.followBtnFollowing]}
+            onPress={handleFollowToggle}
+            disabled={followLoading}
+            activeOpacity={0.85}
+          >
+            {followLoading
+              ? <ActivityIndicator size="small" color="#fff" />
+              : <Text style={styles.followBtnText}>{isFollowing ? 'Following' : 'Follow'}</Text>
+            }
+          </TouchableOpacity>
+        }
+        avatarUrl={profile.avatar_url}
+        displayName={displayName}
+        bio={profile.bio}
+        catchCount={groups.length}
+        followerCount={followerCount}
+        followingCount={followingCount}
+        onOpenFollowList={openFollowList}
+      />
 
       <SegmentedTabs
         tabs={['Recent Activity', 'Stats']}
@@ -294,11 +265,6 @@ const styles = StyleSheet.create({
   centered: { flex: 1, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' },
   errorText: { color: C.muted, fontSize: 16, fontFamily: FONTS.sans },
 
-  headerCard: {
-    borderRadius: RADII.sheet,
-    overflow: 'hidden',
-    marginBottom: 18,
-  },
   followBtn: {
     position: 'absolute',
     top: 12,
@@ -317,58 +283,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.25)',
   },
   followBtnText: { color: '#fff', fontFamily: FONTS.sansSemiBold, fontSize: 13 },
-
-  headerInner: {
-    alignItems: 'center',
-    paddingTop: 48,
-    paddingBottom: 26,
-    paddingHorizontal: 20,
-  },
-  avatar: { width: 100, height: 100, borderRadius: 50 },
-  avatarFallback: {
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitial: { fontSize: 40, fontFamily: FONTS.sansSemiBold, color: '#fff' },
-  displayName: {
-    fontFamily: FONTS.condensedSemiBold,
-    fontSize: 20,
-    color: '#fff',
-    marginTop: 14,
-    textAlign: 'center',
-  },
-  bio: {
-    fontFamily: FONTS.sans,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
-    textAlign: 'center',
-    // No fixed lineHeight: it wouldn't scale with Dynamic Type and would clip
-    // wrapped text at larger accessibility text sizes.
-    marginTop: 6,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 36,
-    marginTop: 22,
-  },
-  stat: { alignItems: 'center' },
-  statPressed: { opacity: 0.6 },
-  statValue: {
-    fontFamily: FONTS.mono,
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  statLabel: {
-    fontFamily: FONTS.condensed,
-    fontSize: 11,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 2,
-  },
 
   emptyText: {
     fontFamily: FONTS.sans,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View, Text, Modal, TouchableOpacity, TextInput, ScrollView,
-  Image, StyleSheet, Alert, ActivityIndicator, Platform, ActionSheetIOS,
+  Image, StyleSheet, Alert, ActivityIndicator, Platform,
   KeyboardAvoidingView,
 } from 'react-native'
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist'
@@ -10,20 +10,7 @@ import { C } from '../lib/theme'
 import { photoUrl } from '../lib/storage'
 import { useAuthStore } from '../store/useAuthStore'
 import { usePhotoStore } from '../store/usePhotoStore'
-
-function selectFromActionSheet(title, options, onSelect) {
-  if (Platform.OS === 'ios') {
-    ActionSheetIOS.showActionSheetWithOptions(
-      { options: ['Cancel', ...options], cancelButtonIndex: 0 },
-      idx => { if (idx > 0) onSelect(options[idx - 1]) }
-    )
-  } else {
-    Alert.alert(title, undefined, [
-      ...options.map(o => ({ text: o, onPress: () => onSelect(o) })),
-      { text: 'Cancel', style: 'cancel' },
-    ])
-  }
-}
+import { selectFromActionSheet } from '../lib/actionSheet'
 
 export function EditCatchModal({ visible, group, onClose, onSaved, onAddPhotos, addingPhotos, onDelete }) {
   const user = useAuthStore(s => s.user)

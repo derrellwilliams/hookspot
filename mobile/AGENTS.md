@@ -11,12 +11,15 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before 
   login.js pattern: page gets explicit `useWindowDimensions()` width/height, the
   background is one absolute layer, and the content is wrapped in a second absolute
   layer with explicit dims, ordered after it.
-- **On-screen Skia canvases don't work here**: `<Canvas>` (CAMetalLayer) fails to
-  allocate drawables on the iOS 26 simulator on cold start, and when it does render
-  it composites above all sibling views. `DitherMesh` therefore renders the dither
-  shader **offscreen** (`Skia.Surface.MakeOffscreen` → image snapshot → `<Image>`),
-  as a frozen frame. Don't convert it back to a live `<Canvas>` without testing on
-  a physical device.
+- **On-screen Skia canvases have a known simulator bug**: `<Canvas>` (CAMetalLayer)
+  can fail to allocate drawables on the iOS 26 simulator on cold start, and when it
+  does render it can composite above sibling views. `DitherMesh` intentionally keeps
+  a live, animated `<Canvas>` anyway — the alternative (offscreen
+  `Skia.Surface.MakeOffscreen` → snapshot → `<Image>`) would freeze the warp
+  animation, which was explicitly rejected as a UX regression (2026-07-13, see
+  memory). Don't "fix" this by converting DitherMesh to an offscreen/frozen
+  snapshot without checking with the user first. If the simulator bug actually
+  blocks you, reboot the simulator (see below) rather than reaching for that.
 - **Simulator Metal degrades with app relaunches**: after many terminate/launch
   cycles, `CAMetalLayer nextDrawable` starts returning nil ("allocation failed")
   for everything. Reboot the simulator (`xcrun simctl shutdown/boot`) before
