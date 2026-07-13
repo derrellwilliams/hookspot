@@ -311,7 +311,7 @@ export function UploadDialog() {
                           onDrop={onZoneDrop}
                         >
                           {loading ? (
-                            <PixelFishLoader variant="wave" size={64} />
+                            <PixelFishLoader size={64} />
                           ) : canHover ? (
                             <>
                               <MediaImage width={24} height={24} style={{ opacity: 0.4 }} />
@@ -388,7 +388,7 @@ export function UploadDialog() {
                               className={identifying ? styles.inputLoading : ''}
                               autoFocus
                             />
-                            {identifying && <PixelFishLoader variant="wave" size={14} className={styles.inputSpinner} />}
+                            {identifying && <PixelFishLoader size={14} className={styles.inputSpinner} />}
                           </div>
                           <label>Rod</label>
                           <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="Select your rod" suggestions={prevRods} />

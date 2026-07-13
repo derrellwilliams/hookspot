@@ -130,7 +130,7 @@ export function DesignPage() {
           <div className={styles.inputRow} style={{ marginTop: 12 }}>
             <div className={d.inputWrap}>
               <Input value="Identifying…" disabled className={d.inputLoading} />
-              <PixelFishLoader variant="wave" size={14} className={d.inputSpinner} />
+              <PixelFishLoader size={14} className={d.inputSpinner} />
             </div>
           </div>
         </Section>
@@ -227,22 +227,12 @@ export function DesignPage() {
         <Section label="Loading">
           <div className={styles.loaderRow}>
             <div className={styles.loaderCard}>
-              <PixelFishLoader variant="wave" size={64} />
-              <span className={styles.loaderLabel}>Wave — ambient chase, loops forever</span>
+              <PixelFishLoader size={64} />
+              <span className={styles.loaderLabel}>Ambient chase, loops forever</span>
             </div>
             <div className={styles.loaderCard}>
-              <PixelFishLoader variant="assemble" size={64} />
-              <span className={styles.loaderLabel}>Assemble — builds, holds, fades, repeats</span>
-            </div>
-          </div>
-          <div className={styles.loaderRow} style={{ marginTop: 16 }}>
-            <div className={styles.loaderCard}>
-              <PixelFishLoader variant="wave" size={20} />
-              <span className={styles.loaderLabel}>Wave @ 20px (inline size)</span>
-            </div>
-            <div className={styles.loaderCard}>
-              <PixelFishLoader variant="assemble" size={20} />
-              <span className={styles.loaderLabel}>Assemble @ 20px (inline size)</span>
+              <PixelFishLoader size={20} />
+              <span className={styles.loaderLabel}>@ 20px (inline size)</span>
             </div>
           </div>
         </Section>

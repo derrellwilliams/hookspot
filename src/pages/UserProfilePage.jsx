@@ -450,7 +450,7 @@ export function UserProfilePage() {
     showToast('Catch deleted')
   }
 
-  if (isLoading) return <div className={styles.page}><div className={styles.loading}><PixelFishLoader variant="wave" size={64} /></div></div>
+  if (isLoading) return <div className={styles.page}><div className={styles.loading}><PixelFishLoader size={64} /></div></div>
 
   if (error) {
     return (
@@ -563,7 +563,7 @@ export function UserProfilePage() {
                             ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
                             : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
                         }
-                        {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
+                        {uploading && <div className={styles.avatarOverlay}><PixelFishLoader size={22} /></div>}
                       </button>
                     </div>
                   </div>
@@ -706,7 +706,7 @@ export function UserProfilePage() {
                         ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
                         : <UserCircle width={28} height={28} className={styles.avatarPlaceholder} />
                     }
-                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
+                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader size={22} /></div>}
                   </button>
                   {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={8} height={8} /></div>}
                   <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />
@@ -869,7 +869,7 @@ export function UserProfilePage() {
                         ? <span className={styles.avatarInitial}>{displayName[0].toUpperCase()}</span>
                         : <UserCircle width={36} height={36} className={styles.avatarPlaceholder} />
                     }
-                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader variant="wave" size={22} /></div>}
+                    {uploading && <div className={styles.avatarOverlay}><PixelFishLoader size={22} /></div>}
                   </button>
                   {!avatarUrl && <div className={styles.avatarEditBadge} aria-hidden="true"><EditPencil width={10} height={10} /></div>}
                   <input ref={fileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleAvatarChange} />

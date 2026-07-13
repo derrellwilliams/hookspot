@@ -257,7 +257,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
                 title="Add photo to this catch"
               >
                 {addingPhoto
-                  ? <PixelFishLoader variant="wave" size={22} />
+                  ? <PixelFishLoader size={22} />
                   : <Plus width={22} height={22} />}
               </div>
             )}

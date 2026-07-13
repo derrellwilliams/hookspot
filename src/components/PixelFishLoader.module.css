@@ -27,30 +27,6 @@
   100% { opacity: 0.14; transform: scale(0.55); fill: currentColor; }
 }
 
-/* Assemble: pixels pop in tail -> head, hold fully formed, then fade out
-   together — restarted from React so the group resets in sync. */
-.assemble .pixel {
-  opacity: 0;
-  transform: scale(0.3);
-  animation: pixelPop 420ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  animation-delay: calc(var(--i) * 70ms);
-}
-
-@keyframes pixelPop {
-  0% { opacity: 0; transform: scale(0.3); fill: var(--accent-bright); }
-  55% { opacity: 1; transform: scale(1.15); fill: var(--accent-bright); }
-  100% { opacity: 1; transform: scale(1); fill: currentColor; }
-}
-
-.assemble.fading .pixel {
-  animation: pixelFadeOut 280ms ease forwards !important;
-  animation-delay: 0ms !important;
-}
-
-@keyframes pixelFadeOut {
-  to { opacity: 0; transform: scale(0.4); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .pixel {
     animation: none !important;
