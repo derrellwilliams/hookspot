@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Icons from '../components/icons.js'
 import { Xmark, EditPencil } from '../components/icons.js'
@@ -8,7 +8,7 @@ import { Avatar, Button, Input, Select, SelectWithCustom } from '../components/u
 import { usePhotoStore } from '../store/usePhotoStore.js'
 import { PixelFishLoader } from '../components/PixelFishLoader.jsx'
 import { SkeletonCard } from '../components/CatchGrid/CatchGrid.jsx'
-import { SPRING, SPRING_TIGHT } from '../lib/motion.js'
+import { SPRING, SPRING_TIGHT, SPRING_POP, SPRING_SNAPPY, EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../lib/motion.js'
 import styles from './DesignPage.module.css'
 import d from '../components/UploadDialog/UploadDialog.module.css'
 import s from './SearchPage.module.css'
@@ -18,27 +18,49 @@ import glass from '../styles/shared.module.css'
 function DemoDialog({ open, onClose }) {
   return (
     <Dialog.Root open={open} onOpenChange={open => { if (!open) onClose() }}>
-      <Dialog.Portal>
-        <Dialog.Overlay className={d.backdrop} />
-        <Dialog.Content className={d.content} aria-describedby={undefined}>
-          <div className={d.header}>
-            <Dialog.Title className={d.title}>Edit profile</Dialog.Title>
-            <Dialog.Close asChild><Button variant="icon-sm" aria-label="Close"><Xmark width={20} height={20} /></Button></Dialog.Close>
-          </div>
-          <div className={d.body}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Input placeholder="Display name" />
-              {/* No shared textarea component yet — this is a gap, not a pattern to copy. */}
-              <textarea placeholder="Bio" rows={3} style={{ padding: '8px 10px', background: 'var(--dark-surface)', border: '1px solid var(--dark-border)', borderRadius: 8, color: 'var(--dark-text)', fontFamily: 'inherit', resize: 'none' }} />
-            </div>
-          </div>
-          <div className={d.form}>
-            <div className={d.actions}>
-              <Button variant="secondary" onClick={onClose}>Cancel</Button>
-              <Button variant="primary">Save</Button>
-            </div>
-          </div>
-        </Dialog.Content>
+      <Dialog.Portal forceMount>
+        <AnimatePresence>
+          {open && (
+            <>
+              <Dialog.Overlay asChild>
+                <motion.div
+                  className={d.backdrop}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+              </Dialog.Overlay>
+              <Dialog.Content className={d.contentPositioner} aria-describedby={undefined}>
+                <motion.div
+                  className={d.content}
+                  initial={{ opacity: 0, scale: 0.97, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.97, y: 4, transition: { duration: 0.15, ease: EASE_OUT } }}
+                  transition={{ duration: 0.25, ease: EASE_ENTER }}
+                >
+                  <div className={d.header}>
+                    <Dialog.Title className={d.title}>Edit profile</Dialog.Title>
+                    <Dialog.Close asChild><Button variant="icon-sm" aria-label="Close"><Xmark width={20} height={20} /></Button></Dialog.Close>
+                  </div>
+                  <div className={d.body}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <Input placeholder="Display name" />
+                      {/* No shared textarea component yet — this is a gap, not a pattern to copy. */}
+                      <textarea placeholder="Bio" rows={3} style={{ padding: '8px 10px', background: 'var(--dark-surface)', border: '1px solid var(--dark-border)', borderRadius: 8, color: 'var(--dark-text)', fontFamily: 'inherit', resize: 'none' }} />
+                    </div>
+                  </div>
+                  <div className={d.form}>
+                    <div className={d.actions}>
+                      <Button variant="secondary" onClick={onClose}>Cancel</Button>
+                      <Button variant="primary">Save</Button>
+                    </div>
+                  </div>
+                </motion.div>
+              </Dialog.Content>
+            </>
+          )}
+        </AnimatePresence>
       </Dialog.Portal>
     </Dialog.Root>
   )
@@ -49,6 +71,43 @@ function Section({ label, children }) {
     <div className={styles.section}>
       <div className={styles.sectionLabel}>{label}</div>
       {children}
+    </div>
+  )
+}
+
+// Values below are pulled live from src/lib/motion.js, not retyped — this
+// table can't drift from the actual tokens.
+const EASING_TOKENS = [
+  { name: 'EASE_OUT', value: EASE_OUT, usage: 'Entrances & exits — strong deceleration, starts fast' },
+  { name: 'EASE_ENTER', value: EASE_ENTER, usage: 'Dialog & panel entrance curve' },
+  { name: 'EASE_DRAWER', value: EASE_DRAWER, usage: 'iOS-style curve for mobile bottom sheets' },
+]
+
+const SPRING_TOKENS = [
+  { name: 'SPRING', value: SPRING, usage: 'Default interactive spring — hover / tap (see Buttons above)' },
+  { name: 'SPRING_TIGHT', value: SPRING_TIGHT, usage: 'layoutId indicators — nav highlight, tabs (see Segmented tabs above)' },
+  { name: 'SPRING_POP', value: SPRING_POP, usage: 'Slight overshoot — dropdowns, chips' },
+  { name: 'SPRING_SNAPPY', value: SPRING_SNAPPY, usage: 'Fast layoutId indicators — mobile stadium/toggle thumbs' },
+]
+
+const MOTION_CONVENTIONS = [
+  { label: 'Press feedback', detail: 'scale(0.975) on tap, SPRING transition — never scale(0), keep it subtle' },
+  { label: 'Hover feedback', detail: 'scale(1.02) on hover, desktop (hover: hover) only' },
+  { label: 'Dialog entrance', detail: '250ms EASE_ENTER in, 150ms EASE_OUT out — see Dialog below' },
+  { label: 'Backdrop fade', detail: '200ms opacity, no movement' },
+  { label: 'List stagger', detail: '40ms per card, capped at the first 9 — see catch grids (home, search, profile)' },
+  { label: 'UI duration budget', detail: 'stays under 300ms; only marketing/onboarding moments can run longer' },
+  { label: 'Reduced motion', detail: 'useReducedMotion() strips position/size changes but keeps opacity feedback — never disables it entirely' },
+]
+
+function EasingDemo({ value }) {
+  return (
+    <div className={styles.easingTrack}>
+      <motion.div
+        className={styles.easingDot}
+        animate={{ x: [0, 176, 0] }}
+        transition={{ duration: 1.4, ease: value, repeat: Infinity, repeatDelay: 0.4 }}
+      />
     </div>
   )
 }
@@ -101,6 +160,42 @@ export function DesignPage() {
         <Section label="Glass surface">
           <div className={styles.glassDemoRow}>
             <div className={`${styles.glassDemoBg} ${glass.glassSurface} ${glass.glassShadow}`} />
+          </div>
+        </Section>
+
+        <Section label="Motion — easing">
+          <div className={styles.motionTable}>
+            {EASING_TOKENS.map(({ name, value, usage }) => (
+              <div key={name} className={styles.motionRow}>
+                <code className={styles.motionName}>{name}</code>
+                <code className={styles.motionValue}>cubic-bezier({value.join(', ')})</code>
+                <span className={styles.motionUsage}>{usage}</span>
+                <EasingDemo value={value} />
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section label="Motion — springs">
+          <div className={styles.motionTable}>
+            {SPRING_TOKENS.map(({ name, value, usage }) => (
+              <div key={name} className={styles.motionRow}>
+                <code className={styles.motionName}>{name}</code>
+                <code className={styles.motionValue}>stiffness {value.stiffness} · damping {value.damping}</code>
+                <span className={styles.motionUsage}>{usage}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section label="Motion — conventions">
+          <div className={styles.motionConventions}>
+            {MOTION_CONVENTIONS.map(({ label, detail }) => (
+              <div key={label} className={styles.motionConventionRow}>
+                <span className={styles.motionConventionLabel}>{label}</span>
+                <span className={styles.motionUsage}>{detail}</span>
+              </div>
+            ))}
           </div>
         </Section>
 
@@ -179,7 +274,7 @@ export function DesignPage() {
                   key={id}
                   className={`${p.tab} ${isActive ? p.tabActive : ''}`}
                   onClick={() => setTab(id)}
-                  whileHover={{ scale: 1.007 }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.975 }}
                   transition={SPRING}
                 >

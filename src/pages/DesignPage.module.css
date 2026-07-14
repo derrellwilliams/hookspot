@@ -149,6 +149,82 @@
   border-radius: 16px;
 }
 
+/* Motion */
+.motionTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.motionRow {
+  display: grid;
+  grid-template-columns: 140px 220px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.motionRow:last-child {
+  border-bottom: none;
+}
+
+.motionName {
+  font-size: 12px;
+  color: var(--dark-text);
+}
+
+.motionValue {
+  font-size: 11px;
+  color: var(--dark-muted);
+}
+
+.motionUsage {
+  font-size: 12px;
+  color: var(--dark-muted);
+  line-height: 1.4;
+}
+
+.easingTrack {
+  position: relative;
+  width: 200px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.easingDot {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.motionConventions {
+  display: flex;
+  flex-direction: column;
+}
+
+.motionConventionRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.motionConventionRow:last-child {
+  border-bottom: none;
+}
+
+.motionConventionLabel {
+  font-size: 12px;
+  color: var(--dark-text);
+  font-weight: 500;
+}
+
 /* Avatar */
 .avatarRow {
   display: flex;
