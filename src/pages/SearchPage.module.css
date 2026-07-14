@@ -188,7 +188,7 @@
 
 .sectionLabel {
   font-family: var(--font-condensed);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -334,19 +334,18 @@
 
 @media (max-width: 600px) {
   /* No glass Nav on mobile — clear the notch on top; bottom padding puts the
-     empty-state mesh 20px above the nav pill (70px nav top + 20px gap − 16px
-     inner padding), matching the filters → mesh gap above */
+     empty-state mesh 20px above the nav pill (70px nav top + 20px gap),
+     matching the filters → mesh gap above */
   .page {
-    padding: calc(4px + env(safe-area-inset-top)) 12px calc(74px + env(safe-area-inset-bottom));
+    padding: calc(4px + env(safe-area-inset-top)) 12px calc(90px + env(safe-area-inset-bottom));
   }
 
   .pageIdle {
     padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
 
-  .inner {
-    padding: 16px;
-  }
+  /* No extra inner padding — the page's 12px side padding is the only
+     margin, matching the catches feed and profile page on mobile. */
 
   /* Single horizontally scrolling row; bleeds to the page edge.
      Bottom margin matches the search-box → filters gap (20px). */
@@ -354,8 +353,8 @@
     gap: 8px;
     flex-wrap: nowrap;
     overflow-x: auto;
-    margin: 0 -16px 20px;
-    padding: 0 16px;
+    margin: 0 -12px 20px;
+    padding: 0 12px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }

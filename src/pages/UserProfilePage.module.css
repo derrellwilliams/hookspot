@@ -163,7 +163,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-sans);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--dark-muted);
 }
@@ -192,7 +192,7 @@
 
 .headerBio {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 14px;
   color: var(--dark-text);
   margin: 0;
   line-height: 1.5;
@@ -1002,7 +1002,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-sans);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--dark-muted);
 }
