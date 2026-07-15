@@ -1,4 +1,4 @@
-import { extractExif, toDisplayBlob, resizeForStorage } from '../exif.js'
+import { extractExif, toDisplayBlob, resizeForStorage, resizeForThumb } from '../exif.js'
 import { getCached, setCached } from '../cache.js'
 import { identifySpecies } from '../identify.js'
 import { fetchWeather } from './weather.js'
@@ -17,6 +17,25 @@ function getUser() {
 // Also normalize HEIC/HEIF → jpg since we always store JPEG content.
 function storageKey(filename) {
   return filename.replace(/[^\w.\-]/g, '_').replace(/\.(heic|heif)$/i, '.jpg')
+}
+
+// Best-effort grid thumbnail — resizes from the original file (falling back to the
+// already-resized display blob if that fails) and uploads to a `thumbs/` sibling
+// path. Returns null on any failure so the caller can omit thumb_url entirely
+// rather than send it as null (see uploadPhoto's comment for why that matters).
+async function uploadThumbnail(file, displayBlob, storagePath) {
+  try {
+    const thumbBlob = await resizeForThumb(file).catch(() => resizeForThumb(displayBlob))
+    const thumbPath = storagePath.replace(/^([^/]+)\//, '$1/thumbs/')
+    const { error } = await supabase.storage
+      .from('catches')
+      .upload(thumbPath, thumbBlob, { upsert: false, contentType: 'image/jpeg' })
+    if (error) return null
+    return supabase.storage.from('catches').getPublicUrl(thumbPath).data.publicUrl
+  } catch (e) {
+    console.warn('[hookspot] thumbnail generation failed, continuing without it', e)
+    return null
+  }
 }
 
 function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
@@ -232,6 +251,12 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
 
+  // Thumbnail is best-effort and strictly sequential after the main upload succeeds —
+  // never run it in parallel and never let its failure touch the catch save. A prior
+  // attempt (2026-06) ran both uploads in one Promise.all and always sent thumb_url
+  // (even as null), which broke every upload when the column briefly lagged behind.
+  const thumbUrl = await uploadThumbnail(file, blob, storagePath)
+
   const exifTime = exif?.DateTimeOriginal instanceof Date
     ? exif.DateTimeOriginal.getTime()
     : parseExifDate(exif?.DateTimeOriginal)
@@ -245,6 +270,7 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
     filename: file.name,
     storage_path: storagePath,
     url: publicUrl,
+    ...(thumbUrl && { thumb_url: thumbUrl }),
     species: uploadMeta.species || null,
     lat: exif?.latitude ?? uploadMeta.manualLat ?? null,
     lng: exif?.longitude ?? uploadMeta.manualLng ?? null,
@@ -254,7 +280,8 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
 
   const { data: insertedRow, error: dbError } = await supabase.from('photos').insert(row).select('id').single()
   if (dbError) {
-    await supabase.storage.from('catches').remove([storagePath])
+    const cleanupPaths = thumbUrl ? [storagePath, storagePath.replace(/^([^/]+)\//, '$1/thumbs/')] : [storagePath]
+    await supabase.storage.from('catches').remove(cleanupPaths)
     console.error('[hookspot] db insert failed', dbError)
     return false
   }
@@ -297,12 +324,15 @@ export async function uploadPhotoToGroup(file, groupLead) {
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
 
+  const thumbUrl = await uploadThumbnail(file, blob, storagePath)
+
   const row = {
     user_id: user.id,
     catch_id: groupLead.catchId ?? null,
     filename: file.name,
     storage_path: storagePath,
     url: publicUrl,
+    ...(thumbUrl && { thumb_url: thumbUrl }),
     species: null,
     lat: groupLead.exif?.latitude ?? null,
     lng: groupLead.exif?.longitude ?? null,
@@ -312,7 +342,8 @@ export async function uploadPhotoToGroup(file, groupLead) {
 
   const { data: insertedRow, error: dbError } = await supabase.from('photos').insert(row).select('id').single()
   if (dbError) {
-    await supabase.storage.from('catches').remove([storagePath])
+    const cleanupPaths = thumbUrl ? [storagePath, storagePath.replace(/^([^/]+)\//, '$1/thumbs/')] : [storagePath]
+    await supabase.storage.from('catches').remove(cleanupPaths)
     throw new Error('DB: ' + dbError.message)
   }
   row.id = insertedRow?.id ?? null
@@ -346,7 +377,11 @@ export async function deletePhotos(toDelete) {
   }
   if (dbError) { console.error('[hookspot] db delete failed', dbError); return }
 
-  const { error: storageError } = await supabase.storage.from('catches').remove(paths)
+  // Best-effort: also remove each photo's thumbs/ sibling if one exists — removing
+  // a nonexistent key is a no-op, not an error, so this is safe for photos that
+  // never got a thumbnail.
+  const thumbPaths = paths.map(p => p.replace(/^([^/]+)\//, '$1/thumbs/'))
+  const { error: storageError } = await supabase.storage.from('catches').remove([...paths, ...thumbPaths])
   if (storageError) console.error('[hookspot] storage delete failed', storageError)
 
   await Promise.all(list.map(p => setCached(`${user.id}/${p.name}`, undefined)))

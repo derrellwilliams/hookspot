@@ -4,6 +4,11 @@ import heic2any from 'heic2any'
 const STORAGE_MAX_PX = 2048
 const STORAGE_QUALITY = 0.85
 const DISPLAY_MAX_PX = 1200
+// Grid thumbnail — sized for a ~450-550px CSS-wide card at up to 2-3x DPR
+// (see CatchGrid.module.css / SearchPage.module.css). Keep in sync with
+// THUMB_MAX_PX/THUMB_QUALITY in scripts/backfill-thumbnails.js.
+const THUMB_MAX_PX = 960
+const THUMB_QUALITY = 0.82
 
 // iOS Safari natively decodes HEIC in <img> and canvas; heic2any (pure-JS
 // decoder) can spike to 300-500MB and crash the tab on low-memory devices.
@@ -69,4 +74,8 @@ export async function resizeBlob(blob, maxPx, quality = 0.85) {
 
 export function resizeForStorage(blob) {
   return resizeBlob(blob, STORAGE_MAX_PX, STORAGE_QUALITY)
+}
+
+export function resizeForThumb(blob) {
+  return resizeBlob(blob, THUMB_MAX_PX, THUMB_QUALITY)
 }
