@@ -66,7 +66,7 @@ export const usePhotoStore = create((set, get) => ({
 
   showToast(msg, variant = 'default') {
     set({ toast: msg, toastVariant: variant })
-    setTimeout(() => set(s => s.toast === msg ? { toast: null } : {}), 3200)
+    setTimeout(() => set(s => s.toast === msg ? { toast: null } : {}), 4000)
   },
 
   reorderGroup(newOrderedPhotos) {
