@@ -63,7 +63,7 @@ Click **+** or drag photos onto the app window — both paths open the upload di
 
 ## Data model
 
-Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `lat`, `lng`, `time`). Each photo is a row in the `photos` table with a `catch_id` foreign key back to its catch. Photos are stored in Supabase Storage and cached in the browser's IndexedDB for fast subsequent loads.
+Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `lat`, `lng`, `time`). Each photo is a row in the `photos` table with a `catch_id` foreign key back to its catch. Photos are stored in Supabase Storage (a resized thumbnail is generated alongside the full-resolution original, so grid views load a lighter image) and cached in the browser's IndexedDB for fast subsequent loads.
 
 ## Tech Stack
 

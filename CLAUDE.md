@@ -21,8 +21,10 @@
 
 ## Data Model
 - **`catches`** — one row per fishing session: `id, user_id, species, rod, fly, lat, lng, time`
-- **`photos`** — one row per image: `catch_id (FK → catches)`, `filename, storage_path, url, species, lat, lng, time, meta`
+- **`photos`** — one row per image: `catch_id (FK → catches)`, `filename, storage_path, url, thumb_url, species, lat, lng, time, meta`
 - Every upload creates a `catches` row first, then inserts photos with that `catch_id`
+- `thumb_url` is a best-effort ~960px grid thumbnail (`resizeForThumb()` in `src/exif.js`, uploaded by `uploadThumbnail()` in `src/lib/fileLoader.js`) generated alongside the full 2048px original on every upload. `CatchCard` (`src/components/CatchGrid/CatchGrid.jsx`) renders `thumbUrl ?? url`, so photos without a thumbnail (pre-2026-07-15) just fall back to the full image. `scripts/backfill-thumbnails.js` (pass `--force` to regenerate existing thumbnails) backfills photos uploaded before this existed.
+- **Thumbnail generation must stay sequential and best-effort** — it runs strictly after the main image upload succeeds, wrapped in try/catch, and `thumb_url` is only included in the insert when generation actually succeeded. A 2026-06 attempt ran both uploads in parallel and always sent `thumb_url` (even as `null`), which broke every upload in production — don't reintroduce either pattern.
 - `groupPhotos(photos)` in `src/lib/groupPhotos.js` groups by `catchId`; photos with no `catchId` become singleton groups
 - `PopupCarousel.saveEdit()` writes edits to both `photos` and `catches` to keep them in sync
 
@@ -40,6 +42,7 @@
 
 ## Mobile (`mobile/`)
 - Expo 56 bare workflow, React Native 0.85.3, new arch
+- **Does not yet consume `thumb_url`** — `mobile/components/CatchCard.js` renders `photoUrl()` (full-resolution `storage_path`) directly, and `mobile/lib/upload.js` has its own independent upload path with no thumbnail generation. The grid-thumbnail fix (2026-07-15) is web-only; mobile parity would need native-side resize tooling, not a port of `src/exif.js`'s canvas-based resize.
 - Only some `mobile/lib` files are symlinks into `src/lib` (formatters, groupByTime, groupPhotos, imageUtils, validation) — the rest of `mobile/lib` and all of `mobile/store` are independent real files, not shared with `src/`
 - Map screen (`mobile/app/(tabs)/map.js`) fetches photos, maps `catch_id → catchId` + ISO → ms, calls `groupPhotos()`, renders one marker/list item per group
 - Environment gotchas (Fabric layout quirks, Skia canvas limits, Metro/Supabase resolution, prebuild caveats) live in `mobile/AGENTS.md` — read it before touching native config or full-screen canvases

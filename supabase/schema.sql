@@ -58,7 +58,7 @@ create table photos (
   filename text not null,
   storage_path text not null,
   url text not null,
-  thumb_url text,
+  thumb_url text, -- best-effort ~960px grid thumbnail, generated at upload time; nullable, falls back to url
   species text,
   lat double precision,
   lng double precision,
