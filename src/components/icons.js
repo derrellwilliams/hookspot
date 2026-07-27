@@ -12,6 +12,7 @@ export {
   LayoutList as ListView,
   ChevronLeft as NavArrowLeft,
   ChevronRight as NavArrowRight,
+  ChevronsLeft as PanelCollapse,
   Plus,
   Search,
   Settings,

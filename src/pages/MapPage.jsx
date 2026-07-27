@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { CatchGrid } from '../components/CatchGrid/CatchGrid.jsx'
 import { CatchDialog } from '../components/CatchDialog/CatchDialog.jsx'
 import { MapView } from '../components/Map/MapView.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
-import { ListView, MapPin } from '../components/icons.js'
-import { SPRING_SNAPPY } from '../lib/motion.js'
+import { ListView, MapPin, PanelCollapse } from '../components/icons.js'
+import { SPRING, SPRING_SNAPPY } from '../lib/motion.js'
 import styles from './MapPage.module.css'
 
 const VIEWS = [
@@ -16,20 +16,55 @@ const VIEWS = [
 export function MapPage({ active }) {
   const isMobile = useIsMobile()
   const [mobileView, setMobileView] = useState('list')
+  const [mapExpanded, setMapExpanded] = useState(false)
+
+  // Collapsed state is desktop-only — drop it on the way into mobile so a
+  // later resize back doesn't restore a stale expanded map.
+  useEffect(() => {
+    if (isMobile) setMapExpanded(false)
+  }, [isMobile])
 
   return (
     <div id="sidebar-anchor" className={styles.page}>
       {!isMobile && (
-        <div className={styles.cardsPane}>
+        <motion.div
+          layout
+          animate={{ opacity: mapExpanded ? 0 : 1 }}
+          transition={{ layout: SPRING, opacity: { duration: 0.15 } }}
+          className={`${styles.cardsPane} ${mapExpanded ? styles.cardsPaneCollapsed : ''}`}
+        >
           <CatchGrid />
-        </div>
+        </motion.div>
       )}
       {/* Dialog portals to <body>, so gate on `active` — MapPage stays
           mounted (display:none) while other routes are shown */}
       {active && <CatchDialog />}
-      <div className={`${styles.mapPane} ${isMobile && mobileView === 'list' ? styles.mapPaneHidden : ''}`}>
+      <motion.div
+        layout={!isMobile}
+        transition={SPRING}
+        className={`${styles.mapPane} ${isMobile && mobileView === 'list' ? styles.mapPaneHidden : ''}`}
+      >
         <MapView active={active && (!isMobile || mobileView === 'map')} />
-      </div>
+        {!isMobile && (
+          <motion.button
+            className={styles.expandMapBtn}
+            onClick={() => setMapExpanded(v => !v)}
+            aria-label={mapExpanded ? 'Show catch list' : 'Expand map'}
+            aria-pressed={mapExpanded}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.92 }}
+            transition={SPRING}
+          >
+            <motion.div
+              style={{ display: 'flex' }}
+              animate={{ rotate: mapExpanded ? 180 : 0 }}
+              transition={SPRING}
+            >
+              <PanelCollapse width={16} height={16} />
+            </motion.div>
+          </motion.button>
+        )}
+      </motion.div>
       {isMobile && (
         <>
           {mobileView === 'list' ? (

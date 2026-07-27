@@ -20,6 +20,17 @@
   padding: 96px 8px 48px 24px;
 }
 
+/* Expanded-map state: flex-basis/opacity animate via motion's `layout` +
+   `animate` on the element itself (see MapPage.jsx) — this class only sets
+   the end state. flex-grow drops to 0 so .mapPane (still flex-grow: 1)
+   absorbs the freed width. */
+.cardsPaneCollapsed {
+  flex: 0 0 0%;
+  padding-left: 0;
+  padding-right: 0;
+  pointer-events: none;
+}
+
 /* Firefox only — in Chromium, setting scrollbar-width disables the
    ::-webkit-scrollbar styles below (and their track margins) */
 @supports (-moz-appearance: none) {
@@ -59,6 +70,36 @@
   margin: 96px 24px 16px 16px;
   border-radius: 16px;
   overflow: hidden;
+}
+
+/* Expand/collapse toggle — sits at the boundary where .cardsPane used to be,
+   so it stays put as the pane underneath it collapses away. */
+.expandMapBtn {
+  composes: glassSurface glassShadow from '../styles/shared.module.css';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.expandMapBtn:hover {
+  color: #fff;
+}
+
+.expandMapBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Mobile keeps the full-bleed map + dock sheet */
