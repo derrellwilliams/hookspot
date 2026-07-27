@@ -91,7 +91,7 @@ export const CatchCard = memo(function CatchCard({
           </div>
         )}
         {species && <div className={styles.species}>{species}</div>}
-        {lead.time && <div className={styles.datetime}>{formatDateNumeric(lead.time)}</div>}
+        {lead.time && <div className={styles.datetime}>{formatDateNumeric(lead.time, lead.meta?.hideTime)}</div>}
         {locationStr && <div className={styles.location}>{locationStr}</div>}
       </div>
     </motion.button>

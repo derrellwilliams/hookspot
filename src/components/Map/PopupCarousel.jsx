@@ -330,7 +330,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
             {cleanSpecies(lead.species) ?? '—'}
           </div>
           <div className={styles.popupDetail}>
-            {d ? formatDateFull(photo.time) : 'Unknown date'}
+            {d ? formatDateFull(photo.time, photo.meta?.hideTime) : 'Unknown date'}
           </div>
           {((photo.meta?.weather?.temp != null && photo.meta?.weather?.condition) || locationStr) && (
             <div className={styles.popupDetail}>

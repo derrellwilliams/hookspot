@@ -230,6 +230,31 @@
   pointer-events: none;
 }
 
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.checkboxRow input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.form .checkboxLabel {
+  margin-top: 0;
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

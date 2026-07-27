@@ -56,6 +56,7 @@ export function UploadDialog() {
   const [species, setSpecies] = useState('')
   const [rod, setRod] = useState('')
   const [fly, setFly] = useState('')
+  const [hideTime, setHideTime] = useState(false)
   const [identifying, setIdentifying] = useState(false)
   const [loading, setLoading] = useState(false)
   const [dropOver, setDropOver] = useState(false)
@@ -112,6 +113,7 @@ export function UploadDialog() {
     revokeUrls(pendingUrls)
     setPendingFiles([]); setPendingBlobs([]); setPendingUrls([])
     setSpecies(''); setRod(''); setFly('')
+    setHideTime(false)
     setManualPin(null)
     setStepRaw(1)
     setUploadOpen(false)
@@ -229,6 +231,7 @@ export function UploadDialog() {
     const catchId = catchRow.id
     const meta = { species, rod: rodVal, fly: flyVal, identified: true, catchId }
     if (catchLat != null && catchLng != null) { meta.manualLat = catchLat; meta.manualLng = catchLng }
+    if (hideTime) meta.hideTime = true
     close()
     try {
       const { added = 0 } = await handleFiles(files, meta, blobs) ?? {}
@@ -394,6 +397,15 @@ export function UploadDialog() {
                           <SelectWithCustom value={rod} onChange={e => setRod(e.target.value)} placeholder="Select your rod" suggestions={prevRods} />
                           <label>Fly</label>
                           <SelectWithCustom value={fly} onChange={e => setFly(e.target.value)} placeholder="Select your fly" suggestions={prevFlys} />
+                          <div className={styles.checkboxRow}>
+                            <input
+                              id="hide-time"
+                              type="checkbox"
+                              checked={hideTime}
+                              onChange={e => setHideTime(e.target.checked)}
+                            />
+                            <label htmlFor="hide-time" className={styles.checkboxLabel}>Hide time of catch</label>
+                          </div>
                           <div className={styles.actions}>
                             <Button variant="secondary" onClick={close}>Cancel</Button>
                             <Button variant="primary" onClick={submit}>Add Catch</Button>

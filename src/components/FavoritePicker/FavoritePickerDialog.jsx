@@ -88,7 +88,7 @@ export function FavoritePickerDialog({ open, current, onSelect, onRemove, onClos
                               <div className={styles.meta}>
                                 {species && <div className={styles.species}>{species}</div>}
                                 <div className={styles.date}>
-                                  {photo.time ? formatDateFull(photo.time) : 'No date'}
+                                  {photo.time ? formatDateFull(photo.time, photo.meta?.hideTime) : 'No date'}
                                 </div>
                               </div>
                               {isSelected && <Check width={16} height={16} className={styles.check} />}
