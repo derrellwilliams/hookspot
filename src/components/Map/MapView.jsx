@@ -48,6 +48,7 @@ export function MapView({ active }) {
       usePhotoStore.getState().setActiveGroup(null)
     })
     map.on('load', () => {
+      map.setConfigProperty('basemap', 'showPlaceLabels', true)
       setFlyToPhoto((photo) => {
         const entry = markerByNameRef.current.get(photo.name)
         if (!entry) return
