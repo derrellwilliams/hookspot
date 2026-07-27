@@ -25,6 +25,16 @@
   box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
 }
 
+/* Mobile: the modal stays centered, but tall steps (step 3's preview + thumb
+   strip + full form) can exceed the viewport height on phones. Cap it and let
+   it scroll internally so the Cancel/Add Catch buttons are always reachable. */
+@media (max-width: 600px) {
+  .content {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
+
 .header {
   display: flex;
   align-items: center;
