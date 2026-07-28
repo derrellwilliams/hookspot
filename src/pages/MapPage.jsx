@@ -46,24 +46,30 @@ export function MapPage({ active }) {
         className={`${styles.mapPane} ${isMobile && mobileView === 'list' ? styles.mapPaneHidden : ''}`}
       >
         <MapView active={active && (!isMobile || mobileView === 'map')} />
-        {!isMobile && (
-          <motion.button
-            className={styles.expandMapBtn}
-            onClick={() => setMapExpanded(v => !v)}
-            aria-label={mapExpanded ? 'Show catch list' : 'Expand map'}
-            aria-pressed={mapExpanded}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.975 }}
-            transition={SPRING}
-          >
-            {mapExpanded ? (
-              <MapCollapse width={16} height={16} />
-            ) : (
-              <MapExpand width={16} height={16} />
-            )}
-          </motion.button>
-        )}
       </motion.div>
+      {/* Rendered as a sibling of .mapPane, not a child — .mapPane's `layout`
+          FLIP animation applies a non-uniform scaleX transform to itself
+          during the resize, and any CSS transform affects all descendants.
+          Keeping this button out of that subtree means it never inherits
+          the distortion, so it doesn't need (and shouldn't have) its own
+          `layout` prop just to correct for it. */}
+      {!isMobile && (
+        <motion.button
+          className={styles.expandMapBtn}
+          onClick={() => setMapExpanded(v => !v)}
+          aria-label={mapExpanded ? 'Show catch list' : 'Expand map'}
+          aria-pressed={mapExpanded}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.975 }}
+          transition={SPRING}
+        >
+          {mapExpanded ? (
+            <MapCollapse width={16} height={16} />
+          ) : (
+            <MapExpand width={16} height={16} />
+          )}
+        </motion.button>
+      )}
       {isMobile && (
         <>
           {mobileView === 'list' ? (

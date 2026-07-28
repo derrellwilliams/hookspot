@@ -73,12 +73,16 @@
 }
 
 /* Expand/collapse toggle — top-right corner of the map, matching Airbnb's
-   map expand control placement. */
+   map expand control placement. Positioned relative to .page (not .mapPane)
+   so it never inherits .mapPane's `layout` FLIP transform during the resize
+   animation — see the comment at its call site in MapPage.jsx. Offsets are
+   .mapPane's own margin (96px top, 24px right) plus the 12px inset this
+   button always had. */
 .expandMapBtn {
   composes: glassSurface glassShadow from '../styles/shared.module.css';
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 108px;
+  right: 36px;
   z-index: 5;
   display: flex;
   align-items: center;
