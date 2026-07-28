@@ -3,7 +3,7 @@ import { motion } from 'motion/react'
 import { CatchGrid } from '../components/CatchGrid/CatchGrid.jsx'
 import { CatchDialog } from '../components/CatchDialog/CatchDialog.jsx'
 import { MapView } from '../components/Map/MapView.jsx'
-import { useIsMobile } from '../hooks/useIsMobile.js'
+import { useIsMobile, useReducedMotion } from '../hooks/useIsMobile.js'
 import { ListView, MapPin, MapExpand, MapCollapse } from '../components/icons.js'
 import { SPRING, SPRING_SNAPPY } from '../lib/motion.js'
 import styles from './MapPage.module.css'
@@ -15,6 +15,7 @@ const VIEWS = [
 
 export function MapPage({ active }) {
   const isMobile = useIsMobile()
+  const reducedMotion = useReducedMotion()
   const [mobileView, setMobileView] = useState('list')
   const [mapExpanded, setMapExpanded] = useState(false)
 
@@ -28,7 +29,7 @@ export function MapPage({ active }) {
     <div id="sidebar-anchor" className={styles.page}>
       {!isMobile && (
         <motion.div
-          layout
+          layout={!reducedMotion}
           animate={{ opacity: mapExpanded ? 0 : 1 }}
           transition={{ layout: SPRING, opacity: { duration: 0.15 } }}
           className={`${styles.cardsPane} ${mapExpanded ? styles.cardsPaneCollapsed : ''}`}
@@ -40,19 +41,20 @@ export function MapPage({ active }) {
           mounted (display:none) while other routes are shown */}
       {active && <CatchDialog />}
       <motion.div
-        layout={!isMobile}
+        layout={!isMobile && !reducedMotion}
         transition={SPRING}
         className={`${styles.mapPane} ${isMobile && mobileView === 'list' ? styles.mapPaneHidden : ''}`}
       >
         <MapView active={active && (!isMobile || mobileView === 'map')} />
         {!isMobile && (
           <motion.button
+            layout
             className={styles.expandMapBtn}
             onClick={() => setMapExpanded(v => !v)}
             aria-label={mapExpanded ? 'Show catch list' : 'Expand map'}
             aria-pressed={mapExpanded}
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.92 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.975 }}
             transition={SPRING}
           >
             {mapExpanded ? (

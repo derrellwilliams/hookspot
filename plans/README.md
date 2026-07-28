@@ -1,6 +1,6 @@
 # Animation improvement plans
 
-Generated from an `/improve-animations` audit of desktop + mobile web (the React Native app in `mobile/` was out of scope). Stamped at commit `0007450`. All 11 vetted findings plus one missed-opportunity implementation (directional step slide) were selected and implemented.
+Generated from an `/improve-animations` audit of desktop + mobile web (the React Native app in `mobile/` was out of scope). Plans 001-011 stamped at commit `0007450`; all 11 vetted findings plus one missed-opportunity implementation (directional step slide) were selected and implemented. Plans 012-014 stamped at commit `49b7490`, from a focused audit of the map expand/collapse toggle (`MapPage.jsx`) after its icon/position were changed to match Airbnb's map control.
 
 ## Plans
 
@@ -17,8 +17,13 @@ Generated from an `/improve-animations` audit of desktop + mobile web (the React
 | [009](009-followlistdialog-spring-token-fix.md) | Fix FollowListDialog's local spring duplicate/misuse | LOW-MEDIUM | DONE | `FollowListDialog.jsx` |
 | [010](010-editthumb-dragover-transition.md) | Animate the editThumb drag-over scale pop | LOW | DONE | `Map.module.css` |
 | [011](011-uploaddialog-directional-step-slide.md) | Directional slide for the UploadDialog step wizard | MEDIUM (missed opportunity) | DONE | `UploadDialog.jsx` |
+| [012](012-mappane-layout-child-distortion.md) | Fix map pane/button distortion during the expand-map layout animation | HIGH | DONE | `MapPage.jsx`, `MapView.jsx` |
+| [013](013-mappage-expand-reduced-motion.md) | Respect reduced motion in the map expand/collapse toggle | MEDIUM | DONE | `MapPage.jsx` |
+| [014](014-expandmapbtn-scale-consolidation.md) | Align expandMapBtn hover/tap scale with the app's button convention | LOW | DONE | `MapPage.jsx` |
 
-All 11 were implemented in the order below on top of commit `0007450`, uncommitted in the working tree — `npm run build` is clean. Not yet feel-checked in a browser (see each plan's Verification section for what to check); CLAUDE.md requires a desktop 1440px screenshot check before committing mobile-web changes.
+Plans 001-011 were implemented in the order below on top of commit `0007450`, uncommitted in the working tree — `npm run build` is clean. Not yet feel-checked in a browser (see each plan's Verification section for what to check); CLAUDE.md requires a desktop 1440px screenshot check before committing mobile-web changes.
+
+Plans 012-014 were implemented in numeric order on top of commit `49b7490`, uncommitted in the working tree — `npm run build` is clean, diffs reviewed against each plan's Boundaries with no drift or scope creep. Not yet feel-checked in a browser — in particular, plan 012's fix (adding `layout` to `expandMapBtn` and `MapView`'s root `div`) should be eyeballed at slowed-down playback per its Verification section before treating the distortion as confirmed-fixed rather than just mechanically-applied.
 
 ## Recommended execution order
 
@@ -35,6 +40,14 @@ All 11 were implemented in the order below on top of commit `0007450`, uncommitt
 11. **011** — fully independent (`UploadDialog.jsx` only, no other plan touches this file); can run any time, listed last since it's the one new pattern (directional variants) rather than a fix to existing code.
 
 **Dependencies summary**: 007 soft-depends on 006. 009 soft-depends on 001. 003 and 005 both touch `MobileNav.jsx` but in disjoint regions — safe in either order. Everything else is independent and can run in parallel if you're dispatching multiple executors.
+
+### 012-014 (map expand toggle)
+
+12. **012** — touches `MapPage.jsx` (adds `layout` to `expandMapBtn`) and `MapView.jsx` (converts the root `div` to `motion.div`); run before 014 since both touch `expandMapBtn`'s JSX region, avoiding a merge on the same lines.
+13. **013** — touches `MapPage.jsx` (`.cardsPane`/`.mapPane` `layout` props, different lines than 012/014) — order-agnostic with 012 and 014, but listed after 012 since both add hooks/props near the top of the component.
+14. **014** — touches `MapPage.jsx:54-55` only (`expandMapBtn`'s `whileHover`/`whileTap`) — independent of 012/013's lines, but run last since 012 also edits `expandMapBtn`'s opening tag.
+
+**Dependencies summary**: 012, 013, 014 all touch `MapPage.jsx` but on disjoint lines/props — safe to run sequentially in numeric order (as listed above) to avoid any diff overlap surprises; none are a hard dependency of another.
 
 ## Documented opportunities (not planned)
 
