@@ -48,7 +48,6 @@ export function MapPage({ active }) {
         <MapView active={active && (!isMobile || mobileView === 'map')} />
         {!isMobile && (
           <motion.button
-            layout
             className={styles.expandMapBtn}
             onClick={() => setMapExpanded(v => !v)}
             aria-label={mapExpanded ? 'Show catch list' : 'Expand map'}
