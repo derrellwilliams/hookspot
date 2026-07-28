@@ -3,6 +3,7 @@
 
 export const SPRING = { type: 'spring', stiffness: 300, damping: 24 }       // default interactive spring (hover/tap)
 export const SPRING_TIGHT = { type: 'spring', stiffness: 400, damping: 35 } // layoutId indicators (nav highlight, tabs)
+export const SPRING_SMOOTH = { type: 'spring', stiffness: 300, damping: 34 } // near-critical damping, no overshoot — large pane/layout resizes
 export const SPRING_POP = { type: 'spring', stiffness: 400, damping: 25 }   // slight overshoot — dropdowns, chips
 export const SPRING_SNAPPY = { type: 'spring', stiffness: 500, damping: 38 } // fast layoutId indicators — mobile stadium/toggle thumbs
 

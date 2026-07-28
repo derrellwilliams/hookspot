@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'motion/react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
@@ -216,5 +215,5 @@ export function MapView({ active }) {
     setFitted(true)
   }, [groups, mapReady, fitted, photosInitialized])
 
-  return <motion.div layout ref={containerRef} className={styles.map} />
+  return <div ref={containerRef} className={styles.map} />
 }

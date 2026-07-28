@@ -5,7 +5,7 @@ import { CatchDialog } from '../components/CatchDialog/CatchDialog.jsx'
 import { MapView } from '../components/Map/MapView.jsx'
 import { useIsMobile, useReducedMotion } from '../hooks/useIsMobile.js'
 import { ListView, MapPin, MapExpand, MapCollapse } from '../components/icons.js'
-import { SPRING, SPRING_SNAPPY } from '../lib/motion.js'
+import { SPRING, SPRING_SMOOTH, SPRING_SNAPPY } from '../lib/motion.js'
 import styles from './MapPage.module.css'
 
 const VIEWS = [
@@ -31,7 +31,7 @@ export function MapPage({ active }) {
         <motion.div
           layout={!reducedMotion}
           animate={{ opacity: mapExpanded ? 0 : 1 }}
-          transition={{ layout: SPRING, opacity: { duration: 0.15 } }}
+          transition={{ layout: SPRING_SMOOTH, opacity: { duration: 0.15 } }}
           className={`${styles.cardsPane} ${mapExpanded ? styles.cardsPaneCollapsed : ''}`}
         >
           <CatchGrid />
@@ -42,7 +42,7 @@ export function MapPage({ active }) {
       {active && <CatchDialog />}
       <motion.div
         layout={!isMobile && !reducedMotion}
-        transition={SPRING}
+        transition={SPRING_SMOOTH}
         className={`${styles.mapPane} ${isMobile && mobileView === 'list' ? styles.mapPaneHidden : ''}`}
       >
         <MapView active={active && (!isMobile || mobileView === 'map')} />
