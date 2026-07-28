@@ -72,13 +72,13 @@
   overflow: hidden;
 }
 
-/* Expand/collapse toggle — sits at the boundary where .cardsPane used to be,
-   so it stays put as the pane underneath it collapses away. */
+/* Expand/collapse toggle — top-right corner of the map, matching Airbnb's
+   map expand control placement. */
 .expandMapBtn {
   composes: glassSurface glassShadow from '../styles/shared.module.css';
   position: absolute;
   top: 12px;
-  left: 12px;
+  right: 12px;
   z-index: 5;
   display: flex;
   align-items: center;

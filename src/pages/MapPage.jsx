@@ -4,7 +4,7 @@ import { CatchGrid } from '../components/CatchGrid/CatchGrid.jsx'
 import { CatchDialog } from '../components/CatchDialog/CatchDialog.jsx'
 import { MapView } from '../components/Map/MapView.jsx'
 import { useIsMobile } from '../hooks/useIsMobile.js'
-import { ListView, MapPin, PanelCollapse } from '../components/icons.js'
+import { ListView, MapPin, MapExpand, MapCollapse } from '../components/icons.js'
 import { SPRING, SPRING_SNAPPY } from '../lib/motion.js'
 import styles from './MapPage.module.css'
 
@@ -55,13 +55,11 @@ export function MapPage({ active }) {
             whileTap={{ scale: 0.92 }}
             transition={SPRING}
           >
-            <motion.div
-              style={{ display: 'flex' }}
-              animate={{ rotate: mapExpanded ? 180 : 0 }}
-              transition={SPRING}
-            >
-              <PanelCollapse width={16} height={16} />
-            </motion.div>
+            {mapExpanded ? (
+              <MapCollapse width={16} height={16} />
+            ) : (
+              <MapExpand width={16} height={16} />
+            )}
           </motion.button>
         )}
       </motion.div>
