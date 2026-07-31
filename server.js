@@ -18,6 +18,7 @@ import { createProfileHandler } from './profile-handler.js'
 import { createPhotosHandler } from './photos-handler.js'
 import { createCheckUsernameHandler } from './check-username-handler.js'
 import { createSearchUsersHandler } from './search-users-handler.js'
+import { buildCatchMeta, parseCatchShareUrl, injectMeta } from './catch-meta-handler.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.join(__dirname, 'dist')
@@ -37,6 +38,7 @@ const handleProfile = createProfileHandler(env)
 const handlePhotos = createPhotosHandler(env)
 const handleCheckUsername = createCheckUsernameHandler(env)
 const handleSearchUsers = createSearchUsersHandler(env)
+const INDEX_HTML = fs.readFileSync(path.join(DIST, 'index.html'), 'utf-8')
 
 const MIME = {
   '.html':        'text/html; charset=utf-8',
@@ -66,6 +68,30 @@ const server = http.createServer(async (req, res) => {
   if (urlPath === '/api/photos') { handlePhotos(req, res); return }
   if (urlPath === '/api/check-username') { handleCheckUsername(req, res); return }
   if (urlPath === '/api/search-users') { handleSearchUsers(req, res); return }
+
+  // Shared catch links (`/user/:username?catch=<id>`) get real OG meta tags
+  // injected into the SPA shell so iMessage/Slack/etc. previews show the
+  // catch photo — everything else falls through to the static file serving
+  // below unchanged.
+  if (urlPath.startsWith('/user/')) {
+    const url = new URL(req.url, `http://${req.headers.host}`)
+    const parsed = parseCatchShareUrl(url.pathname, url.searchParams)
+    if (parsed) {
+      try {
+        const meta = await buildCatchMeta(env, parsed.username, parsed.catchParam)
+        if (meta) {
+          const proto = req.headers['x-forwarded-proto'] || 'https'
+          meta.url = `${proto}://${req.headers.host}${url.pathname}${url.search}`
+          res.statusCode = 200
+          res.setHeader('content-type', 'text/html; charset=utf-8')
+          res.end(injectMeta(INDEX_HTML, meta))
+          return
+        }
+      } catch (err) {
+        console.error('[catch-meta] error:', err.message)
+      }
+    }
+  }
 
   // Static file serving with SPA history fallback
   let filePath = path.resolve(DIST, '.' + urlPath)

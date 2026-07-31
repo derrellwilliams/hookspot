@@ -3,12 +3,19 @@ import { AnimatePresence, motion } from 'motion/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { NavArrowLeft, NavArrowRight } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
+import { useAuthStore } from '../../store/useAuthStore.js'
 import { deletePhotos } from '../../lib/fileLoader.js'
 import { PopupCarousel } from '../Map/PopupCarousel.jsx'
 import { useIsMobile, useReducedMotion } from '../../hooks/useIsMobile.js'
 import { sortByRecency } from '../../lib/groupPhotos.js'
 import { EASE_OUT, EASE_ENTER, EASE_DRAWER } from '../../lib/motion.js'
 import styles from './CatchDialog.module.css'
+
+// Stable share identifier for a catch group; photos without a catches row
+// fall back to the lead photo's filename. Mirrors UserProfilePage/SearchPage.
+function groupShareId(group) {
+  return String(group[0].catchId ?? group[0].name)
+}
 
 // Catch dialog for the map page — same look as the profile page's catch
 // dialog, minus the mini-map (the big map is right there behind it).
@@ -17,11 +24,15 @@ export function CatchDialog() {
   const activeGroup = usePhotoStore(s => s.activeGroup)
   const groups = usePhotoStore(s => s.groups)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
+  const myUsername = useAuthStore(s => s.username)
   const isMobile = useIsMobile()
   const reducedMotion = useReducedMotion()
 
   const sorted = useMemo(() => [...groups].sort(sortByRecency), [groups])
   const idx = activeGroup ? sorted.findIndex(g => g[0].name === activeGroup[0].name) : -1
+  const shareUrl = activeGroup
+    ? `${window.location.origin}/user/${activeGroup[0].ownerProfile?.username ?? myUsername}?catch=${encodeURIComponent(groupShareId(activeGroup))}`
+    : null
 
   async function handleDelete(toDelete) {
     setActiveGroup(null)
@@ -90,6 +101,7 @@ export function CatchDialog() {
                     key={activeGroup[0].catchId ?? activeGroup[0].name}
                     initialGroup={activeGroup}
                     sheet
+                    shareUrl={shareUrl}
                     onClose={() => setActiveGroup(null)}
                     onDelete={handleDelete}
                   />
