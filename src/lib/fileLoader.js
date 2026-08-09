@@ -187,7 +187,14 @@ async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
   if (cached) return buildPhoto(cached.blob, cached.exif, row, ownerProfile, currentUserId)
 
   let res = await fetch(row.url)
-  if (!res.ok && res.status < 500 && /\.(heic|heif)$/i.test(row.url)) {
+  if (res.status === 429) {
+    // Transient Supabase Storage rate-limit, not a missing file — retry the same
+    // URL rather than falling through to the .jpg fallback below, which doesn't
+    // exist for HEICs uploaded from mobile and would 400 every time.
+    await new Promise(r => setTimeout(r, 500 + Math.random() * 500))
+    res = await fetch(row.url)
+  }
+  if (!res.ok && res.status < 500 && res.status !== 429 && /\.(heic|heif)$/i.test(row.url)) {
     res = await fetch(row.url.replace(/\.(heic|heif)$/i, '.jpg'))
   }
   if (!res.ok) { _failedKeys.add(cacheKey); return null }
