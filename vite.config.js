@@ -11,6 +11,7 @@ import { createProfileHandler } from './profile-handler.js'
 import { createPhotosHandler } from './photos-handler.js'
 import { createSearchUsersHandler } from './search-users-handler.js'
 import { createSearchCatchesHandler } from './search-catches-handler.js'
+import { createKeepAliveHandler } from './keep-alive-handler.js'
 import { buildCatchMeta, parseCatchShareUrl, injectMeta } from './catch-meta-handler.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -32,6 +33,7 @@ export default defineConfig(({ mode }) => {
           server.middlewares.use('/api/photos', createPhotosHandler(env))
           server.middlewares.use('/api/search-users', createSearchUsersHandler(env))
           server.middlewares.use('/api/search-catches', createSearchCatchesHandler(env))
+          server.middlewares.use('/api/keep-alive', createKeepAliveHandler(env))
 
           // Shared catch links (`/user/:username?catch=<id>`) need real OG
           // meta tags for iMessage/Slack/etc. link previews — everything
