@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Mobile (Expo bare workflow): Expo and React Native versions move together
+  # with the SDK and need native changes, so only take them as part of a
+  # deliberate SDK upgrade. open-pull-requests-limit: 0 turns off routine
+  # version PRs; security PRs still open, minus the ignored updates below.
+  - package-ecosystem: npm
+    directory: /mobile
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "expo-*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@expo/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "babel-preset-expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]

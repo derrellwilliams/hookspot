@@ -1,0 +1,41 @@
+name: Database backup
+
+# Weekly dump of the Supabase `public` schema (profiles, follows, catches,
+# photos rows), encrypted because artifacts on a public repo are downloadable
+# by anyone. Photo files live in Supabase Storage and are not included.
+#
+# Secrets: SUPABASE_DB_URL (session pooler URI from Supabase → Connect;
+# GitHub runners have no IPv6, so not the direct connection) and
+# BACKUP_PASSPHRASE.
+#
+# Restore: gpg -d hookspot-db-<date>.sql.gz.gpg | gunzip | psql "$DB_URL"
+on:
+  schedule:
+    - cron: '23 6 * * 0'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump and encrypt
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$PASSPHRASE" ]; then
+            echo "::error::Set the SUPABASE_DB_URL and BACKUP_PASSPHRASE repository secrets"
+            exit 1
+          fi
+          file="hookspot-db-$(date -u +%F).sql.gz.gpg"
+          docker run --rm -e DB_URL postgres:17 \
+            sh -c 'pg_dump "$DB_URL" --schema=public --no-owner --no-privileges' \
+            | gzip \
+            | gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+                  --symmetric --cipher-algo AES256 -o "$file"
+          echo "FILE=$file" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FILE }}
+          path: ${{ env.FILE }}
+          retention-days: 90
