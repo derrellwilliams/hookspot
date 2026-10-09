@@ -12,6 +12,9 @@
     "backfill-waterbody": "node --env-file=.env scripts/backfill-waterbody.mjs",
     "serve": "node server.js"
   },
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
     "@paper-design/shaders-react": "^0.0.77",

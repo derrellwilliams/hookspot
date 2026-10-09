@@ -22,7 +22,7 @@ This is an in progress fishing app that I'm tinkering with!
 
 ### Requirements
 
-- [Node.js](https://nodejs.org) 18+
+- [Node.js](https://nodejs.org) 20+ (Vercel builds on 22.x)
 - A [Mapbox](https://mapbox.com) account (free tier is fine)
 - An [Anthropic](https://anthropic.com) API key (for species identification)
 - A [Supabase](https://supabase.com) project
@@ -69,7 +69,7 @@ Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `
 
 - **Frontend**
   - [React](https://react.dev) 19 — UI framework
-  - [Vite](https://vitejs.dev) 5 — build tool and dev server
+  - [Vite](https://vitejs.dev) 6 — build tool and dev server
   - [React Router](https://reactrouter.com) 7 — client-side routing
   - [Zustand](https://github.com/pmndrs/zustand) — state management
   - [Radix UI](https://www.radix-ui.com) — accessible components (dialog, dropdown-menu, scroll-area, tooltip)
