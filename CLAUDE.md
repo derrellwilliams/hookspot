@@ -1,7 +1,7 @@
 # Hook Spot — Claude Guidelines
 
 ## Tech Stack
-- **React 19** + Vite 5 (`@vitejs/plugin-react@4` — do NOT upgrade to v5/v6)
+- **React 19** + Vite 6 (`@vitejs/plugin-react@4` — do NOT upgrade to v5/v6)
 - **Zustand v5**: `src/store/usePhotoStore.js`, `src/store/useAuthStore.js`
 - **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/search`, `/design`
 - **Supabase** auth + storage + database (`src/lib/supabase.js`)
