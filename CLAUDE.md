@@ -1,7 +1,7 @@
 # Hook Spot — Claude Guidelines
 
 ## Tech Stack
-- **React 19** + Vite 5 (`@vitejs/plugin-react@4` — do NOT upgrade to v5/v6)
+- **React 19** + Vite 6 (`@vitejs/plugin-react@4` — do NOT upgrade to v5/v6)
 - **Zustand v5**: `src/store/usePhotoStore.js`, `src/store/useAuthStore.js`
 - **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/search`, `/design`
 - **Supabase** auth + storage + database (`src/lib/supabase.js`)
@@ -13,7 +13,6 @@
 - **Entry**: `src/main.jsx` → `src/App.jsx`
 - **Pages**: `src/pages/` — MapPage, LoginPage, OnboardingPage, UserProfilePage, SearchPage, DesignPage, NotFoundPage, FeedPage (WIP, unrouted)
 - **Components**: `src/components/` — Map, CatchGrid, CatchDialog, Nav (desktop), MobileNav (mobile web), UploadDialog, DropOverlay, FavoritePicker, FollowListDialog, Toast, UserRow, PixelFishLoader, ui/; root-level `DitherMesh.jsx`, `RequireAuth.jsx`, `ErrorBoundary.jsx`, `icons.js`
-- **Orphans** (unused since the 2026-07-11 dock removal, safe to delete): `src/components/Sidebar/`, `src/hooks/useSafeAreaInsets.js`
 - **Stores**: `usePhotoStore` (photos, groups, flyToPhoto, activeGroup, toast, uploadOpen, bulkUploading, pendingUploadFiles, ownOnly, photosInitialized); `useAuthStore` (user, session, username, loading)
 - **Lib**: `src/lib/` — fileLoader.js, groupPhotos.js, groupByTime.js, formatters.js, supabase.js, geocode.js, weather.js, waterbody.js, validation.js, imageUtils.js, mapbox.js, avatarUpload.js, motion.js
 - **Utilities**: `src/cache.js` (IndexedDB), `src/exif.js`, `src/identify.js`, `src/stats.js` — keep pure (no React)
