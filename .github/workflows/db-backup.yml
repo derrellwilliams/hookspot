@@ -22,6 +22,9 @@ jobs:
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        # Explicit shell adds pipefail, so a failed pg_dump fails the job
+        # instead of uploading an empty encrypted file.
+        shell: bash
         run: |
           if [ -z "$DB_URL" ] || [ -z "$PASSPHRASE" ]; then
             echo "::error::Set the SUPABASE_DB_URL and BACKUP_PASSPHRASE repository secrets"

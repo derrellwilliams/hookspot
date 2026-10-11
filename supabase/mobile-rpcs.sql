@@ -89,5 +89,6 @@ $$;
 
 grant execute on function public.get_user_catches(uuid) to authenticated;
 grant execute on function public.search_catches(text, boolean, date, date) to authenticated;
-revoke execute on function public.get_user_catches(uuid) from anon;
-revoke execute on function public.search_catches(text, boolean, date, date) from anon;
+-- Functions are executable by PUBLIC by default, so revoking from anon alone is a no-op.
+revoke execute on function public.get_user_catches(uuid) from public, anon;
+revoke execute on function public.search_catches(text, boolean, date, date) from public, anon;
