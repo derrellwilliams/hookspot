@@ -48,6 +48,14 @@ function AppInner() {
         setUser(session.user)
         setSession(session)
 
+        // If an old code path wrote a base64 data URL into user_metadata, the JWT
+        // grows to ~18KB and Supabase Storage's nginx proxy rejects uploads (400).
+        // Clear it before anything else — users stuck pre-onboarding need it most,
+        // since their onboarding avatar upload goes through Storage.
+        if (session.user.user_metadata?.avatar_url?.startsWith('data:')) {
+          supabase.auth.updateUser({ data: { avatar_url: null } }).catch(() => {})
+        }
+
         try {
           const res = await fetch(`/api/profile?userId=${session.user.id}`)
           if (!res.ok) throw new Error(`Profile fetch error: ${res.status}`)
@@ -65,12 +73,6 @@ function AppInner() {
               : session.user
             setUserAndUsername(syncedUser, username)
             initPhotos()
-            // If an old code path wrote a base64 data URL into user_metadata, the JWT
-            // grows to ~18KB and Supabase Storage's nginx proxy rejects uploads (400).
-            // Clear it so future JWTs stay small; local state still shows the avatar.
-            if (session.user.user_metadata?.avatar_url?.startsWith('data:')) {
-              supabase.auth.updateUser({ data: { avatar_url: null } }).catch(() => {})
-            }
           }
         } catch (err) {
           console.error('[auth] profile fetch failed', err)
