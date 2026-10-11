@@ -8,6 +8,12 @@ name: Database backup
 # GitHub runners have no IPv6, so not the direct connection) and
 # BACKUP_PASSPHRASE.
 #
+# The URI logs in as `backup_reader` (LOGIN, BYPASSRLS so pg_dump can read
+# RLS tables, SELECT on each public table), created by hand, not in a
+# migration. On the pooler the username must be `backup_reader.<project-ref>`.
+# A new public table needs `grant select on <table> to backup_reader`, or
+# this job fails with "permission denied".
+#
 # Restore: gpg -d hookspot-db-<date>.sql.gz.gpg | gunzip | psql "$DB_URL"
 on:
   schedule:
