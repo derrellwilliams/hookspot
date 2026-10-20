@@ -57,6 +57,8 @@
 ## Supabase Constraints
 - **`user_metadata` must stay small** — it is embedded in the JWT on every request. Never store blobs, base64 data URLs, or large arrays here. Scalars only (display_name, bio, gear lists). Violations bloat the JWT past nginx's header buffer limit on the Storage API, causing silent 400 rejections on photo uploads while REST calls continue to work.
 - **`avatar_url` lives in the `profiles` table only** — never write it to `user_metadata` via `supabase.auth.updateUser`. `useAuthStore.setUser` preserves it in local state across token refreshes; App.jsx syncs it from the profiles table on login.
+- **New public tables need explicit grants** — since 2026-10-30 Supabase no longer auto-grants Data API access to new `public` tables. A migration that creates one must `grant select` to `anon`, `grant select, insert, update, delete` to `authenticated` and `service_role`, and `grant select` to `backup_reader` (weekly backup job), or those calls fail with "permission denied". Don't restore auto-grants via `alter default privileges`.
+- **Keep-alive** — `.github/workflows/keep-alive.yml` queries `profiles` via REST twice a day so the free-tier project doesn't pause. GitHub disables scheduled workflows after 60 days without a commit; re-enable from the Actions tab.
 - **JWT size warning** — App.jsx logs a warning if `access_token.length > 4000`. If you see this, something large was written to `user_metadata`.
 
 ## Test Fixtures
