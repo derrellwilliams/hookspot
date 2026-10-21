@@ -118,6 +118,9 @@ function maybeFetchWeather(photo) {
 }
 
 let _initInProgress = false
+// Whose feed is in the store (user id, or null for the signed-out public feed).
+// Signing in or out swaps feeds, so stale photos (and their isOwn flags) must go.
+let _feedUserId
 let _initQueued = false
 const _failedKeys = new Set()
 const _uploadingNames = new Set()
@@ -136,10 +139,12 @@ export async function initPhotos() {
   let fetchAttempted = false
   try {
     const user = getUser()
-    if (!user) return
+    const userId = user?.id ?? null
+    if (_feedUserId !== undefined && _feedUserId !== userId) usePhotoStore.getState().clearPhotos()
+    _feedUserId = userId
 
     fetchAttempted = true
-    const res = await fetch(`/api/photos?userId=${user.id}`)
+    const res = await fetch(userId ? `/api/photos?userId=${userId}` : '/api/photos')
     if (!res.ok) throw new Error(`Photos fetch error: ${res.status}`)
     const { rows, profiles: profileRows, error } = await res.json()
 
@@ -157,7 +162,7 @@ export async function initPhotos() {
       batch.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo); maybeFetchWaterBody(photo) })
     }
     const makeLoader = row => () =>
-      loadPhotoFromRow(row, profileMap[row.user_id] ?? null, user.id)
+      loadPhotoFromRow(row, profileMap[row.user_id] ?? null, userId)
         .then(photo => { if (photo) { pending.push(photo); if (pending.length >= 4) flush() } })
         .catch(e => console.error('[hookspot] failed to load', row.filename, e))
 

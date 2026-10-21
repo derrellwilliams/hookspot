@@ -28,6 +28,7 @@
 - `PopupCarousel.saveEdit()` writes edits to both `photos` and `catches` to keep them in sync
 
 ## Architecture
+- **Public read, auth-gated writes**: `/`, `/user/:username`, `/search` work signed out (home shows everyone's recent catches via `/api/photos` with no `userId`). Every write entry point (add-catch buttons, drag-drop, follow, `/profile`, `/onboarding`) sends signed-out users to `/login`, which doubles as sign-up. `initPhotos()` clears the store when the feed owner changes (sign in/out) so `isOwn` flags never go stale.
 - `PopupCarousel` runs in its own React root inside Mapbox popup DOM; unmount on popup close to prevent leaks
 - `DropOverlay` listens globally to drag events; on drop it sets `pendingUploadFiles` + opens `UploadDialog` — all uploads go through one flow
 - `src/cache.js` — IndexedDB `fishmap-cache` caches photo blobs + EXIF keyed by `{userId}/{filename}`; fileLoader checks cache before network

@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useRef, memo } from 'react'
 import { motion } from 'motion/react'
+import { useNavigate } from 'react-router-dom'
 import { Plus } from '../icons.js'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import { useAuthStore } from '../../store/useAuthStore.js'
@@ -99,6 +100,8 @@ export const CatchCard = memo(function CatchCard({
 })
 
 export function CatchGrid() {
+  const navigate = useNavigate()
+  const user = useAuthStore(s => s.user)
   const groups = usePhotoStore(s => s.groups)
   const hasPhotos = usePhotoStore(s => s.photos.length > 0)
   const photosInitialized = usePhotoStore(s => s.photosInitialized)
@@ -141,7 +144,7 @@ export function CatchGrid() {
       )}
       <motion.button
         className={styles.addCard}
-        onClick={() => setUploadOpen(true)}
+        onClick={() => user ? setUploadOpen(true) : navigate('/login')}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.975 }}
         transition={SPRING}
