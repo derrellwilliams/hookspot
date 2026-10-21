@@ -18,7 +18,6 @@ import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { supabase } from './lib/supabase.js'
 import { useIsMobile } from './hooks/useIsMobile.js'
 import { useAuthStore } from './store/useAuthStore.js'
-import { usePhotoStore } from './store/usePhotoStore.js'
 import { initPhotos, clearUploadingNames } from './lib/fileLoader.js'
 import styles from './App.module.css'
 
@@ -80,10 +79,10 @@ function AppInner() {
         }
       } else {
         setUser(session?.user ?? null)
-        if (event === 'SIGNED_OUT') {
-          clearUploadingNames()
-          usePhotoStore.getState().clearPhotos()
-        }
+        if (event === 'SIGNED_OUT') clearUploadingNames()
+        // Signed-out visitors (or just signed out) get the public feed;
+        // initPhotos swaps out the previous user's photos itself.
+        if (!session && (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT')) initPhotos()
       }
     })
     return () => subscription.unsubscribe()
@@ -101,26 +100,25 @@ function AppInner() {
     <div className={styles.app}>
       {!isPublicPage && !hideNav && <Nav />}
       {!isPublicPage && isMobile && isMainPage && <MobileNav />}
-      {user && (
-        <RequireAuth>
-          <div style={{ display: isMap ? 'contents' : 'none' }}>
-            <MapPage active={isMap} />
-          </div>
-        </RequireAuth>
+      {/* Home is public — signed-out visitors see everyone's recent catches */}
+      {!isPublicPage && (
+        <div style={{ display: isMap ? 'contents' : 'none' }}>
+          <MapPage active={isMap} />
+        </div>
       )}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><ProfileRedirect /></RequireAuth>} />
         <Route path="/user/:username" element={<UserProfilePage />} />
-        <Route path="/search" element={<RequireAuth><SearchPage /></RequireAuth>} />
-        {/* MapPage itself stays mounted above; this only enforces the login redirect */}
-        <Route path="/" element={<RequireAuth>{null}</RequireAuth>} />
+        <Route path="/search" element={<SearchPage />} />
+        {/* MapPage itself stays mounted above */}
+        <Route path="/" element={null} />
         <Route path="/design" element={<DesignPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
 
-      {!isPublicPage && user && <DropOverlay />}
+      {!isPublicPage && <DropOverlay />}
       {!isPublicPage && user && <UploadDialog />}
       {!isPublicPage && <Toast />}
     </div>

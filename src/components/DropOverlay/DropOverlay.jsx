@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
+import { useNavigate } from 'react-router-dom'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
+import { useAuthStore } from '../../store/useAuthStore.js'
 import styles from './DropOverlay.module.css'
 
 export function DropOverlay() {
   const [active, setActive] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     let count = 0
@@ -24,6 +27,7 @@ export function DropOverlay() {
         f => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name)
       )
       if (!files.length) return
+      if (!useAuthStore.getState().user) { navigate('/login'); return }
       const { setPendingUploadFiles, setUploadOpen } = usePhotoStore.getState()
       setPendingUploadFiles(files)
       setUploadOpen(true)
@@ -39,7 +43,7 @@ export function DropOverlay() {
       document.removeEventListener('dragover', onOver)
       document.removeEventListener('drop', onDrop)
     }
-  }, [])
+  }, [navigate])
 
   return (
     <AnimatePresence>

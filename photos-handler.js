@@ -6,11 +6,11 @@ export function createPhotosHandler(env) {
     const url = new URL(req.url, 'http://localhost')
     const userId = url.searchParams.get('userId')
     const ownOnly = url.searchParams.get('ownOnly') === 'true'
-    if (!userId) { sendJson(res, { error: 'userId required' }, 400); return }
     const headers = serviceHeaders(env)
     try {
-      let allUserIds = [userId]
-      if (!ownOnly) {
+      // No userId = signed-out visitor: public feed of everyone's recent catches
+      let allUserIds = userId ? [userId] : null
+      if (userId && !ownOnly) {
         // Fetch the list of users this person follows (feed mode)
         const followsRes = await fetch(
           `${env.VITE_SUPABASE_URL}/rest/v1/follows?select=following_id&follower_id=eq.${encodeURIComponent(userId)}`,
@@ -22,9 +22,9 @@ export function createPhotosHandler(env) {
         allUserIds = [userId, ...followingIds].slice(0, 100)
       }
 
-      const idFilter = `user_id=in.(${allUserIds.map(encodeURIComponent).join(',')})`
+      const idFilter = allUserIds ? `&user_id=in.(${allUserIds.map(encodeURIComponent).join(',')})` : ''
       const photosRes = await fetch(
-        `${env.VITE_SUPABASE_URL}/rest/v1/photos?select=*&${idFilter}&order=time.desc&limit=500`,
+        `${env.VITE_SUPABASE_URL}/rest/v1/photos?select=*${idFilter}&order=time.desc&limit=500`,
         { headers }
       )
       if (!photosRes.ok) throw new Error(`Supabase error: ${photosRes.status}`)

@@ -281,7 +281,7 @@ export function SearchPage() {
             <>
               <Select className={styles.filterSelect} value={scope} onChange={e => setScope(e.target.value)} aria-label="Whose catches">
                 <option value="everyone">Everyone</option>
-                <option value="me">Just me</option>
+                {myUser && <option value="me">Just me</option>}
               </Select>
               <label className={styles.dateChip}>
                 <span className={styles.dateChipLabel}>From</span>
