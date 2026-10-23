@@ -1,6 +1,6 @@
 // Shared /identify request handler used by both the Vite dev proxy and the production server.
 import Anthropic from '@anthropic-ai/sdk'
-import { IDENTIFY_MODEL, IDENTIFY_PROMPT } from './identify-config.js'
+import { buildIdentifyRequest, extractSpecies } from './identify-config.js'
 import { readBody } from './handler-utils.js'
 
 const MAX_BODY_SIZE = 4 * 1024 * 1024 // 4 MB
@@ -34,18 +34,8 @@ export function createIdentifyHandler(anthropic, env) {
       ? buf.toString('utf8').trim()
       : buf.toString('base64')
     try {
-      const response = await anthropic.messages.create({
-        model: IDENTIFY_MODEL,
-        max_tokens: 64,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
-            { type: 'text', text: IDENTIFY_PROMPT },
-          ],
-        }],
-      })
-      const species = response.content[0]?.text?.trim() ?? 'none'
+      const response = await anthropic.beta.messages.create(buildIdentifyRequest(mediaType, base64Data))
+      const species = extractSpecies(response)
       res.setHeader('content-type', 'application/json')
       res.end(JSON.stringify({ species }))
     } catch (err) {

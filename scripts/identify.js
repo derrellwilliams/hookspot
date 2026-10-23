@@ -9,7 +9,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import heicConvert from 'heic-convert'
-import { IDENTIFY_MODEL, IDENTIFY_PROMPT } from '../identify-config.js'
+import { buildIdentifyRequest, extractSpecies } from '../identify-config.js'
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -43,19 +43,9 @@ for (const photo of photos) {
 
     const mediaType = /\.png$/i.test(photo.filename) ? 'image/png' : 'image/jpeg'
 
-    const response = await anthropic.messages.create({
-      model: IDENTIFY_MODEL,
-      max_tokens: 64,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: buffer.toString('base64') } },
-          { type: 'text', text: IDENTIFY_PROMPT },
-        ],
-      }],
-    })
+    const response = await anthropic.beta.messages.create(buildIdentifyRequest(mediaType, buffer.toString('base64')))
 
-    const species = response.content[0].text.trim()
+    const species = extractSpecies(response)
     if (species && species !== 'none') {
       await supabase.from('photos').update({ species }).eq('id', photo.id)
     }
