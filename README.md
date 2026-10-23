@@ -1,6 +1,6 @@
 # Hook Spot
 
-This is an in progress fishing app that I'm tinkering with! 
+This is an in-progress fishing app that I'm tinkering with! Live at [hook-spot.com](https://hook-spot.com).
 
 <img width="1528" height="1082" alt="Screenshot 2026-07-11 at 1 45 28 PM" src="https://github.com/user-attachments/assets/1eb7606b-c9c4-48f8-a97a-e4e42ce59982" />
 <img width="1528" height="1082" alt="Screenshot 2026-07-11 at 1 45 36 PM" src="https://github.com/user-attachments/assets/3d1f2940-709c-4bf9-829f-9d93f42f4501" />
@@ -9,20 +9,21 @@ This is an in progress fishing app that I'm tinkering with!
 
 ## What it does
 
+- **Public browsing** — anyone can browse the home feed, angler profiles, and search without an account. Signed in, the home feed shows your catches plus anglers you follow.
 - **Map view** — each catch appears as a pin at its GPS coordinates. Click a pin to see the photo, species, date/time, rod, and fly. Multiple photos from the same upload session are grouped into a single pin.
 - **Catch cards** — scrollable grid of catch cards next to the map, sorted newest first. Click any card to jump to it on the map and open its details.
 - **Mobile web** — at phone widths the app switches to an app-like layout: a floating bottom nav (home, profile, search, add), a card feed with a list/map toggle, and bottom-sheet catch details.
-- **Stats view** — charts derived from your catch history: catches per month, time of day, species breakdown, and species by month.
+- **Stats** — a tab on each profile with charts derived from your catch history: catches per month, time of day, species breakdown, and species by month.
 - **Upload flow** — click **+** or drag photos onto the window to open the upload dialog. Claude automatically identifies the fish species from the image. Edit the species, rod, and fly before saving.
-- **Edit & delete** — click the pencil icon on any popup to edit species, rod, or fly, or delete the catch entirely.
-- **User profiles** — sign up with email, create a profile with a custom username and avatar. View your profile and explore other anglers' catches.
+- **Edit & delete** — click the pencil icon on any catch to edit species, rod, or fly, or delete the catch entirely.
+- **User profiles** — sign in with a one-time code sent to your email, then pick a username and avatar. Follow other anglers and explore their catches.
 - **Mobile app** — iOS app (Expo bare workflow) with the same map and catch list, sharing the same Supabase backend.
 
 ## Setup
 
 ### Requirements
 
-- [Node.js](https://nodejs.org) 20+ (Vercel builds on 22.x)
+- [Node.js](https://nodejs.org) 22.x
 - A [Mapbox](https://mapbox.com) account (free tier is fine)
 - An [Anthropic](https://anthropic.com) API key (for species identification)
 - A [Supabase](https://supabase.com) project
@@ -47,7 +48,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 
 ### Database
 
-Run `supabase/schema.sql` in the Supabase SQL editor to create the `profiles`, `follows`, `catches`, and `photos` tables with RLS policies.
+Run `supabase/schema.sql` in the Supabase SQL editor to create the `profiles`, `follows`, `catches`, and `photos` tables with RLS policies, then apply `supabase/migrations/` in order.
 
 ### Run
 
@@ -57,13 +58,13 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173).
 
-## Adding catches
+### Deploy
 
-Click **+** or drag photos onto the app window — both paths open the upload dialog. Fill in species, rod, and fly, then submit. Each submission creates one catch entry in the database that all uploaded photos attach to.
+Production runs on [Vercel](https://vercel.com): the Vite build is served statically and the API routes run as functions from `api/`, pinned to the `pdx1` region next to the Supabase database (`vercel.json`). To self-host instead, `npm run build && npm run serve` runs `server.js`, which serves `dist/` and the same API routes.
 
 ## Data model
 
-Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `lat`, `lng`, `time`). Each photo is a row in the `photos` table with a `catch_id` foreign key back to its catch. Photos are stored in Supabase Storage (a resized thumbnail is generated alongside the full-resolution original, so grid views load a lighter image) and cached in the browser's IndexedDB for fast subsequent loads.
+Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `lat`, `lng`, `time`). Each photo is a row in the `photos` table with a `catch_id` foreign key back to its catch. Photos are stored in Supabase Storage as a 2048px original plus a ~960px thumbnail that the catch grids load. `scripts/backfill-thumbnails.js` generates thumbnails for older photos.
 
 ## Tech Stack
 
@@ -72,6 +73,7 @@ Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `
   - [Vite](https://vitejs.dev) 6 — build tool and dev server
   - [React Router](https://reactrouter.com) 7 — client-side routing
   - [Zustand](https://github.com/pmndrs/zustand) — state management
+  - [Motion](https://motion.dev) — animation
   - [Radix UI](https://www.radix-ui.com) — accessible components (dialog, dropdown-menu, scroll-area, tooltip)
   - [CSS Modules](https://github.com/css-modules/css-modules) — component-scoped styling
 
@@ -80,11 +82,12 @@ Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `
   - [Mapbox Maps SDK for React Native](https://github.com/rnmapbox/maps)
 
 - **Maps & Charts**
-  - [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/) — map rendering
+  - [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/) — map rendering (loaded on demand)
   - [ApexCharts](https://apexcharts.com) — stats charts
 
 - **APIs & Services**
   - [Supabase](https://supabase.com) — authentication, database, and storage
+  - [Vercel](https://vercel.com) — hosting and API functions
   - [Claude](https://anthropic.com) (via Anthropic SDK) — fish species identification from photos
 
 - **Utilities**
