@@ -16,4 +16,8 @@ window.addEventListener('vite:preloadError', () => {
   window.location.reload()
 })
 
+// The old IndexedDB photo cache (src/cache.js, removed 2026-10-22) can hold
+// many MB of blobs nothing reads anymore — free it. No-op once it's gone.
+try { indexedDB.deleteDatabase('fishmap-cache') } catch { /* IndexedDB unavailable */ }
+
 createRoot(document.getElementById('root')).render(<App />)

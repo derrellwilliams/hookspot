@@ -16,9 +16,9 @@
 - **Stores**: `usePhotoStore` (photos, groups, flyToPhoto, activeGroup, hoveredPhotoName, toast, uploadOpen, pendingUploadFiles, photosInitialized); `useAuthStore` (user, session, username, loading)
 - **Hooks**: `src/hooks/` — useIsMobile.js (`useIsMobile`, `useCanHover`, `useReducedMotion`, `MOBILE_QUERY`), useMapbox.js
 - **Lib**: `src/lib/` — fileLoader.js, groupPhotos.js, groupByTime.js, formatters.js, supabase.js, geocode.js, weather.js, waterbody.js, validation.js, imageUtils.js, mapbox.js, avatarUpload.js, motion.js
-- **Utilities**: `src/cache.js` (IndexedDB), `src/exif.js`, `src/identify.js`, `src/stats.js` — keep pure (no React)
+- **Utilities**: `src/exif.js`, `src/identify.js`, `src/stats.js` — keep pure (no React)
 - **API**: handler logic lives in root-level `*-handler.js` files, mounted three ways — Vercel functions in `api/*.js` (production), Vite middleware in `vite.config.js` (dev), and `server.js` (self-host, `npm run serve`). Routes: `/identify` (Claude via Anthropic SDK; model in `identify-config.js`), `/api/check-username`, `/api/save-profile`, `/api/profile`, `/api/photos`, `/api/search-users`, `/api/search-catches`. A new route needs all three.
-- **Share-link previews**: `catch-meta-handler.js` injects OG tags for `/user/:username?catch=<id>` — wired into dev and `server.js` only; **not on Vercel** (`vercel.json` rewrites everything to `index.html`), so production share links have no rich preview.
+- **Share-link previews**: `catch-meta-handler.js` injects OG tags into the SPA shell for `/user/:username?catch=<id>`. On Vercel a `has: query catch` rewrite sends those to `api/catch-meta.js`, which reads `dist/index.html` (bundled via `includeFiles` in `vercel.json`); dev and `server.js` intercept the same URL shape themselves.
 
 ## Data Model
 - **`catches`** — one row per fishing session: `id, user_id, species, rod, fly, lat, lng, time`
@@ -34,7 +34,6 @@
 - `MapPage` stays mounted (`display: none`) while other routes show, so the map isn't rebuilt on every visit home.
 - `PopupCarousel` is the catch-detail view, rendered inside `CatchDialog` (home) and the Search/Profile dialogs; `showMap` adds a live mini-map.
 - `DropOverlay` listens globally to drag events; on drop it sets `pendingUploadFiles` + opens `UploadDialog` — all uploads go through one flow
-- `src/cache.js` (IndexedDB `fishmap-cache`) is currently write-only — uploads store blob + EXIF, but nothing reads it since the home feed stopped downloading images client-side.
 
 ## Performance (home feed load path)
 - `initPhotos()` builds photos straight from `/api/photos` rows via `mapPhotoRow()` — never download, decode, or canvas-process images client-side just to display them. `<img>` streams from the Storage CDN.

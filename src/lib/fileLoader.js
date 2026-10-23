@@ -1,5 +1,4 @@
 import { extractExif, toDisplayBlob, resizeForStorage, resizeForThumb } from '../exif.js'
-import { setCached } from '../cache.js'
 import { identifySpecies } from '../identify.js'
 import { fetchWeather } from './weather.js'
 import { reverseGeocode } from './geocode.js'
@@ -257,8 +256,6 @@ async function uploadPhoto(file, user, uploadMeta, displayBlob) {
   }
   row.id = insertedRow?.id ?? null
 
-  await setCached(`${user.id}/${file.name}`, { blob, exif })
-
   const photo = buildPhoto(blob, exif, row, null, user.id)
   if (uploadMeta.species) photo.species = uploadMeta.species
   usePhotoStore.getState().addPhoto(photo)
@@ -318,7 +315,6 @@ export async function uploadPhotoToGroup(file, groupLead) {
   }
   row.id = insertedRow?.id ?? null
 
-  await setCached(`${user.id}/${file.name}`, { blob, exif })
   const photo = buildPhoto(blob, exif, row, null, user.id)
   usePhotoStore.getState().addPhoto(photo)
   maybeFetchLocation(photo)
@@ -353,7 +349,5 @@ export async function deletePhotos(toDelete) {
   const thumbPaths = paths.map(p => p.replace(/^([^/]+)\//, '$1/thumbs/'))
   const { error: storageError } = await supabase.storage.from('catches').remove([...paths, ...thumbPaths])
   if (storageError) console.error('[hookspot] storage delete failed', storageError)
-
-  await Promise.all(list.map(p => setCached(`${user.id}/${p.name}`, undefined)))
   usePhotoStore.getState().removePhotos(list)
 }
