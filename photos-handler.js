@@ -22,11 +22,17 @@ export function createPhotosHandler(env) {
         allUserIds = [userId, ...followingIds].slice(0, 100)
       }
 
-      const idFilter = allUserIds ? `&user_id=in.(${allUserIds.map(encodeURIComponent).join(',')})` : ''
-      const photosRes = await fetch(
-        `${env.VITE_SUPABASE_URL}/rest/v1/photos?select=*${idFilter}&order=time.desc&limit=500`,
+      const fetchProfiles = ids => fetch(
+        `${env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id,username,display_name,avatar_url&id=in.(${ids.map(encodeURIComponent).join(',')})`,
         { headers }
       )
+      const idFilter = allUserIds ? `&user_id=in.(${allUserIds.map(encodeURIComponent).join(',')})` : ''
+      // When the feed's users are already known, fetch their profiles alongside the
+      // photos rather than after — saves a full round-trip to Supabase.
+      const [photosRes, prefetchedProfilesRes] = await Promise.all([
+        fetch(`${env.VITE_SUPABASE_URL}/rest/v1/photos?select=*${idFilter}&order=time.desc&limit=500`, { headers }),
+        allUserIds ? fetchProfiles(allUserIds) : null,
+      ])
       if (!photosRes.ok) throw new Error(`Supabase error: ${photosRes.status}`)
       let rows = await photosRes.json()
       if (!Array.isArray(rows) || !rows.length) {
@@ -62,11 +68,7 @@ export function createPhotosHandler(env) {
         }
       }
 
-      const userIds = [...new Set(rows.map(r => r.user_id))]
-      const profilesRes = await fetch(
-        `${env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id,username,display_name,avatar_url&id=in.(${userIds.map(encodeURIComponent).join(',')})`,
-        { headers }
-      )
+      const profilesRes = prefetchedProfilesRes ?? await fetchProfiles([...new Set(rows.map(r => r.user_id))])
       if (!profilesRes.ok) throw new Error(`Supabase profiles error: ${profilesRes.status}`)
       const profiles = await profilesRes.json()
       sendJson(res, { rows, profiles: Array.isArray(profiles) ? profiles : [] })
