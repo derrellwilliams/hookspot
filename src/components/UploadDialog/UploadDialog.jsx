@@ -2,8 +2,6 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useShallow } from 'zustand/react/shallow'
 import * as Dialog from '@radix-ui/react-dialog'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { Xmark, MediaImage } from '../icons.js'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { PixelFishLoader } from '../PixelFishLoader.jsx'
@@ -17,7 +15,8 @@ import { parseExifDate, cleanGear } from '../../lib/formatters.js'
 import { identifySpecies } from '../../identify.js'
 import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
-import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
+import { MAP_STYLE } from '../../lib/mapbox.js'
+import { useMapbox } from '../../hooks/useMapbox.js'
 import { SPRING, EASE_OUT, EASE_ENTER } from '../../lib/motion.js'
 
 const STEP_SLIDE_DISTANCE = '6%'
@@ -66,17 +65,20 @@ export function UploadDialog() {
   const locationMapInstanceRef = useRef(null)
   const locationMarkerRef = useRef(null)
   const mapCenterRef = useRef(null)
+  // Start fetching the map library when the dialog opens so it's ready by the location step.
+  const mapboxgl = useMapbox(uploadOpen)
 
   // Callback ref: initializes the map as soon as the container mounts, and cleans up on unmount.
+  // Depends on mapboxgl, so if the library arrives after the container mounts, React re-runs
+  // the ref (null on the old callback, then the node on the new one) and the map initializes.
   // A plain useEffect(fn, [step]) fires before AnimatePresence mode="wait" has mounted the new
   // step's DOM node, so locationMapRef.current would be null and the map would never initialize.
   const locationMapRef = useCallback((node) => {
-    if (!node) {
+    if (!node || !mapboxgl) {
       if (locationMarkerRef.current) { locationMarkerRef.current.remove(); locationMarkerRef.current = null }
       if (locationMapInstanceRef.current) { locationMapInstanceRef.current.remove(); locationMapInstanceRef.current = null }
       return
     }
-    mapboxgl.accessToken = MAPBOX_TOKEN
     const { center = [-98, 39], zoom = 3 } = mapCenterRef.current ?? {}
     const map = new mapboxgl.Map({ container: node, style: MAP_STYLE, center, zoom })
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right')
@@ -97,7 +99,7 @@ export function UploadDialog() {
         locationMarkerRef.current = marker
       }
     })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mapboxgl]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!uploadOpen) return

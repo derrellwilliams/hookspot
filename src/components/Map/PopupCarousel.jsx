@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { useShallow } from 'zustand/react/shallow'
 import { EditPencil, Xmark, Plus, ShareIos } from '../icons.js'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
@@ -10,7 +8,8 @@ import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
 import { formatDateFull, cleanSpecies, cleanGear, formatCatchLocation } from '../../lib/formatters.js'
-import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
+import { MAP_STYLE } from '../../lib/mapbox.js'
+import { useMapbox } from '../../hooks/useMapbox.js'
 import { PixelFishLoader } from '../PixelFishLoader.jsx'
 import { EASE_OUT } from '../../lib/motion.js'
 import styles from './Map.module.css'
@@ -19,9 +18,10 @@ import styles from './Map.module.css'
 // so the dialog mini-map is a live (non-interactive) GL map instead.
 function MiniMap({ lat, lng }) {
   const containerRef = useRef(null)
+  const mapboxgl = useMapbox()
 
   useEffect(() => {
-    mapboxgl.accessToken = MAPBOX_TOKEN
+    if (!mapboxgl) return
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: MAP_STYLE,
@@ -34,7 +34,7 @@ function MiniMap({ lat, lng }) {
       .setLngLat([lng, lat])
       .addTo(map)
     return () => { marker.remove(); map.remove() }
-  }, [lat, lng])
+  }, [mapboxgl, lat, lng])
 
   return <div ref={containerRef} className={styles.miniMap} />
 }

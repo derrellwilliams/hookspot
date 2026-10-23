@@ -1,5 +1,4 @@
 import exifr from 'exifr'
-import heic2any from 'heic2any'
 
 const STORAGE_MAX_PX = 2048
 const STORAGE_QUALITY = 0.85
@@ -40,6 +39,8 @@ export async function toDisplayBlob(file) {
     // iOS Safari can display HEIC natively — skip the JS decoder entirely.
     if (isNativeHeicBrowser()) return file
     try {
+      // ~1.3MB decoder, only needed for HEIC uploads on non-Safari browsers
+      const { default: heic2any } = await import('heic2any')
       const result = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 })
       const converted = Array.isArray(result) ? result[0] : result
       return resizeBlob(converted, DISPLAY_MAX_PX, 0.82).catch(() => converted)

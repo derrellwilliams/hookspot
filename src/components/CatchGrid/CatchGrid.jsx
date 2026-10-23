@@ -7,9 +7,15 @@ import { useAuthStore } from '../../store/useAuthStore.js'
 import { formatDateNumeric, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'
 import { sortByRecency } from '../../lib/groupPhotos.js'
 import { SPRING, EASE_OUT } from '../../lib/motion.js'
+import { MOBILE_QUERY } from '../../hooks/useIsMobile.js'
 import styles from './CatchGrid.module.css'
 
 const SKELETON_COUNT = 8
+// Cards whose images load immediately at high priority — roughly what's above the
+// fold: ~1.5 cards in the single-column mobile feed, ~6 in the desktop grid.
+// Loading more eagerly just splits the connection and delays the visible ones.
+const EAGER_COUNT_MOBILE = 2
+const EAGER_COUNT_DESKTOP = 6
 
 export function SkeletonCard() {
   return (
@@ -37,6 +43,9 @@ export const CatchCard = memo(function CatchCard({
 }) {
   const internalRef = useRef(null)
   const user = useAuthStore(s => s.user)
+  // Read once rather than subscribing — it only matters for the initial fetch,
+  // and a per-card media-query listener across the whole feed isn't worth it.
+  const eager = index < (window.matchMedia(MOBILE_QUERY).matches ? EAGER_COUNT_MOBILE : EAGER_COUNT_DESKTOP)
 
   const lead = group.find(p => p.species) ?? group[0]
   const species = cleanSpecies(lead.species)
@@ -78,10 +87,8 @@ export const CatchCard = memo(function CatchCard({
           className={styles.image}
           src={lead.thumbUrl ?? lead.url}
           alt={species ? `${species} catch` : 'Fishing catch photo'}
-          // First rows are above the fold — fetch them immediately at high priority;
-          // everything below lazy-loads as it nears the viewport.
-          loading={index < 6 ? 'eager' : 'lazy'}
-          fetchPriority={index < 6 ? 'high' : 'auto'}
+          loading={eager ? 'eager' : 'lazy'}
+          fetchPriority={eager ? 'high' : 'auto'}
           decoding="async"
         />
       </div>
