@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { useShallow } from 'zustand/react/shallow'
 import { EditPencil, Xmark, Plus, ShareIos } from '../icons.js'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
@@ -10,7 +8,7 @@ import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
 import { formatDateFull, cleanSpecies, cleanGear, formatCatchLocation } from '../../lib/formatters.js'
-import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
+import { MAP_STYLE, loadMapbox } from '../../lib/mapbox.js'
 import { PixelFishLoader } from '../PixelFishLoader.jsx'
 import { EASE_OUT } from '../../lib/motion.js'
 import styles from './Map.module.css'
@@ -21,19 +19,24 @@ function MiniMap({ lat, lng }) {
   const containerRef = useRef(null)
 
   useEffect(() => {
-    mapboxgl.accessToken = MAPBOX_TOKEN
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      style: MAP_STYLE,
-      center: [lng, lat],
-      zoom: 11,
-      interactive: false,
-      attributionControl: false,
-    })
-    const marker = new mapboxgl.Marker({ color: '#000000' })
-      .setLngLat([lng, lat])
-      .addTo(map)
-    return () => { marker.remove(); map.remove() }
+    let cancelled = false
+    let teardown = null
+    loadMapbox().then(mapboxgl => {
+      if (cancelled) return
+      const map = new mapboxgl.Map({
+        container: containerRef.current,
+        style: MAP_STYLE,
+        center: [lng, lat],
+        zoom: 11,
+        interactive: false,
+        attributionControl: false,
+      })
+      const marker = new mapboxgl.Marker({ color: '#000000' })
+        .setLngLat([lng, lat])
+        .addTo(map)
+      teardown = () => { marker.remove(); map.remove() }
+    }).catch(e => console.error('[hookspot] failed to load map', e))
+    return () => { cancelled = true; teardown?.() }
   }, [lat, lng])
 
   return <div ref={containerRef} className={styles.miniMap} />

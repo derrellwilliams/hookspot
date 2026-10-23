@@ -2,8 +2,6 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useShallow } from 'zustand/react/shallow'
 import * as Dialog from '@radix-ui/react-dialog'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { Xmark, MediaImage } from '../icons.js'
 import { Button, Input, SelectWithCustom } from '../ui/index.js'
 import { PixelFishLoader } from '../PixelFishLoader.jsx'
@@ -17,7 +15,7 @@ import { parseExifDate, cleanGear } from '../../lib/formatters.js'
 import { identifySpecies } from '../../identify.js'
 import { ThumbStrip } from './ThumbStrip.jsx'
 import styles from './UploadDialog.module.css'
-import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
+import { MAP_STYLE, loadMapbox } from '../../lib/mapbox.js'
 import { SPRING, EASE_OUT, EASE_ENTER } from '../../lib/motion.js'
 
 const STEP_SLIDE_DISTANCE = '6%'
@@ -64,6 +62,7 @@ export function UploadDialog() {
   const fileInputRef = useRef(null)
   const cameraInputRef = useRef(null)
   const locationMapInstanceRef = useRef(null)
+  const locationMapNodeRef = useRef(null)
   const locationMarkerRef = useRef(null)
   const mapCenterRef = useRef(null)
 
@@ -71,32 +70,36 @@ export function UploadDialog() {
   // A plain useEffect(fn, [step]) fires before AnimatePresence mode="wait" has mounted the new
   // step's DOM node, so locationMapRef.current would be null and the map would never initialize.
   const locationMapRef = useCallback((node) => {
+    locationMapNodeRef.current = node
     if (!node) {
       if (locationMarkerRef.current) { locationMarkerRef.current.remove(); locationMarkerRef.current = null }
       if (locationMapInstanceRef.current) { locationMapInstanceRef.current.remove(); locationMapInstanceRef.current = null }
       return
     }
-    mapboxgl.accessToken = MAPBOX_TOKEN
-    const { center = [-98, 39], zoom = 3 } = mapCenterRef.current ?? {}
-    const map = new mapboxgl.Map({ container: node, style: MAP_STYLE, center, zoom })
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right')
-    locationMapInstanceRef.current = map
-    map.on('click', e => {
-      const { lng, lat } = e.lngLat
-      setManualPin({ lat, lng })
-      if (locationMarkerRef.current) {
-        locationMarkerRef.current.setLngLat([lng, lat])
-      } else {
-        const marker = new mapboxgl.Marker({ color: '#000000', draggable: true })
-          .setLngLat([lng, lat])
-          .addTo(map)
-        marker.on('dragend', () => {
-          const pos = marker.getLngLat()
-          setManualPin({ lat: pos.lat, lng: pos.lng })
-        })
-        locationMarkerRef.current = marker
-      }
-    })
+    loadMapbox().then(mapboxgl => {
+      // The step may have changed (unmounting this node) while the library loaded
+      if (locationMapNodeRef.current !== node) return
+      const { center = [-98, 39], zoom = 3 } = mapCenterRef.current ?? {}
+      const map = new mapboxgl.Map({ container: node, style: MAP_STYLE, center, zoom })
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right')
+      locationMapInstanceRef.current = map
+      map.on('click', e => {
+        const { lng, lat } = e.lngLat
+        setManualPin({ lat, lng })
+        if (locationMarkerRef.current) {
+          locationMarkerRef.current.setLngLat([lng, lat])
+        } else {
+          const marker = new mapboxgl.Marker({ color: '#000000', draggable: true })
+            .setLngLat([lng, lat])
+            .addTo(map)
+          marker.on('dragend', () => {
+            const pos = marker.getLngLat()
+            setManualPin({ lat: pos.lat, lng: pos.lng })
+          })
+          locationMarkerRef.current = marker
+        }
+      })
+    }).catch(e => console.error('[hookspot] failed to load map', e))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

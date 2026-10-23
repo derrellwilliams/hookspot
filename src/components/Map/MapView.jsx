@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import styles from './Map.module.css'
-import { MAPBOX_TOKEN, MAP_STYLE } from '../../lib/mapbox.js'
+import { MAP_STYLE, loadMapbox } from '../../lib/mapbox.js'
 import { MOBILE_QUERY } from '../../hooks/useIsMobile.js'
 import { sortByRecency } from '../../lib/groupPhotos.js'
 
@@ -21,9 +19,11 @@ function avg(arr) {
 export function MapView({ active }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
+  const mapboxRef = useRef(null)  // the lazily loaded mapboxgl module
   const markersRef = useRef([])  // { key, marker }
   const markerByNameRef = useRef(new Map())
   const [mapReady, setMapReady] = useState(false)
+  const [shouldInit, setShouldInit] = useState(active)
   const [fitted, setFitted] = useState(false)
   const savedViewRef = useRef(null)
 
@@ -33,55 +33,81 @@ export function MapView({ active }) {
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
 
+  // A visible map loads right away. A hidden one (mobile list view, or another
+  // route on first load) waits until the page has finished loading so the map
+  // library doesn't compete with the feed's first images, then warms up so
+  // switching to it is instant.
+  useEffect(() => {
+    if (shouldInit) return
+    if (active) { setShouldInit(true); return }
+    const start = () => setShouldInit(true)
+    if (document.readyState === 'complete') { start(); return }
+    window.addEventListener('load', start, { once: true })
+    return () => window.removeEventListener('load', start)
+  }, [active, shouldInit])
+
   // Init map once. flyToPhotoFn is defined here so it only enters the store once,
   // reading current marker state via markerByNameRef on each call.
   useEffect(() => {
-    mapboxgl.accessToken = MAPBOX_TOKEN
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      style: MAP_STYLE,
-      center: MAP_CENTER,
-      zoom: MAP_ZOOM,
-    })
-    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
-    map.on('click', () => {
-      usePhotoStore.getState().setActiveGroup(null)
-    })
-    map.on('load', () => {
-      map.setConfigProperty('basemap', 'showPlaceLabels', true)
-      setFlyToPhoto((photo) => {
-        const entry = markerByNameRef.current.get(photo.name)
-        if (!entry) return
-        const lnglat = entry.marker.getLngLat()
-        const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
-        const onMobile = window.matchMedia(MOBILE_QUERY).matches
-        // Mobile: push map up so the pin sits above the dock sheet mid height (65%).
-        // Use visualViewport height (matches dvh used in sheet max-height) so the
-        // padding is correct on iOS Safari when the URL bar is visible.
-        const vh = window.visualViewport?.height ?? window.innerHeight
-        const padding = onMobile
-          ? { left: 0, right: 0, top: 0, bottom: Math.round(vh * 0.65) }
-          : { left: 0, right: 0, top: 0, bottom: 0 }
-        map.jumpTo({ center: lnglat, zoom, padding })
+    if (!shouldInit) return
+    let cancelled = false
+    let teardown = null
+    loadMapbox().then(mapboxgl => {
+      if (cancelled) return
+      mapboxRef.current = mapboxgl
+      const map = new mapboxgl.Map({
+        container: containerRef.current,
+        style: MAP_STYLE,
+        center: MAP_CENTER,
+        zoom: MAP_ZOOM,
       })
-      setMapReady(true)
-    })
-    mapRef.current = map
-    // Keep the canvas in sync with the container — Mapbox only listens to
-    // window resize, so layout-driven size changes need an explicit resize().
-    const ro = new ResizeObserver(() => map.resize())
-    ro.observe(containerRef.current)
+      map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
+      map.on('click', () => {
+        usePhotoStore.getState().setActiveGroup(null)
+      })
+      map.on('load', () => {
+        map.setConfigProperty('basemap', 'showPlaceLabels', true)
+        setFlyToPhoto((photo) => {
+          const entry = markerByNameRef.current.get(photo.name)
+          if (!entry) return
+          const lnglat = entry.marker.getLngLat()
+          const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
+          const onMobile = window.matchMedia(MOBILE_QUERY).matches
+          // Mobile: push map up so the pin sits above the dock sheet mid height (65%).
+          // Use visualViewport height (matches dvh used in sheet max-height) so the
+          // padding is correct on iOS Safari when the URL bar is visible.
+          const vh = window.visualViewport?.height ?? window.innerHeight
+          const padding = onMobile
+            ? { left: 0, right: 0, top: 0, bottom: Math.round(vh * 0.65) }
+            : { left: 0, right: 0, top: 0, bottom: 0 }
+          map.jumpTo({ center: lnglat, zoom, padding })
+        })
+        setMapReady(true)
+      })
+      mapRef.current = map
+      // Keep the canvas in sync with the container — Mapbox only listens to
+      // window resize, so layout-driven size changes need an explicit resize().
+      const ro = new ResizeObserver(() => map.resize())
+      ro.observe(containerRef.current)
+      teardown = () => {
+        ro.disconnect()
+        markersRef.current = []
+        mapRef.current = null
+        setMapReady(false)
+        map.remove()
+      }
+    }).catch(e => console.error('[hookspot] failed to load map', e))
     return () => {
-      ro.disconnect()
-      markersRef.current = []
-      map.remove()
+      cancelled = true
+      teardown?.()
     }
-  }, [setFlyToPhoto])
+  }, [shouldInit, setFlyToPhoto])
 
   // Rebuild markers when groups or filter change
   useEffect(() => {
     if (!mapReady) return
     const map = mapRef.current
+    const mapboxgl = mapboxRef.current
 
     const groupKey = (group) => group.map(p => p.name).sort().join('|')
     const newKeySet = new Set(groups.map(groupKey))
@@ -199,6 +225,7 @@ export function MapView({ active }) {
       lat: avg(g.map(p => p.exif.latitude)),
     }))
 
+    const mapboxgl = mapboxRef.current
     const lngs = points.map(p => p.lng)
     const lats = points.map(p => p.lat)
     const bounds = new mapboxgl.LngLatBounds(
