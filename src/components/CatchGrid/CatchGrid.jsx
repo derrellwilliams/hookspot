@@ -78,7 +78,11 @@ export const CatchCard = memo(function CatchCard({
           className={styles.image}
           src={lead.thumbUrl ?? lead.url}
           alt={species ? `${species} catch` : 'Fishing catch photo'}
-          loading="lazy"
+          // First rows are above the fold — fetch them immediately at high priority;
+          // everything below lazy-loads as it nears the viewport.
+          loading={index < 6 ? 'eager' : 'lazy'}
+          fetchPriority={index < 6 ? 'high' : 'auto'}
+          decoding="async"
         />
       </div>
       <div className={styles.meta}>
