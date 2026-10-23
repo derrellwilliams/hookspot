@@ -7,7 +7,7 @@ import { useAuthStore } from '../../store/useAuthStore.js'
 import { formatDateNumeric, cleanSpecies, formatCatchLocation, getDisplayName } from '../../lib/formatters.js'
 import { sortByRecency } from '../../lib/groupPhotos.js'
 import { SPRING, EASE_OUT } from '../../lib/motion.js'
-import { useIsMobile } from '../../hooks/useIsMobile.js'
+import { MOBILE_QUERY } from '../../hooks/useIsMobile.js'
 import styles from './CatchGrid.module.css'
 
 const SKELETON_COUNT = 8
@@ -43,7 +43,9 @@ export const CatchCard = memo(function CatchCard({
 }) {
   const internalRef = useRef(null)
   const user = useAuthStore(s => s.user)
-  const eager = index < (useIsMobile() ? EAGER_COUNT_MOBILE : EAGER_COUNT_DESKTOP)
+  // Read once rather than subscribing — it only matters for the initial fetch,
+  // and a per-card media-query listener across the whole feed isn't worth it.
+  const eager = index < (window.matchMedia(MOBILE_QUERY).matches ? EAGER_COUNT_MOBILE : EAGER_COUNT_DESKTOP)
 
   const lead = group.find(p => p.species) ?? group[0]
   const species = cleanSpecies(lead.species)

@@ -8,7 +8,8 @@ import { useAuthStore } from '../../store/useAuthStore.js'
 import { supabase } from '../../lib/supabase.js'
 import { uploadPhotoToGroup, deletePhotos } from '../../lib/fileLoader.js'
 import { formatDateFull, cleanSpecies, cleanGear, formatCatchLocation } from '../../lib/formatters.js'
-import { MAP_STYLE, loadMapbox } from '../../lib/mapbox.js'
+import { MAP_STYLE } from '../../lib/mapbox.js'
+import { useMapbox } from '../../hooks/useMapbox.js'
 import { PixelFishLoader } from '../PixelFishLoader.jsx'
 import { EASE_OUT } from '../../lib/motion.js'
 import styles from './Map.module.css'
@@ -17,27 +18,23 @@ import styles from './Map.module.css'
 // so the dialog mini-map is a live (non-interactive) GL map instead.
 function MiniMap({ lat, lng }) {
   const containerRef = useRef(null)
+  const mapboxgl = useMapbox()
 
   useEffect(() => {
-    let cancelled = false
-    let teardown = null
-    loadMapbox().then(mapboxgl => {
-      if (cancelled) return
-      const map = new mapboxgl.Map({
-        container: containerRef.current,
-        style: MAP_STYLE,
-        center: [lng, lat],
-        zoom: 11,
-        interactive: false,
-        attributionControl: false,
-      })
-      const marker = new mapboxgl.Marker({ color: '#000000' })
-        .setLngLat([lng, lat])
-        .addTo(map)
-      teardown = () => { marker.remove(); map.remove() }
-    }).catch(e => console.error('[hookspot] failed to load map', e))
-    return () => { cancelled = true; teardown?.() }
-  }, [lat, lng])
+    if (!mapboxgl) return
+    const map = new mapboxgl.Map({
+      container: containerRef.current,
+      style: MAP_STYLE,
+      center: [lng, lat],
+      zoom: 11,
+      interactive: false,
+      attributionControl: false,
+    })
+    const marker = new mapboxgl.Marker({ color: '#000000' })
+      .setLngLat([lng, lat])
+      .addTo(map)
+    return () => { marker.remove(); map.remove() }
+  }, [mapboxgl, lat, lng])
 
   return <div ref={containerRef} className={styles.miniMap} />
 }

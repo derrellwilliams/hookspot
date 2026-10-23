@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePhotoStore } from '../../store/usePhotoStore.js'
 import styles from './Map.module.css'
-import { MAP_STYLE, loadMapbox } from '../../lib/mapbox.js'
+import { MAP_STYLE } from '../../lib/mapbox.js'
+import { useMapbox } from '../../hooks/useMapbox.js'
 import { MOBILE_QUERY } from '../../hooks/useIsMobile.js'
 import { sortByRecency } from '../../lib/groupPhotos.js'
 
@@ -11,6 +12,7 @@ const MARKER_COLOR = '#000000'
 const MIN_FLY_ZOOM = 13
 const BOUNDS_PADDING_DEGREES = 0.008  // ~0.55 miles
 const INITIAL_FIT_COUNT = 10
+const HIDDEN_INIT_MAX_WAIT_MS = 3000
 
 function avg(arr) {
   return arr.reduce((s, v) => s + v, 0) / arr.length
@@ -19,12 +21,11 @@ function avg(arr) {
 export function MapView({ active }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
-  const mapboxRef = useRef(null)  // the lazily loaded mapboxgl module
   const markersRef = useRef([])  // { key, marker }
   const markerByNameRef = useRef(new Map())
   const [mapReady, setMapReady] = useState(false)
-  const [shouldInit, setShouldInit] = useState(active)
   const [fitted, setFitted] = useState(false)
+  const [shouldInit, setShouldInit] = useState(active)
   const savedViewRef = useRef(null)
 
   const groups = usePhotoStore(s => s.groups)
@@ -33,81 +34,95 @@ export function MapView({ active }) {
   const setFlyToPhoto = usePhotoStore(s => s.setFlyToPhoto)
   const setActiveGroup = usePhotoStore(s => s.setActiveGroup)
 
-  // A visible map loads right away. A hidden one (mobile list view, or another
-  // route on first load) waits until the page has finished loading so the map
-  // library doesn't compete with the feed's first images, then warms up so
-  // switching to it is instant.
+  // A visible map loads right away. A hidden one in mobile list view waits until
+  // the feed has rendered and its non-lazy images have finished (capped at
+  // HIDDEN_INIT_MAX_WAIT_MS) so the map library doesn't compete with them, then
+  // warms up so switching to it is instant. (window 'load' is no good here — it
+  // fires before React renders the feed.) While MapPage is display:none behind
+  // another route the container is 0×0, so wait until it has a size —
+  // initializing at 0×0 would fit bounds to a world-level zoom.
   useEffect(() => {
     if (shouldInit) return
     if (active) { setShouldInit(true); return }
-    const start = () => setShouldInit(true)
-    if (document.readyState === 'complete') { start(); return }
-    window.addEventListener('load', start, { once: true })
-    return () => window.removeEventListener('load', start)
-  }, [active, shouldInit])
+    if (!photosInitialized) return
+    const el = containerRef.current
+    let cancelled = false
+    let timer
+    let ro
+    const start = () => { if (!cancelled) setShouldInit(true) }
+    const warmUp = () => {
+      const pending = [...document.images].filter(img => !img.complete && img.loading !== 'lazy')
+      timer = setTimeout(start, HIDDEN_INIT_MAX_WAIT_MS)
+      Promise.all(pending.map(img => new Promise(resolve => {
+        img.addEventListener('load', resolve, { once: true })
+        img.addEventListener('error', resolve, { once: true })
+      }))).then(start)
+    }
+    if (el.clientWidth) warmUp()
+    else {
+      ro = new ResizeObserver(() => {
+        if (!el.clientWidth) return
+        ro.disconnect()
+        warmUp()
+      })
+      ro.observe(el)
+    }
+    return () => { cancelled = true; clearTimeout(timer); ro?.disconnect() }
+  }, [active, shouldInit, photosInitialized])
+
+  const mapboxgl = useMapbox(shouldInit)
 
   // Init map once. flyToPhotoFn is defined here so it only enters the store once,
   // reading current marker state via markerByNameRef on each call.
   useEffect(() => {
-    if (!shouldInit) return
-    let cancelled = false
-    let teardown = null
-    loadMapbox().then(mapboxgl => {
-      if (cancelled) return
-      mapboxRef.current = mapboxgl
-      const map = new mapboxgl.Map({
-        container: containerRef.current,
-        style: MAP_STYLE,
-        center: MAP_CENTER,
-        zoom: MAP_ZOOM,
+    if (!mapboxgl) return
+    const map = new mapboxgl.Map({
+      container: containerRef.current,
+      style: MAP_STYLE,
+      center: MAP_CENTER,
+      zoom: MAP_ZOOM,
+    })
+    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
+    map.on('click', () => {
+      usePhotoStore.getState().setActiveGroup(null)
+    })
+    map.on('load', () => {
+      map.setConfigProperty('basemap', 'showPlaceLabels', true)
+      setFlyToPhoto((photo) => {
+        const entry = markerByNameRef.current.get(photo.name)
+        if (!entry) return
+        const lnglat = entry.marker.getLngLat()
+        const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
+        const onMobile = window.matchMedia(MOBILE_QUERY).matches
+        // Mobile: push map up so the pin sits above the dock sheet mid height (65%).
+        // Use visualViewport height (matches dvh used in sheet max-height) so the
+        // padding is correct on iOS Safari when the URL bar is visible.
+        const vh = window.visualViewport?.height ?? window.innerHeight
+        const padding = onMobile
+          ? { left: 0, right: 0, top: 0, bottom: Math.round(vh * 0.65) }
+          : { left: 0, right: 0, top: 0, bottom: 0 }
+        map.jumpTo({ center: lnglat, zoom, padding })
       })
-      map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
-      map.on('click', () => {
-        usePhotoStore.getState().setActiveGroup(null)
-      })
-      map.on('load', () => {
-        map.setConfigProperty('basemap', 'showPlaceLabels', true)
-        setFlyToPhoto((photo) => {
-          const entry = markerByNameRef.current.get(photo.name)
-          if (!entry) return
-          const lnglat = entry.marker.getLngLat()
-          const zoom = Math.max(map.getZoom(), MIN_FLY_ZOOM)
-          const onMobile = window.matchMedia(MOBILE_QUERY).matches
-          // Mobile: push map up so the pin sits above the dock sheet mid height (65%).
-          // Use visualViewport height (matches dvh used in sheet max-height) so the
-          // padding is correct on iOS Safari when the URL bar is visible.
-          const vh = window.visualViewport?.height ?? window.innerHeight
-          const padding = onMobile
-            ? { left: 0, right: 0, top: 0, bottom: Math.round(vh * 0.65) }
-            : { left: 0, right: 0, top: 0, bottom: 0 }
-          map.jumpTo({ center: lnglat, zoom, padding })
-        })
-        setMapReady(true)
-      })
-      mapRef.current = map
-      // Keep the canvas in sync with the container — Mapbox only listens to
-      // window resize, so layout-driven size changes need an explicit resize().
-      const ro = new ResizeObserver(() => map.resize())
-      ro.observe(containerRef.current)
-      teardown = () => {
-        ro.disconnect()
-        markersRef.current = []
-        mapRef.current = null
-        setMapReady(false)
-        map.remove()
-      }
-    }).catch(e => console.error('[hookspot] failed to load map', e))
+      setMapReady(true)
+    })
+    mapRef.current = map
+    // Keep the canvas in sync with the container — Mapbox only listens to
+    // window resize, so layout-driven size changes need an explicit resize().
+    const ro = new ResizeObserver(() => map.resize())
+    ro.observe(containerRef.current)
     return () => {
-      cancelled = true
-      teardown?.()
+      ro.disconnect()
+      markersRef.current = []
+      mapRef.current = null
+      setMapReady(false)
+      map.remove()
     }
-  }, [shouldInit, setFlyToPhoto])
+  }, [mapboxgl, setFlyToPhoto])
 
   // Rebuild markers when groups or filter change
   useEffect(() => {
     if (!mapReady) return
     const map = mapRef.current
-    const mapboxgl = mapboxRef.current
 
     const groupKey = (group) => group.map(p => p.name).sort().join('|')
     const newKeySet = new Set(groups.map(groupKey))
@@ -177,7 +192,7 @@ export function MapView({ active }) {
 
     // Publish updated lookup so flyToPhotoFn (in init effect) sees current markers
     markerByNameRef.current = markerByName
-  }, [groups, mapReady, setActiveGroup])
+  }, [groups, mapReady, mapboxgl, setActiveGroup])
 
   // Card hover → highlight the connected pin
   useEffect(() => {
@@ -225,7 +240,6 @@ export function MapView({ active }) {
       lat: avg(g.map(p => p.exif.latitude)),
     }))
 
-    const mapboxgl = mapboxRef.current
     const lngs = points.map(p => p.lng)
     const lats = points.map(p => p.lat)
     const bounds = new mapboxgl.LngLatBounds(
@@ -240,7 +254,12 @@ export function MapView({ active }) {
       duration: 0,
     })
     setFitted(true)
-  }, [groups, mapReady, fitted, photosInitialized])
+
+    // A card picked while the map library was still loading couldn't fly then
+    // (flyToPhoto was null) — catch up now that markers exist.
+    const pendingGroup = usePhotoStore.getState().activeGroup
+    if (pendingGroup) usePhotoStore.getState().flyToPhoto?.(pendingGroup[0])
+  }, [groups, mapReady, mapboxgl, fitted, photosInitialized])
 
   return <div ref={containerRef} className={styles.map} />
 }
