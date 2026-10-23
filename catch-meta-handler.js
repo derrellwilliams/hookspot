@@ -32,8 +32,12 @@ export async function buildCatchMeta(env, username, catchParam) {
     return Array.isArray(rows) ? rows : []
   }
 
-  let rows = await fetchPhotos(`catch_id=eq.${encodeURIComponent(catchParam)}`)
-  if (!rows.length) rows = await fetchPhotos(`filename=eq.${encodeURIComponent(catchParam)}`)
+  // Both lookups at once — a non-uuid catchParam just makes the catch_id one fail
+  const [byCatchId, byFilename] = await Promise.all([
+    fetchPhotos(`catch_id=eq.${encodeURIComponent(catchParam)}`),
+    fetchPhotos(`filename=eq.${encodeURIComponent(catchParam)}`),
+  ])
+  const rows = byCatchId.length ? byCatchId : byFilename
   if (!rows.length) return null
   // Same lead-photo ordering as groupPhotos() client-side: lowest meta.order,
   // then earliest time — so the OG image matches what the dialog shows first.
@@ -57,12 +61,31 @@ export async function buildCatchMeta(env, username, catchParam) {
 }
 
 // Matches `/user/<username>` paths carrying a `?catch=` param — the only
-// case that needs a per-catch preview instead of the generic SPA shell.
+// case that needs a per-catch preview instead of the generic SPA shell. On
+// Vercel, vercel.json rewrites those to `/api/catch-meta?username=…&catch=…`,
+// so that shape is accepted too.
 export function parseCatchShareUrl(pathname, searchParams) {
-  const match = pathname.match(/^\/user\/([^/]+)\/?$/)
   const catchParam = searchParams.get('catch')
-  if (!match || !catchParam) return null
-  return { username: decodeURIComponent(match[1]), catchParam }
+  if (!catchParam) return null
+  const match = pathname.match(/^\/user\/([^/]+)\/?$/)
+  if (match) return { username: decodeURIComponent(match[1]), catchParam }
+  const username = searchParams.get('username')
+  if (/^\/api\/catch-meta\/?$/.test(pathname) && username && !username.includes('/')) {
+    return { username, catchParam }
+  }
+  return null
+}
+
+// The one entry point for every mount (Vercel api/, Vite dev, server.js):
+// returns `html` with per-catch tags injected, or null when the URL isn't a
+// share link or the catch doesn't resolve. `origin` is e.g. https://hook-spot.com.
+export async function renderCatchShare(env, html, { pathname, searchParams, origin }) {
+  const parsed = parseCatchShareUrl(pathname, searchParams)
+  if (!parsed) return null
+  const meta = await buildCatchMeta(env, parsed.username, parsed.catchParam)
+  if (!meta) return null
+  meta.url = `${origin}/user/${encodeURIComponent(parsed.username)}?catch=${encodeURIComponent(parsed.catchParam)}`
+  return injectMeta(html, meta)
 }
 
 function escapeHtml(s) {
@@ -70,9 +93,9 @@ function escapeHtml(s) {
 }
 
 // Replaces the static <title> with a per-catch <title> plus OG/Twitter
-// meta tags. `meta.url` should be the exact request URL (protocol + host +
-// path + query) so previews link back to the right catch.
-export function injectMeta(html, meta) {
+// meta tags. `meta.url` is the canonical share URL so previews link back to
+// the right catch.
+function injectMeta(html, meta) {
   const title = escapeHtml(meta.title)
   const description = escapeHtml(meta.description)
   const tags = [

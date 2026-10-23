@@ -328,7 +328,6 @@ export async function deletePhotos(toDelete) {
 
   const list = Array.isArray(toDelete) ? toDelete : [toDelete]
   const paths = list.map(p => p.storagePath ?? `${user.id}/${storageKey(p.name)}`)
-  const filenames = list.map(p => p.name)
 
   const withId = list.filter(p => p.id)
   const withoutId = list.filter(p => !p.id)
