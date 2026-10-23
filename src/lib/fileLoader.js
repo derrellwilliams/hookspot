@@ -1,5 +1,5 @@
 import { extractExif, toDisplayBlob, resizeForStorage, resizeForThumb } from '../exif.js'
-import { getCached, setCached } from '../cache.js'
+import { setCached } from '../cache.js'
 import { identifySpecies } from '../identify.js'
 import { fetchWeather } from './weather.js'
 import { reverseGeocode } from './geocode.js'
@@ -8,6 +8,7 @@ import { usePhotoStore } from '../store/usePhotoStore.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import { supabase } from '../lib/supabase.js'
 import { parseExifDate } from './formatters.js'
+import { mapPhotoRow } from './groupPhotos.js'
 
 function getUser() {
   return useAuthStore.getState().user
@@ -64,13 +65,6 @@ function buildPhoto(blob, exif, row, ownerProfile, currentUserId) {
   }
 }
 
-async function withConcurrency(fns, limit) {
-  const queue = [...fns]
-  await Promise.all(Array.from({ length: Math.min(limit, fns.length) }, async () => {
-    while (queue.length) await queue.shift()()
-  }))
-}
-
 function makeSemaphore(limit) {
   let active = 0
   const pending = []
@@ -122,7 +116,6 @@ let _initInProgress = false
 // Signing in or out swaps feeds, so stale photos (and their isOwn flags) must go.
 let _feedUserId
 let _initQueued = false
-const _failedKeys = new Set()
 const _uploadingNames = new Set()
 
 export function clearUploadingNames() {
@@ -153,28 +146,20 @@ export async function initPhotos() {
     const profileMap = Object.fromEntries((profileRows ?? []).map(p => [p.id, p]))
     const existing = new Set(usePhotoStore.getState().photos.map(p => `${p.userId}/${p.name}`))
 
-    const toLoad = rows.filter(row => !existing.has(`${row.user_id}/${row.filename}`))
-    const pending = []
-    const flush = () => {
-      if (!pending.length) return
-      const batch = pending.splice(0)
-      usePhotoStore.getState().batchAddPhotos(batch)
-      batch.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo); maybeFetchWaterBody(photo) })
-    }
-    const makeLoader = row => () =>
-      loadPhotoFromRow(row, profileMap[row.user_id] ?? null, userId)
-        .then(photo => { if (photo) { pending.push(photo); if (pending.length >= 4) flush() } })
-        .catch(e => console.error('[hookspot] failed to load', row.filename, e))
-
-    // Load the 15 most recent first so the sidebar becomes interactive quickly,
-    // then continue with the rest in the background. Cap at 3 concurrent to avoid
-    // stacking too many canvas decodes on low-memory iOS devices.
-    await withConcurrency(toLoad.slice(0, 15).map(makeLoader), 3)
-    flush()
-    usePhotoStore.getState().setPhotosInitialized()
-
-    await withConcurrency(toLoad.slice(15).map(makeLoader), 3)
-    flush()
+    // Build photos straight from the rows — images stream from the Storage CDN via
+    // <img> (grid uses the ~960px thumb_url), so nothing is downloaded or decoded
+    // before the grid can render.
+    const photos = rows
+      .filter(row => !existing.has(`${row.user_id}/${row.filename}`))
+      .map(row => ({
+        ...mapPhotoRow(row),
+        id: row.id ?? null,
+        storagePath: row.storage_path ?? null,
+        isOwn: row.user_id === userId,
+        ownerProfile: profileMap[row.user_id] ?? null,
+      }))
+    usePhotoStore.getState().batchAddPhotos(photos)
+    photos.forEach(photo => { maybeFetchWeather(photo); maybeFetchLocation(photo); maybeFetchWaterBody(photo) })
   } finally {
     if (fetchAttempted) usePhotoStore.getState().setPhotosInitialized()
     _initInProgress = false
@@ -183,33 +168,6 @@ export async function initPhotos() {
       await initPhotos()
     }
   }
-}
-
-async function loadPhotoFromRow(row, ownerProfile, currentUserId) {
-  const cacheKey = `${row.user_id}/${row.filename}`
-  if (_failedKeys.has(cacheKey)) return null
-  const cached = await getCached(cacheKey)
-  if (cached) return buildPhoto(cached.blob, cached.exif, row, ownerProfile, currentUserId)
-
-  let res = await fetch(row.url)
-  if (res.status === 429) {
-    // Transient Supabase Storage rate-limit, not a missing file — retry the same
-    // URL rather than falling through to the .jpg fallback below, which doesn't
-    // exist for HEICs uploaded from mobile and would 400 every time.
-    await new Promise(r => setTimeout(r, 500 + Math.random() * 500))
-    res = await fetch(row.url)
-  }
-  if (!res.ok && res.status < 500 && res.status !== 429 && /\.(heic|heif)$/i.test(row.url)) {
-    res = await fetch(row.url.replace(/\.(heic|heif)$/i, '.jpg'))
-  }
-  if (!res.ok) { _failedKeys.add(cacheKey); return null }
-  const rawBlob = await res.blob()
-  const file = new File([rawBlob], row.filename, { type: rawBlob.type || 'image/heic' })
-
-  const [blob, exif] = await Promise.all([toDisplayBlob(file), extractExif(file)])
-  await setCached(cacheKey, { blob, exif })
-
-  return buildPhoto(blob, exif, row, ownerProfile, currentUserId)
 }
 
 export async function handleFiles(fileList, meta = {}, displayBlobs = []) {
