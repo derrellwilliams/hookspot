@@ -18,7 +18,7 @@ import { createProfileHandler } from './profile-handler.js'
 import { createPhotosHandler } from './photos-handler.js'
 import { createCheckUsernameHandler } from './check-username-handler.js'
 import { createSearchUsersHandler } from './search-users-handler.js'
-import { buildCatchMeta, parseCatchShareUrl, injectMeta } from './catch-meta-handler.js'
+import { renderCatchShare } from './catch-meta-handler.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DIST = path.join(__dirname, 'dist')
@@ -75,21 +75,17 @@ const server = http.createServer(async (req, res) => {
   // below unchanged.
   if (urlPath.startsWith('/user/')) {
     const url = new URL(req.url, `http://${req.headers.host}`)
-    const parsed = parseCatchShareUrl(url.pathname, url.searchParams)
-    if (parsed) {
-      try {
-        const meta = await buildCatchMeta(env, parsed.username, parsed.catchParam)
-        if (meta) {
-          const proto = req.headers['x-forwarded-proto'] || 'https'
-          meta.url = `${proto}://${req.headers.host}${url.pathname}${url.search}`
-          res.statusCode = 200
-          res.setHeader('content-type', 'text/html; charset=utf-8')
-          res.end(injectMeta(INDEX_HTML, meta))
-          return
-        }
-      } catch (err) {
-        console.error('[catch-meta] error:', err.message)
+    try {
+      const origin = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
+      const html = await renderCatchShare(env, INDEX_HTML, { pathname: url.pathname, searchParams: url.searchParams, origin })
+      if (html) {
+        res.statusCode = 200
+        res.setHeader('content-type', 'text/html; charset=utf-8')
+        res.end(html)
+        return
       }
+    } catch (err) {
+      console.error('[catch-meta] error:', err.message)
     }
   }
 
