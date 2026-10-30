@@ -31,7 +31,7 @@ struct OnboardingView: View {
                         PhotosPicker(selection: $avatarItem, matching: .images) {
                             Group {
                                 if let avatarImage { avatarImage.resizable().scaledToFill() }
-                                else { Image(systemName: "person.fill").font(.system(size: 32)).foregroundStyle(Theme.darkMuted) }
+                                else { Icon.user.view(32).foregroundStyle(Theme.darkMuted) }
                             }
                             .frame(width: 80, height: 80)
                             .background(Theme.avatarFallback)
@@ -99,7 +99,7 @@ struct OnboardingView: View {
         case .idle: Text("3–20 characters: lowercase letters, numbers, - or _")
         case .invalid: Text("3–20 chars: lowercase letters, numbers, - or _").foregroundStyle(.red)
         case .checking: Text("Checking…")
-        case .available: Label("Available", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.iosBlue)
+        case .available: Label { Text("Available") } icon: { Icon.checkCircle.view(14) }.foregroundStyle(Theme.iosBlue)
         case .taken: Text("That username is taken").foregroundStyle(.red)
         case .failed: Text("Could not check username. Try again.").foregroundStyle(.red)
         }

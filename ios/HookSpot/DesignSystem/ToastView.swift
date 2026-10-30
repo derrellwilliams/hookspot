@@ -7,7 +7,7 @@ struct ToastView: View {
     var body: some View {
         HStack(spacing: 8) {
             if toast.variant == .success {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.iosBlue)
+                Icon.checkCircle.view(16).foregroundStyle(Theme.iosBlue)
             }
             Text(toast.message).font(Typography.caption.weight(.medium)).foregroundStyle(Theme.darkText)
         }

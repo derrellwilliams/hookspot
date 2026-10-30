@@ -6,7 +6,7 @@ import ObjectiveC
 /// iOS 27 does this through `UITabBarController.prominentTabIdentifier`, which SwiftUI has
 /// no modifier for yet — and SwiftUI clears it whenever it refreshes the tab bar. So the two
 /// setters are swapped once at launch: whenever anything sets the prominent tab to nil, the
-/// tab titled `addTitle` is substituted. On iOS 26 the tab's `.search` role detaches it.
+/// "+" tab (our only `.search`-role tab) is substituted. On iOS 26 that role detaches it.
 enum ProminentTab {
     static let addTitle = "Add Catch"
 
@@ -28,7 +28,8 @@ enum ProminentTab {
 @available(iOS 27.0, *)
 extension UITabBarController {
     fileprivate var hs_addTabIdentifier: String? {
-        tabs.first { $0.title == ProminentTab.addTitle }?.identifier
+        // "+" is the only search-role tab (SwiftUI bridges it as a UISearchTab).
+        tabs.first { $0 is UISearchTab }?.identifier
     }
 
     // After the swap, calling hs_* invokes UIKit's original implementation.

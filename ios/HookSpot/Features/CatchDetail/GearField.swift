@@ -20,7 +20,7 @@ struct GearField: View {
                         Button("Clear", role: .destructive) { value = "" }
                     }
                 } label: {
-                    Image(systemName: "chevron.up.chevron.down")
+                    Icon.chevronsUpDown.view(16)
                         .frame(width: 44, height: 44)
                         .contentShape(.rect)
                 }

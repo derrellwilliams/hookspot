@@ -135,16 +135,16 @@ struct CatchDetailView: View {
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Close")
+            Button { dismiss() } label: { Icon.xmark.view(18) }.accessibilityLabel("Close")
         }
         if let shareURL {
             ToolbarItem(placement: .primaryAction) {
-                ShareLink(item: shareURL) { Image(systemName: "square.and.arrow.up") }.accessibilityLabel("Share")
+                ShareLink(item: shareURL) { Icon.share.view(18) }.accessibilityLabel("Share")
             }
         }
         if isOwn {
             ToolbarItem(placement: .primaryAction) {
-                Button { editing = true } label: { Image(systemName: "pencil") }.accessibilityLabel("Edit")
+                Button { editing = true } label: { Icon.editPencil.view(18) }.accessibilityLabel("Edit")
             }
         }
     }

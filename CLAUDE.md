@@ -58,6 +58,8 @@
 - **Config**: `ios/Config/Base.xcconfig` → `Info.plist` `HS*` keys → `AppConfig`. Real values go in gitignored `ios/Config/Secrets.xcconfig` (`ios/scripts/make-secrets.sh`): publishable Supabase key and public `pk.` Mapbox token only.
 - **Layout**: `Core/` pure Swift ports of `src/lib` (parity-tested in `HookSpotTests/`, fixtures generated from the JS); `Services/` (APIClient → same `/api/*` routes, UploadService, CatchService, ProfileService, EnrichmentService, ImageProcessing via ImageIO); `Stores/` (`AuthStore`, `FeedStore`, `@Observable @MainActor`).
 - **Design system**: `ios/HookSpot/DesignSystem/` — `Theme` (only place colors live, mirrors `src/tokens.js`), `Typography` (bundled fonts, Dynamic Type via `relativeTo:`), `Motion` (motion.js springs; Reduce Motion aware), `glassSurface` (one Liquid Glass recipe, solid under Reduce Transparency), `Avatar`, `DitherMesh` (Metal port of Paper's Dithering warp/4×4), `PixelFishLoader`, `CatchCard`. `DesignCatalog` is the iOS `/design` — launch with `-catalog` in Debug; render real components only.
+- **Icons**: lucide (same set as `src/components/icons.js`) as template SVGs in `Assets.xcassets/Icons`, used via `Icon` (`Icon.plus.view(20)`) — no SF Symbols. Regenerate with `ios/scripts/gen-lucide-icons.mjs`. App icon (pixel fish on `#1A1953`) from `ios/scripts/gen-app-icon.swift`.
+- **Tab bar**: icon-only tabs; "+" is detached via `ProminentTab` (iOS 27 `prominentTabIdentifier`, re-applied because SwiftUI resets it to nil; iOS 26 uses the `.search` role). Keep "+" the only `.search`-role tab.
 - **Build/test**: `cd ios && xcodebuild -scheme HookSpot -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build test`.
 
 ## Standards

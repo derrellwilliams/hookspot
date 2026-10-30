@@ -36,7 +36,7 @@ struct LoginView: View {
         }
         .overlay(alignment: .topTrailing) {
             Button { dismiss() } label: {
-                Image(systemName: "xmark").font(.body.weight(.semibold)).frame(width: 44, height: 44)
+                Icon.xmark.view(18).frame(width: 44, height: 44)
             }
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)

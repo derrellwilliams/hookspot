@@ -16,7 +16,7 @@ struct MiniMap: View {
     var body: some View {
         Map(initialViewport: .camera(center: coordinate.cl, zoom: 11)) {
             MapViewAnnotation(coordinate: coordinate.cl) {
-                Image(systemName: "mappin").font(.title2.weight(.bold)).foregroundStyle(.black)
+                Icon.mapPin.view(28).foregroundStyle(.black)
                     .accessibilityHidden(true)
             }
         }

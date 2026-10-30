@@ -21,10 +21,10 @@ struct MainTabView: View {
                     selection = new
                 }
             })) {
-            Tab("Catches", systemImage: "house", value: .catches) { FeedView() }
-            Tab("Profile", systemImage: "person", value: .profile) { MyProfileTab() }
-            Tab("Search", systemImage: "magnifyingglass", value: .search) { SearchView() }
-            Tab(ProminentTab.addTitle, systemImage: "plus", value: .add, role: .search) { Color.clear }
+            Tab(value: .catches) { FeedView() } label: { Label { Text("Catches") } icon: { Icon.home.image }.labelStyle(.iconOnly) }
+            Tab(value: .profile) { MyProfileTab() } label: { Label { Text("Profile") } icon: { Icon.user.image }.labelStyle(.iconOnly) }
+            Tab(value: .search) { SearchView() } label: { Label { Text("Search") } icon: { Icon.search.image }.labelStyle(.iconOnly) }
+            Tab(value: .add, role: .search) { Color.clear } label: { Label { Text(ProminentTab.addTitle) } icon: { Icon.plus.image }.labelStyle(.iconOnly) }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .sheet(isPresented: $feed.uploadOpen) { UploadView() }

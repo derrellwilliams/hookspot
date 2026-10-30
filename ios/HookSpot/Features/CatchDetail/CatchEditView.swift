@@ -49,7 +49,7 @@ struct CatchEditView: View {
                     .onDelete(perform: removePhotos)
                     PhotosPicker(selection: $addItem, matching: .images) {
                         HStack {
-                            if adding { PixelFishLoader(size: 22) } else { Image(systemName: "plus") }
+                            if adding { PixelFishLoader(size: 22) } else { Icon.plus.view(20) }
                             Text("Add photo")
                         }
                     }

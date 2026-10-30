@@ -35,8 +35,8 @@ struct FeedView: View {
                 .sharedBackgroundVisibility(.hidden)
                 ToolbarItem(placement: .topBarTrailing) {
                     Picker("View", selection: $mode) {
-                        Image(systemName: "list.bullet").tag(Mode.list).accessibilityLabel("List")
-                        Image(systemName: "map").tag(Mode.map).accessibilityLabel("Map")
+                        Icon.listView.view(18).tag(Mode.list).accessibilityLabel("List")
+                        Icon.map.view(18).tag(Mode.map).accessibilityLabel("Map")
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 96)
