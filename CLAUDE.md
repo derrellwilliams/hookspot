@@ -51,7 +51,7 @@
 - Profile: contained dither header card + segmented Recent Activity/Stats in normal page flow; Search: filters in one horizontally scrolling row.
 
 ## iOS (`ios/`)
-- Native Swift / SwiftUI app, iOS 26+, replacing the deleted Expo app (`mobile/`, removed 2026-10-30; recover from git history if needed). Plan: Mapbox Maps SDK for iOS, supabase-swift, Nuke; talks to the same `/api/*` routes and Supabase tables as the web.
+- Native Swift / SwiftUI app, iOS 26+, replacing the deleted Expo app (`mobile/`, removed 2026-10-30; recover from git history if needed). Uses Mapbox Maps SDK for iOS (v11, SPM, no download token), supabase-swift, Nuke; talks to the same `/api/*` routes and Supabase tables as the web.
 - Must follow the same upload order and `thumb_url` rules as `src/lib/fileLoader.js` (see Data Model), and the same `user_metadata` / `avatar_url` constraints (see Supabase Constraints).
 - `supabase/mobile-rpcs.sql` and its deployed RPCs stay — migration 006 references them.
 - **Project**: `ios/project.yml` (XcodeGen) is the source of truth for `HookSpot.xcodeproj`; folders are synchronized, so new Swift files need no regeneration — only target/package/setting changes do (`cd ios && xcodegen`).
@@ -64,7 +64,7 @@
 
 ## Standards
 - **No browser automation unless asked**: Don't use Chrome DevTools MCP / browser tools to verify changes unless explicitly requested
-- **No test suite**: CI (`.github/workflows/ci.yml`) runs `npm run build` + `npm audit --audit-level=high` on push/PR — make sure the build passes.
+- **No test suite** (web): CI (`.github/workflows/ci.yml`) runs `npm run build` + `npm audit --audit-level=high` on push/PR — make sure the build passes. iOS has its own workflow (`.github/workflows/ios.yml`, `ios/**` only): newest Xcode on `macos-26`, `xcodebuild build test` with no secrets.
 - **Zustand selectors**: Select only what's needed (`usePhotoStore(s => s.photos)`) — no whole-store subscriptions
 - **Markers**: `MapView` diffs markers against `groups` in one effect (keeping existing markers/popups); don't rebuild them wholesale.
 - **Design tokens**: Use CSS custom properties from `src/tokens.js` — no hardcoded hex values in `.module.css`
