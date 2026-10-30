@@ -45,6 +45,7 @@ targets:
         UIUserInterfaceStyle: Dark
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        UIAppFonts: [Roboto.ttf, RobotoCondensed.ttf, RobotoMono.ttf, GeistPixel.ttf]
         NSPhotoLibraryUsageDescription: Hook Spot uses your photos to add catches.
         NSCameraUsageDescription: Hook Spot uses your camera to photograph catches.
         NSLocationWhenInUseUsageDescription: Hook Spot uses your location to place catches on the map.

@@ -57,6 +57,7 @@
 - **Project**: `ios/project.yml` (XcodeGen) is the source of truth for `HookSpot.xcodeproj`; folders are synchronized, so new Swift files need no regeneration — only target/package/setting changes do (`cd ios && xcodegen`).
 - **Config**: `ios/Config/Base.xcconfig` → `Info.plist` `HS*` keys → `AppConfig`. Real values go in gitignored `ios/Config/Secrets.xcconfig` (`ios/scripts/make-secrets.sh`): publishable Supabase key and public `pk.` Mapbox token only.
 - **Layout**: `Core/` pure Swift ports of `src/lib` (parity-tested in `HookSpotTests/`, fixtures generated from the JS); `Services/` (APIClient → same `/api/*` routes, UploadService, CatchService, ProfileService, EnrichmentService, ImageProcessing via ImageIO); `Stores/` (`AuthStore`, `FeedStore`, `@Observable @MainActor`).
+- **Design system**: `ios/HookSpot/DesignSystem/` — `Theme` (only place colors live, mirrors `src/tokens.js`), `Typography` (bundled fonts, Dynamic Type via `relativeTo:`), `Motion` (motion.js springs; Reduce Motion aware), `glassSurface` (one Liquid Glass recipe, solid under Reduce Transparency), `Avatar`, `DitherMesh` (Metal port of Paper's Dithering warp/4×4), `PixelFishLoader`, `CatchCard`. `DesignCatalog` is the iOS `/design` — launch with `-catalog` in Debug; render real components only.
 - **Build/test**: `cd ios && xcodebuild -scheme HookSpot -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build test`.
 
 ## Standards
