@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		26656C97B6CAF6C5D2DE6A05 /* MapboxMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 6A5E1AF69C967943864C4E3A /* MapboxMaps */; };
 		33B1C8D3082CDDEF784EED6D /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 1B719FA0428B628740F18569 /* Supabase */; };
 		93A8A95C2AD49548CB92DE5C /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = EAE7024DFEF79977E2A26099 /* NukeUI */; };
 		B8310C8FA8501396FE752C1B /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = B3766CAF9EEB012C7C5ABCBD /* Nuke */; };
@@ -57,6 +58,7 @@
 				33B1C8D3082CDDEF784EED6D /* Supabase in Frameworks */,
 				B8310C8FA8501396FE752C1B /* Nuke in Frameworks */,
 				93A8A95C2AD49548CB92DE5C /* NukeUI in Frameworks */,
+				26656C97B6CAF6C5D2DE6A05 /* MapboxMaps in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -113,6 +115,7 @@
 				1B719FA0428B628740F18569 /* Supabase */,
 				B3766CAF9EEB012C7C5ABCBD /* Nuke */,
 				EAE7024DFEF79977E2A26099 /* NukeUI */,
+				6A5E1AF69C967943864C4E3A /* MapboxMaps */,
 			);
 			productName = HookSpot;
 			productReference = C274A3B8C283471DA8A5F156 /* HookSpot.app */;
@@ -167,6 +170,7 @@
 			mainGroup = BD92B305A953E410C0C95AD0;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				4FB253B8AF11B7DAC1227350 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */,
 				E2829021536F96CB935A86AD /* XCRemoteSwiftPackageReference "Nuke" */,
 				DF268B2A2EF76EDF67A39CCC /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
@@ -452,6 +456,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		4FB253B8AF11B7DAC1227350 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mapbox/mapbox-maps-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
 		DF268B2A2EF76EDF67A39CCC /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift";
@@ -475,6 +487,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DF268B2A2EF76EDF67A39CCC /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		6A5E1AF69C967943864C4E3A /* MapboxMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FB253B8AF11B7DAC1227350 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */;
+			productName = MapboxMaps;
 		};
 		B3766CAF9EEB012C7C5ABCBD /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;

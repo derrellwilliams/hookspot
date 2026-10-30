@@ -22,6 +22,9 @@ packages:
   Nuke:
     url: https://github.com/kean/Nuke
     from: "12.0.0"
+  MapboxMaps:
+    url: https://github.com/mapbox/mapbox-maps-ios
+    from: "11.0.0"
 targets:
   HookSpot:
     type: application
@@ -35,6 +38,7 @@ targets:
         product: Nuke
       - package: Nuke
         product: NukeUI
+      - package: MapboxMaps
     info:
       path: Config/HookSpot-Info.plist
       properties:
