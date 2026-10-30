@@ -6,7 +6,7 @@
 - **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/search`, `/design`
 - **Supabase** auth (emailed one-time code) + storage + database (`src/lib/supabase.js`)
 - **Mapbox GL JS** (raw, no react-map-gl) — lazy-loaded, see Performance
-- **Radix UI** for modals, dropdowns, tooltips; **lucide-react** icons via `src/components/icons.js` (mobile: `lucide-react-native` via `mobile/components/icons.js`)
+- **Radix UI** for modals, dropdowns, tooltips; **lucide-react** icons via `src/components/icons.js` (iOS: SF Symbols)
 - **CSS Modules** + CSS custom properties; tokens in `src/tokens.js` mirror `src/style.css`
 
 ## Key Files
@@ -50,12 +50,10 @@
 - Catch details open as glass bottom-sheet dialogs (`CatchDialog` on home; same pattern in Search/Profile) — base styles carry the glass recipe, mobile media query only reshapes the positioner.
 - Profile: contained dither header card + segmented Recent Activity/Stats in normal page flow; Search: filters in one horizontally scrolling row.
 
-## Mobile (`mobile/`)
-- Expo 56 bare workflow, React Native 0.85.3, new arch
-- **Does not yet consume `thumb_url`** — `mobile/components/CatchCard.js` renders `photoUrl()` (full-resolution `storage_path`) directly, and `mobile/lib/upload.js` has its own upload path with no thumbnail generation. Parity would need native-side resize tooling, not a port of `src/exif.js`'s canvas resize.
-- Only some `mobile/lib` files are symlinks into `src/lib` (formatters, groupByTime, groupPhotos, imageUtils, validation) — the rest of `mobile/lib` and all of `mobile/store` are independent real files, not shared with `src/`
-- Map screen (`mobile/app/(tabs)/map.js`) fetches photos, maps `catch_id → catchId` + ISO → ms, calls `groupPhotos()`, renders one marker/list item per group
-- Environment gotchas (Fabric layout quirks, Skia canvas limits, Metro/Supabase resolution, prebuild caveats) live in `mobile/AGENTS.md` — read it before touching native config or full-screen canvases
+## iOS (`ios/`)
+- Native Swift / SwiftUI app, iOS 26+, replacing the deleted Expo app (`mobile/`, removed 2026-10-30; recover from git history if needed). Plan: Mapbox Maps SDK for iOS, supabase-swift, Nuke; talks to the same `/api/*` routes and Supabase tables as the web.
+- Must follow the same upload order and `thumb_url` rules as `src/lib/fileLoader.js` (see Data Model), and the same `user_metadata` / `avatar_url` constraints (see Supabase Constraints).
+- `supabase/mobile-rpcs.sql` and its deployed RPCs stay — migration 006 references them.
 
 ## Standards
 - **No browser automation unless asked**: Don't use Chrome DevTools MCP / browser tools to verify changes unless explicitly requested

@@ -17,7 +17,7 @@ This is an in-progress fishing app that I'm tinkering with! Live at [hook-spot.c
 - **Upload flow** — click **+** or drag photos onto the window to open the upload dialog. Claude automatically identifies the fish species from the image. Edit the species, rod, and fly before saving.
 - **Edit & delete** — click the pencil icon on any catch to edit species, rod, or fly, or delete the catch entirely.
 - **User profiles** — sign in with a one-time code sent to your email, then pick a username and avatar. Follow other anglers and explore their catches.
-- **Mobile app** — iOS app (Expo bare workflow) with the same map and catch list, sharing the same Supabase backend.
+- **iOS app** — native Swift / SwiftUI app (in progress, `ios/`) sharing the same Supabase backend and API.
 
 ## Setup
 
@@ -77,9 +77,9 @@ Each catch is stored as a row in the `catches` table (`species`, `rod`, `fly`, `
   - [Radix UI](https://www.radix-ui.com) — accessible components (dialog, dropdown-menu, scroll-area, tooltip)
   - [CSS Modules](https://github.com/css-modules/css-modules) — component-scoped styling
 
-- **Mobile**
-  - [Expo](https://expo.dev) 56 (bare workflow) + React Native 0.85.3
-  - [Mapbox Maps SDK for React Native](https://github.com/rnmapbox/maps)
+- **iOS** (in progress)
+  - Swift / SwiftUI, iOS 26+
+  - [Mapbox Maps SDK for iOS](https://github.com/mapbox/mapbox-maps-ios), [supabase-swift](https://github.com/supabase/supabase-swift), [Nuke](https://github.com/kean/Nuke)
 
 - **Maps & Charts**
   - [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/) — map rendering (loaded on demand)
