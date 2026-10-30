@@ -1,43 +1,42 @@
-import SwiftUI
 import UIKit
+import ObjectiveC
 
-/// iOS 27's `UITabBarController.prominentTabIdentifier` detaches a tab into its own glass
-/// button. SwiftUI has no modifier for it yet, so this reaches the hosting tab bar controller
-/// and marks the tab whose title matches. Harmless no-op if the lookup ever fails.
-/// On iOS 26 the tab's `.search` role gives it the detached treatment instead.
-private struct ProminentTabSetter: UIViewControllerRepresentable {
-    let title: String
+/// Detaches the "+" tab into its own glass button.
+///
+/// iOS 27 does this through `UITabBarController.prominentTabIdentifier`, which SwiftUI has
+/// no modifier for yet — and SwiftUI clears it whenever it refreshes the tab bar. So the two
+/// setters are swapped once at launch: whenever anything sets the prominent tab to nil, the
+/// tab titled `addTitle` is substituted. On iOS 26 the tab's `.search` role detaches it.
+enum ProminentTab {
+    static let addTitle = "Add Catch"
 
-    func makeUIViewController(context: Context) -> Probe { Probe(title: title) }
-    func updateUIViewController(_ vc: Probe, context: Context) { vc.apply() }
+    @MainActor static func install() {
+        guard #available(iOS 27.0, *) else { return }
+        swap(#selector(setter: UITabBarController.prominentTabIdentifier),
+             #selector(UITabBarController.hs_setProminentTabIdentifier(_:)))
+        swap(#selector(UITabBarController.setProminentTabIdentifier(_:animated:)),
+             #selector(UITabBarController.hs_setProminentTabIdentifier(_:animated:)))
+    }
 
-    final class Probe: UIViewController {
-        let title_: String
-        init(title: String) { title_ = title; super.init(nibName: nil, bundle: nil) }
-        required init?(coder: NSCoder) { fatalError() }
-
-        override func viewDidAppear(_ animated: Bool) { super.viewDidAppear(animated); apply() }
-
-        func apply() {
-            guard #available(iOS 27.0, *),
-                  let tbc = tabBarController ?? findTabBarController(from: view.window?.rootViewController),
-                  let tab = tbc.tabs.first(where: { $0.title == title_ }),
-                  tbc.prominentTabIdentifier != tab.identifier else { return }
-            tbc.prominentTabIdentifier = tab.identifier
-        }
-
-        private func findTabBarController(from vc: UIViewController?) -> UITabBarController? {
-            guard let vc else { return nil }
-            if let tbc = vc as? UITabBarController { return tbc }
-            for child in vc.children { if let found = findTabBarController(from: child) { return found } }
-            return findTabBarController(from: vc.presentedViewController)
-        }
+    private static func swap(_ original: Selector, _ replacement: Selector) {
+        guard let a = class_getInstanceMethod(UITabBarController.self, original),
+              let b = class_getInstanceMethod(UITabBarController.self, replacement) else { return }
+        method_exchangeImplementations(a, b)
     }
 }
 
-extension View {
-    /// Detach the tab with this title (iOS 27 prominent tab).
-    func prominentTab(titled title: String) -> some View {
-        background(ProminentTabSetter(title: title).frame(width: 0, height: 0).accessibilityHidden(true))
+@available(iOS 27.0, *)
+extension UITabBarController {
+    fileprivate var hs_addTabIdentifier: String? {
+        tabs.first { $0.title == ProminentTab.addTitle }?.identifier
+    }
+
+    // After the swap, calling hs_* invokes UIKit's original implementation.
+    @objc fileprivate func hs_setProminentTabIdentifier(_ identifier: String?) {
+        hs_setProminentTabIdentifier(identifier ?? hs_addTabIdentifier)
+    }
+
+    @objc fileprivate func hs_setProminentTabIdentifier(_ identifier: String?, animated: Bool) {
+        hs_setProminentTabIdentifier(identifier ?? hs_addTabIdentifier, animated: animated)
     }
 }

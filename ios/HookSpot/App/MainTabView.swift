@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// MobileNav → native TabView: Catches / Profile / Search, plus "+" detached as the
-/// iOS 27 prominent tab. Tapping "+" never switches tabs — it opens Upload, or Login
-/// when signed out. Minimizes on scroll.
+/// MobileNav → native TabView: Catches / Profile / Search, plus a detached "+".
+/// Tapping "+" never switches tabs — it opens Upload, or Login when signed out.
+/// Minimizes on scroll.
 struct MainTabView: View {
     @Environment(AuthStore.self) private var auth
     @Environment(FeedStore.self) private var feed
@@ -24,10 +24,9 @@ struct MainTabView: View {
             Tab("Catches", systemImage: "house", value: .catches) { FeedView() }
             Tab("Profile", systemImage: "person", value: .profile) { MyProfileTab() }
             Tab("Search", systemImage: "magnifyingglass", value: .search) { SearchView() }
-            Tab("Add Catch", systemImage: "plus", value: .add, role: .search) { Color.clear }
+            Tab(ProminentTab.addTitle, systemImage: "plus", value: .add, role: .search) { Color.clear }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .prominentTab(titled: "Add Catch")
         .sheet(isPresented: $feed.uploadOpen) { UploadView() }
         .sensoryFeedback(.selection, trigger: selection)
     }

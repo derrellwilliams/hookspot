@@ -9,6 +9,7 @@ struct HookSpotApp: App {
     init() {
         // Public pk. token only (Secrets.xcconfig); the secret sk. token never ships.
         MapboxOptions.accessToken = AppConfig.mapboxPublicToken
+        ProminentTab.install()
     }
 
     var body: some Scene {

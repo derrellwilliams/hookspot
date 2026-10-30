@@ -26,10 +26,13 @@ struct FeedView: View {
             }
             .background(Theme.uiBg)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("HookSpot").font(Typography.font(.display, 22, relativeTo: .headline)).foregroundStyle(.white)
+                ToolbarItem(placement: .topBarLeading) {
+                    Text("HookSpot").font(Typography.font(.display, 28, relativeTo: .title)).foregroundStyle(.white)
+                        .fixedSize()
                         .accessibilityAddTraits(.isHeader)
                 }
+                // Plain text, not a control — no glass capsule behind it.
+                .sharedBackgroundVisibility(.hidden)
                 ToolbarItem(placement: .topBarTrailing) {
                     Picker("View", selection: $mode) {
                         Image(systemName: "list.bullet").tag(Mode.list).accessibilityLabel("List")
@@ -38,6 +41,8 @@ struct FeedView: View {
                     .pickerStyle(.segmented)
                     .frame(width: 96)
                 }
+                // The segmented control has its own capsule; skip the toolbar's glass behind it.
+                .sharedBackgroundVisibility(.hidden)
             }
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             .navigationDestination(for: ProfileRoute.self) { UserProfileView(username: $0.username) }
