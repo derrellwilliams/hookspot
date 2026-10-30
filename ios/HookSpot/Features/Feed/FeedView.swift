@@ -6,7 +6,12 @@ struct FeedView: View {
     @Environment(FeedStore.self) private var feed
 
     enum Mode: String, CaseIterable { case list, map }
-    @State private var mode: Mode = .list
+    @State private var mode: Mode = {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-mapMode") { return .map }
+        #endif
+        return .list
+    }()
     @State private var path: [ProfileRoute] = []
     @State private var selection: GroupSelection?
 
