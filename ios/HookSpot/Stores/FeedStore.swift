@@ -86,6 +86,13 @@ final class FeedStore {
         regroup()
     }
 
+    /// Unfollow: drop that angler's catches from your feed (removeUserPhotos).
+    func removeUser(_ userId: String) {
+        photos.removeAll { $0.userId == userId }
+        activeGroup = nil
+        regroup()
+    }
+
     func replaceGroupOrder(_ reordered: PhotoGroup) {
         let byKey = Dictionary(reordered.map { ($0.key, $0) }, uniquingKeysWith: { a, _ in a })
         photos = photos.map { byKey[$0.key] ?? $0 }

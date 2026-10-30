@@ -12,7 +12,14 @@ struct FeedView: View {
         #endif
         return .list
     }()
-    @State private var path: [ProfileRoute] = []
+    @State private var path: [ProfileRoute] = {
+        #if DEBUG
+        if let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("-openProfile=") }) {
+            return [ProfileRoute(username: String(arg.dropFirst("-openProfile=".count)))]
+        }
+        #endif
+        return []
+    }()
     @State private var selection: GroupSelection?
 
     var body: some View {
