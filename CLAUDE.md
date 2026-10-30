@@ -54,6 +54,10 @@
 - Native Swift / SwiftUI app, iOS 26+, replacing the deleted Expo app (`mobile/`, removed 2026-10-30; recover from git history if needed). Plan: Mapbox Maps SDK for iOS, supabase-swift, Nuke; talks to the same `/api/*` routes and Supabase tables as the web.
 - Must follow the same upload order and `thumb_url` rules as `src/lib/fileLoader.js` (see Data Model), and the same `user_metadata` / `avatar_url` constraints (see Supabase Constraints).
 - `supabase/mobile-rpcs.sql` and its deployed RPCs stay — migration 006 references them.
+- **Project**: `ios/project.yml` (XcodeGen) is the source of truth for `HookSpot.xcodeproj`; folders are synchronized, so new Swift files need no regeneration — only target/package/setting changes do (`cd ios && xcodegen`).
+- **Config**: `ios/Config/Base.xcconfig` → `Info.plist` `HS*` keys → `AppConfig`. Real values go in gitignored `ios/Config/Secrets.xcconfig` (`ios/scripts/make-secrets.sh`): publishable Supabase key and public `pk.` Mapbox token only.
+- **Layout**: `Core/` pure Swift ports of `src/lib` (parity-tested in `HookSpotTests/`, fixtures generated from the JS); `Services/` (APIClient → same `/api/*` routes, UploadService, CatchService, ProfileService, EnrichmentService, ImageProcessing via ImageIO); `Stores/` (`AuthStore`, `FeedStore`, `@Observable @MainActor`).
+- **Build/test**: `cd ios && xcodebuild -scheme HookSpot -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build test`.
 
 ## Standards
 - **No browser automation unless asked**: Don't use Chrome DevTools MCP / browser tools to verify changes unless explicitly requested

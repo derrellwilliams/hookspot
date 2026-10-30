@@ -1,0 +1,8 @@
+// Shared build settings. Real values live in Secrets.xcconfig (gitignored);
+// copy Secrets.example.xcconfig or run ios/scripts/make-secrets.sh.
+SUPABASE_URL =
+SUPABASE_ANON_KEY =
+MAPBOX_PUBLIC_TOKEN =
+API_BASE_URL = https:/$()/hook-spot.com
+
+#include? "Secrets.xcconfig"

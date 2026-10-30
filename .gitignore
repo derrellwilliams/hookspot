@@ -6,3 +6,10 @@ dist
 *.MOV
 *.mp4
 *.MP4
+
+# iOS
+ios/Config/Secrets.xcconfig
+ios/build/
+ios/DerivedData/
+xcuserdata/
+*.xcuserstate

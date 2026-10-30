@@ -1,0 +1,492 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		33B1C8D3082CDDEF784EED6D /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 1B719FA0428B628740F18569 /* Supabase */; };
+		93A8A95C2AD49548CB92DE5C /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = EAE7024DFEF79977E2A26099 /* NukeUI */; };
+		B8310C8FA8501396FE752C1B /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = B3766CAF9EEB012C7C5ABCBD /* Nuke */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C9B80E36D010EC083131DB5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F68FF3C47E4B38E28C8DEF29 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 62A0CDB000443A97B74A2500;
+			remoteInfo = HookSpot;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		BECE0D5F353EE9CFFDBBC87A /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		C274A3B8C283471DA8A5F156 /* HookSpot.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HookSpot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2FFE9058709CC0A541E05EA /* HookSpotTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HookSpotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		950BB9156049E6A662DA4E01 /* HookSpotTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = HookSpotTests;
+			sourceTree = "<group>";
+		};
+		9B4DC95BADCB010D806C33C2 /* HookSpot */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = HookSpot;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2B455C6460CFDABCB0B6CEC6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33B1C8D3082CDDEF784EED6D /* Supabase in Frameworks */,
+				B8310C8FA8501396FE752C1B /* Nuke in Frameworks */,
+				93A8A95C2AD49548CB92DE5C /* NukeUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BD92B305A953E410C0C95AD0 = {
+			isa = PBXGroup;
+			children = (
+				C3CC6F7C59D46EC4B88DC11F /* Config */,
+				9B4DC95BADCB010D806C33C2 /* HookSpot */,
+				950BB9156049E6A662DA4E01 /* HookSpotTests */,
+				CDF1E86F4641B9149CCD5DC8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C3CC6F7C59D46EC4B88DC11F /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				BECE0D5F353EE9CFFDBBC87A /* Base.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		CDF1E86F4641B9149CCD5DC8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C274A3B8C283471DA8A5F156 /* HookSpot.app */,
+				F2FFE9058709CC0A541E05EA /* HookSpotTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		62A0CDB000443A97B74A2500 /* HookSpot */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 05BB3DC6BDFDAE5236E0E29D /* Build configuration list for PBXNativeTarget "HookSpot" */;
+			buildPhases = (
+				9CFA258CC8198F633594DBC9 /* Sources */,
+				EAD83CD400D4E80297E31E8A /* Resources */,
+				2B455C6460CFDABCB0B6CEC6 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				9B4DC95BADCB010D806C33C2 /* HookSpot */,
+			);
+			name = HookSpot;
+			packageProductDependencies = (
+				1B719FA0428B628740F18569 /* Supabase */,
+				B3766CAF9EEB012C7C5ABCBD /* Nuke */,
+				EAE7024DFEF79977E2A26099 /* NukeUI */,
+			);
+			productName = HookSpot;
+			productReference = C274A3B8C283471DA8A5F156 /* HookSpot.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A6AA91F39A9E6918CB2CE2F3 /* HookSpotTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A7A7AC1E45C4D89C85B5159 /* Build configuration list for PBXNativeTarget "HookSpotTests" */;
+			buildPhases = (
+				CE2233A55D1BD3142D72E152 /* Sources */,
+				FFD7515E4F783982D962784C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3C85242DE746B0E3320D9948 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				950BB9156049E6A662DA4E01 /* HookSpotTests */,
+			);
+			name = HookSpotTests;
+			packageProductDependencies = (
+			);
+			productName = HookSpotTests;
+			productReference = F2FFE9058709CC0A541E05EA /* HookSpotTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F68FF3C47E4B38E28C8DEF29 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					62A0CDB000443A97B74A2500 = {
+						DevelopmentTeam = "";
+					};
+					A6AA91F39A9E6918CB2CE2F3 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = A7B495D8D132BA5D44A39A83 /* Build configuration list for PBXProject "HookSpot" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = BD92B305A953E410C0C95AD0;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E2829021536F96CB935A86AD /* XCRemoteSwiftPackageReference "Nuke" */,
+				DF268B2A2EF76EDF67A39CCC /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CDF1E86F4641B9149CCD5DC8 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				62A0CDB000443A97B74A2500 /* HookSpot */,
+				A6AA91F39A9E6918CB2CE2F3 /* HookSpotTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EAD83CD400D4E80297E31E8A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FFD7515E4F783982D962784C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9CFA258CC8198F633594DBC9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE2233A55D1BD3142D72E152 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3C85242DE746B0E3320D9948 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 62A0CDB000443A97B74A2500 /* HookSpot */;
+			targetProxy = C9B80E36D010EC083131DB5C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		182CB43B1FD62A81196A10FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BECE0D5F353EE9CFFDBBC87A /* Base.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		2471C3BC5FA05A8947E73D5A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hookspot.HookSpotTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HookSpot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HookSpot";
+			};
+			name = Release;
+		};
+		3F179C95C3A7B21617FB21C9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Config/HookSpot-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hookspot.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		4E8AA10E966EC541B747E6F5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Config/HookSpot-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hookspot.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5738AE315EAA8BB4CCD2742E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hookspot.HookSpotTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HookSpot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HookSpot";
+			};
+			name = Debug;
+		};
+		EEFE06FE5F392560FC828695 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BECE0D5F353EE9CFFDBBC87A /* Base.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		05BB3DC6BDFDAE5236E0E29D /* Build configuration list for PBXNativeTarget "HookSpot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4E8AA10E966EC541B747E6F5 /* Debug */,
+				3F179C95C3A7B21617FB21C9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		0A7A7AC1E45C4D89C85B5159 /* Build configuration list for PBXNativeTarget "HookSpotTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5738AE315EAA8BB4CCD2742E /* Debug */,
+				2471C3BC5FA05A8947E73D5A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A7B495D8D132BA5D44A39A83 /* Build configuration list for PBXProject "HookSpot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				182CB43B1FD62A81196A10FF /* Debug */,
+				EEFE06FE5F392560FC828695 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DF268B2A2EF76EDF67A39CCC /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		E2829021536F96CB935A86AD /* XCRemoteSwiftPackageReference "Nuke" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kean/Nuke";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1B719FA0428B628740F18569 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF268B2A2EF76EDF67A39CCC /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		B3766CAF9EEB012C7C5ABCBD /* Nuke */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E2829021536F96CB935A86AD /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = Nuke;
+		};
+		EAE7024DFEF79977E2A26099 /* NukeUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E2829021536F96CB935A86AD /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = NukeUI;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F68FF3C47E4B38E28C8DEF29 /* Project object */;
+}
