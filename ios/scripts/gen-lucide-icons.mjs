@@ -5,7 +5,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 const [,, iconsDir, outDir] = process.argv
-const icons = ['house','user','search','plus','layout-list','map','map-pin','pencil','x','share','check','chevrons-up-down','circle-check','image','settings','users','circle-user-round','chevron-left','chevron-right','camera']
+const icons = ['house','user','search','plus','layout-list','map','map-pin','pencil','x','share','check','chevrons-up-down','circle-check','image','settings','users','circle-user-round','chevron-left','chevron-right','camera','sliders-horizontal','fish']
 const attr = o => Object.entries(o).filter(([k]) => k !== 'key').map(([k, v]) => `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}="${v}"`).join(' ')
 for (const name of icons) {
   const mod = await import(path.join(iconsDir, `${name}.mjs`))

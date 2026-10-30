@@ -8,7 +8,12 @@ struct MainTabView: View {
     @Environment(FeedStore.self) private var feed
 
     enum TabID: Hashable { case catches, profile, search, add }
-    @State private var selection: TabID = .catches
+    @State private var selection: TabID = {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains(where: { $0.hasPrefix("-search=") }) { return .search }
+        #endif
+        return .catches
+    }()
 
     var body: some View {
         @Bindable var feed = feed

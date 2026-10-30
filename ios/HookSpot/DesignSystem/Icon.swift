@@ -23,6 +23,7 @@ enum Icon: String {
     case mediaImage = "lucide.image"
     case settings = "lucide.settings"
     case camera = "lucide.camera"
+    case filters = "lucide.sliders-horizontal"
 
     var image: Image { Image(rawValue).renderingMode(.template) }
 }
