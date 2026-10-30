@@ -28,6 +28,17 @@ final class AuthStore {
         userId.map { ProfileSummary(id: $0, username: username, displayName: displayName, avatarUrl: avatarUrl, bio: bio) }
     }
 
+    /// Presents LoginView (sheet). Every write entry point calls `requireSignIn()`.
+    var loginPresented = false
+
+    /// Returns true when signed in; otherwise shows Login (which doubles as sign-up).
+    @discardableResult
+    func requireSignIn() -> Bool {
+        if isSignedIn && phase == .signedIn { return true }
+        if !isSignedIn { loginPresented = true }
+        return false
+    }
+
     /// Called whenever the signed-in user changes (or on first load) so the feed reloads.
     var onFeedOwnerChange: (@MainActor (String?) -> Void)?
 
