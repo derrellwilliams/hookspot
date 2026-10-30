@@ -94,7 +94,7 @@ struct SearchView: View {
                 CatchDetailView(initialGroup: sel.group, onOpenProfile: { u in selection = nil; path.append(ProfileRoute(username: u)) },
                                 onChange: { Task { await search() } })
             }
-            .navigationDestination(for: ProfileRoute.self) { UserProfileView(username: $0.username) }
+            .navigationDestination(for: ProfileRoute.self) { UserProfileView(username: $0.username, openCatchId: $0.catchId) }
             .task(id: Key(q: trimmed, whose: whose, from: from, to: to, me: auth.userId)) {
                 try? await Task.sleep(for: .milliseconds(300)) // debounce, like the web
                 guard !Task.isCancelled else { return }

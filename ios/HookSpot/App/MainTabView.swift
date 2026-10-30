@@ -6,6 +6,7 @@ import SwiftUI
 struct MainTabView: View {
     @Environment(AuthStore.self) private var auth
     @Environment(FeedStore.self) private var feed
+    @Environment(Router.self) private var router
 
     enum TabID: Hashable { case catches, profile, search, add }
     @State private var selection: TabID = {
@@ -34,5 +35,6 @@ struct MainTabView: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         .sheet(isPresented: $feed.uploadOpen) { UploadView() }
         .sensoryFeedback(.selection, trigger: selection)
+        .onChange(of: router.pendingLink) { _, link in if link != nil { selection = .catches; feed.uploadOpen = false } }
     }
 }

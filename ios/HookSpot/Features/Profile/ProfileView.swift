@@ -5,6 +5,8 @@ import PhotosUI
 /// Following → Follow or settings → segmented Recent Activity / Stats.
 struct ProfileView: View {
     let username: String
+    /// Share link target (`?catch=`): opened once it appears in this profile's catches.
+    var openCatchId: String? = nil
     var onOpenProfile: (String) -> Void
 
     @Environment(AuthStore.self) private var auth
@@ -26,6 +28,7 @@ struct ProfileView: View {
     @State private var editingGear = false
     @State private var avatarItem: PhotosPickerItem?
     @State private var avatarUploading = false
+    @State private var pendingCatchId: String?
 
     private let service = ProfileService()
     private let api = APIClient()
@@ -57,7 +60,8 @@ struct ProfileView: View {
         .navigationTitle(shownProfile.map { Formatters.displayName($0) } ?? username)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { if isOwn { settingsMenu } }
-        .task(id: username) { await load() }
+        .task(id: username) { pendingCatchId = openCatchId; await load(); openPendingCatch() }
+        .onChange(of: groups.count) { openPendingCatch() }
         .refreshable { await load(); if isOwn { await feed.refresh() } }
         .sheet(item: $selection) { sel in
             CatchDetailView(initialGroup: sel.group, onOpenProfile: { u in selection = nil; onOpenProfile(u) },
@@ -178,6 +182,15 @@ struct ProfileView: View {
     }
 
     // MARK: Data
+
+    /// Share links open the catch whose groupShareId matches. Own profiles fill in from the
+    /// feed store, so this also re-checks as groups arrive.
+    private func openPendingCatch() {
+        guard let id = pendingCatchId, let g = groups.first(where: { $0.shareId == id }) else { return }
+        pendingCatchId = nil
+        section = .activity
+        selection = GroupSelection(group: g)
+    }
 
     private func load() async {
         error = nil

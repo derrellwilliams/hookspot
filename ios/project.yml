@@ -14,7 +14,8 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_APPROACHABLE_CONCURRENCY: YES
     ENABLE_USER_SCRIPT_SANDBOXING: YES
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: 88S9XG6NXK
+    CODE_SIGN_STYLE: Automatic
 packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
@@ -57,9 +58,13 @@ targets:
         HSSupabaseAnonKey: $(SUPABASE_ANON_KEY)
         HSMapboxPublicToken: $(MAPBOX_PUBLIC_TOKEN)
         HSAPIBaseURL: $(API_BASE_URL)
+        CFBundleURLTypes:
+          - CFBundleURLName: com.hookspot.app
+            CFBundleURLSchemes: [hookspot]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hookspot.app
+        CODE_SIGN_ENTITLEMENTS: Config/HookSpot.entitlements
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

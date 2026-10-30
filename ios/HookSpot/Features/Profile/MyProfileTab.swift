@@ -20,7 +20,7 @@ struct MyProfileTab: View {
                     .background(Theme.uiBg)
                 }
             }
-            .navigationDestination(for: ProfileRoute.self) { UserProfileView(username: $0.username) }
+            .navigationDestination(for: ProfileRoute.self) { UserProfileView(username: $0.username, openCatchId: $0.catchId) }
         }
     }
 }

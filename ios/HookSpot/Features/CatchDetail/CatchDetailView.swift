@@ -2,7 +2,11 @@ import SwiftUI
 import PhotosUI
 
 /// Navigation value for a profile (`/user/:username`).
-struct ProfileRoute: Hashable { let username: String }
+struct ProfileRoute: Hashable {
+    let username: String
+    /// Open this catch once the profile loads (share links: `?catch=`).
+    var catchId: String? = nil
+}
 
 /// Wraps a group so it can drive `.sheet(item:)`.
 struct GroupSelection: Identifiable, Hashable {

@@ -4,6 +4,7 @@ import SwiftUI
 struct FeedView: View {
     @Environment(AuthStore.self) private var auth
     @Environment(FeedStore.self) private var feed
+    @Environment(Router.self) private var router
 
     enum Mode: String, CaseIterable { case list, map }
     @State private var mode: Mode = {
@@ -57,12 +58,18 @@ struct FeedView: View {
                 .sharedBackgroundVisibility(.hidden)
             }
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
-            .navigationDestination(for: ProfileRoute.self) { UserProfileView(username: $0.username) }
+            .navigationDestination(for: ProfileRoute.self) { UserProfileView(username: $0.username, openCatchId: $0.catchId) }
             .sheet(item: $selection) { sel in
                 CatchDetailView(initialGroup: sel.group, showMap: mode == .list) { username in
                     selection = nil
                     path.append(ProfileRoute(username: username))
                 }
+            }
+            .onChange(of: router.pendingLink, initial: true) { _, link in
+                guard let link else { return }
+                router.pendingLink = nil
+                selection = nil
+                path = [ProfileRoute(username: link.username, catchId: link.catchId)]
             }
             .motion(Motion.springSmooth, value: mode)
             .sensoryFeedback(.selection, trigger: mode)

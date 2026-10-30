@@ -190,3 +190,26 @@ private func photo(_ name: String, catchId: String? = nil, ms: Double? = nil, or
         #expect(await counter.peak <= 3)
     }
 }
+
+@Suite struct DeepLinkTests {
+    @Test func parsesShareLinks() {
+        #expect(DeepLink(url: URL(string: "https://hook-spot.com/user/matthew?catch=abc-123")!) == DeepLink(username: "matthew", catchId: "abc-123"))
+        #expect(DeepLink(url: URL(string: "https://www.hook-spot.com/user/matthew")!) == DeepLink(username: "matthew", catchId: nil))
+        #expect(DeepLink(url: URL(string: "hookspot://user/matthew?catch=IMG_1.jpg")!) == DeepLink(username: "matthew", catchId: "IMG_1.jpg"))
+        #expect(DeepLink(url: URL(string: "https://hook-spot.com/user/matthew/")!)?.username == "matthew")
+    }
+
+    @Test func rejectsOtherLinks() {
+        #expect(DeepLink(url: URL(string: "https://evil.com/user/matthew")!) == nil)
+        #expect(DeepLink(url: URL(string: "https://hook-spot.com/search")!) == nil)
+        #expect(DeepLink(url: URL(string: "https://hook-spot.com/user/Bad%20Name")!) == nil)
+        #expect(DeepLink(url: URL(string: "https://hook-spot.com/user/a/b")!) == nil)
+    }
+
+    @Test func shareIdFallsBackToFilename() {
+        let legacy = [Photo(name: "IMG_9.jpg", userId: "u", meta: [:])]
+        #expect(legacy.shareId == "IMG_9.jpg")
+        let withCatch = [Photo(name: "x.jpg", userId: "u", catchId: "c1", meta: [:])]
+        #expect(withCatch.shareId == "c1")
+    }
+}
