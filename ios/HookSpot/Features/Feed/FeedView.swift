@@ -27,12 +27,16 @@ struct FeedView: View {
             .background(Theme.uiBg)
             .toolbar {
                 ToolbarItem(placement: .principal) {
+                    Text("HookSpot").font(Typography.font(.display, 22, relativeTo: .headline)).foregroundStyle(.white)
+                        .accessibilityAddTraits(.isHeader)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Picker("View", selection: $mode) {
                         Image(systemName: "list.bullet").tag(Mode.list).accessibilityLabel("List")
                         Image(systemName: "map").tag(Mode.map).accessibilityLabel("Map")
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 120)
+                    .frame(width: 96)
                 }
             }
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
@@ -51,8 +55,6 @@ struct FeedView: View {
     private var list: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 28) {
-                Text("HookSpot").font(Typography.wordmark).foregroundStyle(.white)
-                    .accessibilityAddTraits(.isHeader)
                 if !feed.initialized {
                     ForEach(0..<3, id: \.self) { _ in SkeletonCard() }
                 } else if feed.groups.isEmpty {
