@@ -90,3 +90,30 @@ struct FeedMapView: View {
         }
     }
 }
+
+/// Upload location step: tap the map to drop (or move) the catch pin. Starts on your
+/// catches' average location (zoom 5) or the continental US (zoom 3), like the web.
+struct PinDropMap: View {
+    @Binding var pin: Coordinate?
+    @State private var viewport: Viewport
+
+    init(pin: Binding<Coordinate?>, start: (center: Coordinate, zoom: Double)?) {
+        _pin = pin
+        let center = start?.center.cl ?? CLLocationCoordinate2D(latitude: 39, longitude: -98)
+        _viewport = State(initialValue: .camera(center: center, zoom: start?.zoom ?? 3))
+    }
+
+    var body: some View {
+        Map(viewport: $viewport) {
+            if let pin {
+                MapViewAnnotation(coordinate: pin.cl) { CatchPin().allowsHitTesting(false) }
+                    .allowOverlap(true)
+            }
+        }
+        .mapStyle(HookSpotMapStyle.style)
+        .onMapTapGesture { context in
+            pin = Coordinate(latitude: context.coordinate.latitude, longitude: context.coordinate.longitude)
+        }
+        .accessibilityLabel(pin == nil ? "Map. Tap to place your catch location." : "Map with your catch pin. Tap to move it.")
+    }
+}
