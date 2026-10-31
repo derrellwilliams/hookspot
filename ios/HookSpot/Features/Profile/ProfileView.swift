@@ -170,7 +170,7 @@ struct ProfileView: View {
 
     @ViewBuilder private var content: some View {
         if let error {
-            Text(error).font(Typography.caption).foregroundStyle(.red).padding(.top, 20)
+            Text(error).font(Typography.caption).foregroundStyle(Theme.error).padding(.top, 20)
         } else if section == .activity {
             if loading && groups.isEmpty && !(isOwn && feed.initialized) {
                 ForEach(0..<2, id: \.self) { _ in SkeletonCard() }

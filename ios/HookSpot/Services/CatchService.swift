@@ -84,6 +84,13 @@ struct CatchService: Sendable {
         _ = try? await client.storage.from(AppConfig.catchesBucket).remove(paths: paths + paths.map(StorageKeys.thumbPath))
     }
 
+    /// Best-effort: drops the catches row once its last photo is gone (photos.catch_id is
+    /// `on delete set null`, so this never touches photos).
+    func deleteCatchRow(_ catchId: String?, userId: String) async {
+        guard let catchId else { return }
+        _ = try? await client.from("catches").delete().eq("id", value: catchId).eq("user_id", value: userId).execute()
+    }
+
     /// saveMeta(): merge one enrichment key into a photo's meta.
     func saveMeta(_ photo: Photo, key: String, value: JSONValue, userId: String) async throws -> Photo {
         var updated = photo

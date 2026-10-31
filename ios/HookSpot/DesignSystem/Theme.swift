@@ -13,6 +13,7 @@ enum Theme {
     static let darkBorder = Color(hex: 0x3A3A3C)
     static let darkText = Color(hex: 0xF4F4F5)
     static let darkMuted = Color(hex: 0xA1A1AA)
+    static let error = Color(hex: 0xF87171)          // LoginPage.module.css .error
 
     /// Glass fallback when Reduce Transparency is on (--glass-tip-bg).
     static let glassSolid = Color(red: 22 / 255, green: 22 / 255, blue: 24 / 255, opacity: 0.96)

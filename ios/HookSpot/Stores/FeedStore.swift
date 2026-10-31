@@ -48,14 +48,25 @@ final class FeedStore {
         guard let res = try? await api.photos(userId: userId), !Task.isCancelled,
               feedUserId == .some(userId) else { return }
         let profiles = Dictionary(res.profiles.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        let existing = Set(photos.map(\.key))
+        // The server is the source of truth, so a refresh drops deletions and picks up edits
+        // made elsewhere. Enrichment values saved locally but not yet echoed back are kept.
+        let local = Dictionary(photos.map { ($0.key, $0) }, uniquingKeysWith: { a, _ in a })
         let fresh = res.rows.map { row -> Photo in
             var p = PhotoGrouping.mapPhotoRow(row)
             p.isOwn = row.userId == userId
             p.ownerProfile = profiles[row.userId]
+            if let old = local[p.key] {
+                for k in Self.enrichmentKeys where p.meta[k] == nil { p.meta[k] = old.meta[k] }
+            }
             return p
-        }.filter { !existing.contains($0.key) }
-        add(fresh)
+        }
+        photos = fresh
+        if let active = activeGroup {
+            let byKey = Dictionary(fresh.map { ($0.key, $0) }, uniquingKeysWith: { a, _ in a })
+            let kept = active.compactMap { byKey[$0.key] }
+            activeGroup = kept.isEmpty ? nil : kept
+        }
+        regroup()
         if let userId { fresh.forEach { enrich($0, userId: userId) } }
     }
 
@@ -110,6 +121,13 @@ final class FeedStore {
 
     // MARK: Enrichment (own photos only, 3 at a time, skip keys already set)
 
+    private static let enrichmentKeys = ["weather", "location", "waterBody"]
+    /// "photoKey|metaKey" lookups already running, so a refresh doesn't start duplicates.
+    private var enriching: Set<String> = []
+    /// Meta writes run one at a time: each sends the photo's whole meta, so two in flight
+    /// could land out of order and drop the other's key.
+    private var metaWrites: Task<Void, Never>?
+
     func enrich(_ photo: Photo, userId: String) {
         guard photo.isOwn, let coord = photo.coordinate else { return }
         if photo.meta["weather"] == nil, let time = photo.time {
@@ -124,15 +142,24 @@ final class FeedStore {
     }
 
     private func schedule(_ photo: Photo, key: String, userId: String, fetch: @escaping @Sendable () async -> JSONValue?) {
+        let id = "\(photo.key)|\(key)"
+        guard enriching.insert(id).inserted else { return }
         Task {
-            guard let value = await limiter.run(fetch) else { return }
-            // Re-read the latest copy so concurrent keys merge instead of clobbering each other.
-            guard let current = photos.first(where: { $0.key == photo.key }),
-                  let saved = try? await catches.saveMeta(current, key: key, value: value, userId: userId) else { return }
-            if let latest = photos.first(where: { $0.key == photo.key }) {
-                var merged = latest; merged.meta[key] = saved.meta[key]
-                update(merged)
+            defer { enriching.remove(id) }
+            guard let value = await limiter.run(fetch),
+                  var latest = photos.first(where: { $0.key == photo.key }) else { return }
+            // Merge locally first (main actor, so atomic), then queue the write behind any
+            // other meta write; it sends whatever the photo's meta is when its turn comes.
+            latest.meta[key] = value
+            update(latest)
+            let previous = metaWrites
+            let write = Task { [catches] in
+                await previous?.value
+                guard let current = self.photos.first(where: { $0.key == photo.key }) else { return }
+                _ = try? await catches.saveMeta(current, key: key, value: current.meta[key] ?? value, userId: userId)
             }
+            metaWrites = write
+            await write.value
         }
     }
 }

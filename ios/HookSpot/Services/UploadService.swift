@@ -126,19 +126,17 @@ struct UploadService: Sendable {
     /// uploadPhoto(): main image → thumbnail → photos row, cleaning storage up if the insert fails.
     func uploadPhoto(_ item: Item, userId: String, catchId: String?, species: String?,
                      meta: [String: JSONValue], fallbackCoordinate: Coordinate?,
-                     fallbackTime: Date? = nil, useFallbackLocation: Bool = false,
-                     tolerateExisting: Bool = false) async throws -> Photo {
+                     fallbackTime: Date? = nil, useFallbackLocation: Bool = false) async throws -> Photo {
         let storagePath = StorageKeys.photoPath(userId: userId, filename: item.filename)
         let exif = ImageProcessing.exif(from: item.data)
-        let storageJPEG = (try? ImageProcessing.storageJPEG(item.data)) ?? item.data
+        // Never fall back to the original bytes: they carry full EXIF (GPS, time) into a
+        // public bucket. An image ImageIO can't re-encode fails this photo instead.
+        let storageJPEG = try ImageProcessing.storageJPEG(item.data)
 
-        do {
-            try await bucket.upload(storagePath, data: storageJPEG,
-                                    options: FileOptions(contentType: "image/jpeg", upsert: false))
-        } catch {
-            // Adding to an existing catch tolerates a 409 (same file already in storage), like uploadPhotoToGroup.
-            guard tolerateExisting, "\(error)".contains("409") || "\(error)".localizedCaseInsensitiveContains("already exists") else { throw error }
-        }
+        // Filenames are unique per pick (UploadNaming), so no 409 tolerance: an existing
+        // object would belong to another row, and the cleanup below would delete it.
+        try await bucket.upload(storagePath, data: storageJPEG,
+                                options: FileOptions(contentType: "image/jpeg", upsert: false))
         guard let publicURL = SupabaseService.publicURL(bucket: AppConfig.catchesBucket, path: storagePath) else {
             throw URLError(.badURL)
         }
@@ -185,6 +183,6 @@ struct UploadService: Sendable {
     func addPhoto(_ item: Item, to lead: Photo, userId: String) async throws -> Photo {
         try await uploadPhoto(item, userId: userId, catchId: lead.catchId, species: nil, meta: [:],
                               fallbackCoordinate: lead.coordinate, fallbackTime: lead.time,
-                              useFallbackLocation: true, tolerateExisting: true)
+                              useFallbackLocation: true)
     }
 }

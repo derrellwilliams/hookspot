@@ -60,33 +60,44 @@ final class AuthStore {
     private func handle(event: AuthChangeEvent, session: Session?) async {
         switch event {
         case .initialSession, .signedIn:
+            // An expired stored session shows the public feed until the SDK refreshes it;
+            // the .tokenRefreshed below then finishes signing in.
             guard let session, !session.isExpired || event == .signedIn else {
                 signedOutState(); return
             }
-            let previousId = userId
-            user = session.user
-            // Clear a legacy data: avatar before anything touches Storage.
-            await profiles.clearLegacyDataAvatar(session.user)
-            do {
-                let p = try await api.profile(userId: userId!)
-                if p.username == nil {
-                    phase = .needsOnboarding
-                    return
-                }
-                username = p.username
-                avatarUrl = p.avatarUrl
-            } catch {
-                // Profile check failed — same as web: carry on to the feed.
-            }
-            phase = .signedIn
-            if previousId != userId || event == .initialSession { onFeedOwnerChange?(userId) }
+            await signIn(session, initial: event == .initialSession)
         case .tokenRefreshed, .userUpdated:
-            if let session { user = session.user } // keeps avatarUrl/username as-is
+            guard let session else { break }
+            if phase == .signedOut || phase == .loading {
+                await signIn(session, initial: true)
+            } else {
+                user = session.user // keeps avatarUrl/username as-is
+            }
         case .signedOut:
             signedOutState()
         default:
             break
         }
+    }
+
+    private func signIn(_ session: Session, initial: Bool) async {
+        let previousId = userId
+        user = session.user
+        // Clear a legacy data: avatar before anything touches Storage.
+        await profiles.clearLegacyDataAvatar(session.user)
+        do {
+            let p = try await api.profile(userId: userId!)
+            if p.username == nil {
+                phase = .needsOnboarding
+                return
+            }
+            username = p.username
+            avatarUrl = p.avatarUrl
+        } catch {
+            // Profile check failed — same as web: carry on to the feed.
+        }
+        phase = .signedIn
+        if previousId != userId || initial { onFeedOwnerChange?(userId) }
     }
 
     private func signedOutState() {

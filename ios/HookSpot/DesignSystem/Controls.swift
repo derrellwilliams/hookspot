@@ -116,7 +116,7 @@ struct FieldChrome: ViewModifier {
     private var borderColor: Color {
         switch state {
         case .normal: Theme.darkBorder
-        case .error: .red.opacity(0.8)
+        case .error: Theme.error
         case .ok: Theme.iosBlue
         }
     }

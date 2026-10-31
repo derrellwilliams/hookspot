@@ -24,7 +24,7 @@ struct LoginView: View {
                 VStack(spacing: 14) {
                     if !sent { emailStep } else { codeStep }
                     if let error {
-                        Text(error).font(Typography.caption).foregroundStyle(.red.opacity(0.9))
+                        Text(error).font(Typography.caption).foregroundStyle(Theme.error)
                             .multilineTextAlignment(.center)
                     }
                 }

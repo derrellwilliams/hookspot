@@ -64,7 +64,9 @@ struct ProfileService: Sendable {
             func encode(to e: Encoder) throws {
                 var c = e.container(keyedBy: CodingKeys.self)
                 try c.encode(id, forKey: .id); try c.encode(display_name, forKey: .display_name)
-                try c.encode(bio, forKey: .bio); try c.encode(avatar_url, forKey: .avatar_url)
+                try c.encode(bio, forKey: .bio)
+                // Only when known: an explicit null would wipe the stored avatar.
+                try c.encodeIfPresent(avatar_url, forKey: .avatar_url)
             }
             enum CodingKeys: String, CodingKey { case id, display_name, bio, avatar_url }
         }

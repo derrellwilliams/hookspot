@@ -66,7 +66,7 @@ struct OnboardingView: View {
                         .onChange(of: bio) { _, v in if v.count > Validation.bioMax { bio = String(v.prefix(Validation.bioMax)) } }
                 }
                 if let saveError {
-                    Section { Text(saveError).foregroundStyle(.red) }
+                    Section { Text(saveError).foregroundStyle(Theme.error) }
                 }
             }
             .scrollContentBackground(.hidden)
@@ -97,11 +97,11 @@ struct OnboardingView: View {
     @ViewBuilder private var usernameFooter: some View {
         switch check {
         case .idle: Text("3–20 characters: lowercase letters, numbers, - or _")
-        case .invalid: Text("3–20 chars: lowercase letters, numbers, - or _").foregroundStyle(.red)
+        case .invalid: Text("3–20 chars: lowercase letters, numbers, - or _").foregroundStyle(Theme.error)
         case .checking: Text("Checking…")
         case .available: Label { Text("Available") } icon: { Icon.checkCircle.view(14) }.foregroundStyle(Theme.iosBlue)
-        case .taken: Text("That username is taken").foregroundStyle(.red)
-        case .failed: Text("Could not check username. Try again.").foregroundStyle(.red)
+        case .taken: Text("That username is taken").foregroundStyle(Theme.error)
+        case .failed: Text("Could not check username. Try again.").foregroundStyle(Theme.error)
         }
     }
 

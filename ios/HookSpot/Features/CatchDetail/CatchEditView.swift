@@ -56,7 +56,7 @@ struct CatchEditView: View {
                     .disabled(adding)
                 } header: { Text("Photos") } footer: { Text("Drag to reorder. The first photo is the cover.") }
 
-                if let error { Section { Text(error).foregroundStyle(.red) } }
+                if let error { Section { Text(error).foregroundStyle(Theme.error) } }
 
                 Section {
                     Button("Delete Catch", role: .destructive) { confirmDelete = true }
@@ -77,10 +77,11 @@ struct CatchEditView: View {
             } message: { Text("All of its photos will be removed. This can't be undone.") }
             .task(id: addItem) { await addPhoto() }
             .onAppear {
-                let lead = group[0]
-                species = lead.species ?? ""
-                rod = lead.rod ?? ""
-                fly = lead.fly ?? ""
+                // Catch-level fields live on whichever photo was cover when they were last
+                // saved, so take the first photo that has each one.
+                species = group.lazy.compactMap(\.species).first ?? ""
+                rod = group.lazy.compactMap(\.rod).first ?? ""
+                fly = group.lazy.compactMap(\.fly).first ?? ""
                 order = group
             }
             .sensoryFeedback(.success, trigger: saving == false && error == nil)
@@ -93,11 +94,13 @@ struct CatchEditView: View {
         Task {
             defer { saving = false }
             do {
-                let result = try await catches.saveEdit(group: group, lead: group[0], species: species, rod: rod, fly: fly,
+                // `order` is the live group: removals already applied, cover first (as the web).
+                guard let lead = order.first else { return }
+                let result = try await catches.saveEdit(group: order, lead: lead, species: species, rod: rod, fly: fly,
                                                         newOrder: orderChanged ? order : nil, userId: userId)
                 feed.update(result.lead)
                 if let reordered = result.reordered { feed.replaceGroupOrder(reordered) }
-                let updated = result.reordered ?? group.map { $0.key == result.lead.key ? result.lead : $0 }
+                let updated = result.reordered ?? order.map { $0.key == result.lead.key ? result.lead : $0 }
                 feed.showToast("Changes saved")
                 onFinish(.saved(updated))
                 dismiss()
@@ -116,10 +119,17 @@ struct CatchEditView: View {
                 try await catches.deletePhotos(removed, userId: userId)
                 feed.remove(removed)
                 feed.showToast("Photo removed")
-                if order.isEmpty { onFinish(.deleted); dismiss() }
+                if order.isEmpty {
+                    await catches.deleteCatchRow(removed.first?.catchId, userId: userId)
+                    onFinish(.deleted); dismiss()
+                }
             } catch {
                 self.error = "Failed to remove photo"
-                order = group
+                // Put back only what this call removed, keeping earlier removals and additions.
+                for p in removed.reversed() where !order.contains(where: { $0.key == p.key }) {
+                    let i = group.firstIndex(where: { $0.key == p.key }).map { min($0, order.count) } ?? order.count
+                    order.insert(p, at: i)
+                }
             }
         }
     }
@@ -144,8 +154,9 @@ struct CatchEditView: View {
         guard let userId = auth.userId else { return }
         Task {
             do {
-                try await catches.deletePhotos(group, userId: userId)
-                feed.remove(group)
+                try await catches.deletePhotos(order, userId: userId)
+                await catches.deleteCatchRow((order.first ?? group[0]).catchId, userId: userId)
+                feed.remove(order)
                 feed.showToast("Catch deleted")
                 onFinish(.deleted)
                 dismiss()
