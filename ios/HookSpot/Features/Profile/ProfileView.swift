@@ -24,6 +24,7 @@ struct ProfileView: View {
     @State private var loading = true
     @State private var error: String?
     @State private var selection: GroupSelection?
+    @Namespace private var zoom
     @State private var followList: ProfileService.FollowList?
     @State private var editingProfile = false
     @State private var editingGear = false
@@ -70,9 +71,9 @@ struct ProfileView: View {
         .task(id: username) { pendingCatchId = openCatchId; await load(); openPendingCatch() }
         .onChange(of: groups.count) { openPendingCatch() }
         .refreshable { await load(); if isOwn { await feed.refresh() } }
-        .sheet(item: $selection) { sel in
-            CatchDetailView(initialGroup: sel.group, onOpenProfile: { u in selection = nil; onOpenProfile(u) },
-                            onChange: { Task { await load() } })
+        .navigationDestination(item: $selection) { sel in
+            CatchDetailView(initialGroup: sel.group, presentation: .pushed, onChange: { Task { await load() } })
+                .navigationTransition(.zoom(sourceID: sel.id, in: zoom))
         }
         .sheet(item: $followList) { kind in
             if let id = shownProfile?.id {
@@ -185,6 +186,7 @@ struct ProfileView: View {
                         CatchCard(group: g, index: i, showAngler: false, me: auth.profileSummary) {
                             selection = GroupSelection(group: g)
                         }
+                        .zoomSource(id: g[0].key, in: zoom)
                     }
                 }
             }

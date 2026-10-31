@@ -79,6 +79,15 @@ struct CatchCard: View {
     }
 }
 
+extension View {
+    /// Zoom-transition source for a card that pushes `CatchDetailView(presentation: .pushed)`.
+    func zoomSource(id: String, in namespace: Namespace.ID) -> some View {
+        matchedTransitionSource(id: id, in: namespace) {
+            $0.background(Theme.uiBg).clipShape(.rect(cornerRadius: Theme.cardRadius, style: .continuous))
+        }
+    }
+}
+
 /// Loading placeholder matching the card layout (SkeletonCard), with the web's shimmer.
 struct SkeletonCard: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

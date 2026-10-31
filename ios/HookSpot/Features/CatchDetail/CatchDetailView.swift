@@ -8,15 +8,19 @@ struct ProfileRoute: Hashable {
     var catchId: String? = nil
 }
 
-/// Wraps a group so it can drive `.sheet(item:)`.
+/// Wraps a group so it can drive `.sheet(item:)` / `.navigationDestination(item:)`.
 struct GroupSelection: Identifiable, Hashable {
     let group: PhotoGroup
     var id: String { group.first?.key ?? UUID().uuidString }
 }
 
-/// PopupCarousel inside CatchDialog: the catch-detail sheet used by feed, search and profile.
+/// PopupCarousel: catch detail. Feed and profile cards push it with a zoom transition
+/// (`.pushed`); map markers and search present it as a sheet.
 struct CatchDetailView: View {
+    enum Presentation { case sheet, pushed }
+
     let initialGroup: PhotoGroup
+    var presentation: Presentation = .sheet
     var showMap = true
     var onOpenProfile: ((String) -> Void)?
     /// Called after a delete or edit so non-feed lists (search/profile) can refresh.
@@ -29,6 +33,8 @@ struct CatchDetailView: View {
     @State private var localGroup: PhotoGroup?
     @State private var current = 0
     @State private var editing = false
+    /// Pushed only: profiles open on top of the detail, so Back returns here.
+    @State private var profileRoute: ProfileRoute?
 
     private var leadKey: String { initialGroup[0].key }
     /// Latest copy: feed store first (it receives edits/enrichment), else our local copy.
@@ -46,30 +52,39 @@ struct CatchDetailView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    carousel
-                    details.padding(.horizontal, 20)
-                    if showMap {
-                        Group {
-                            if let c = lead.coordinate { MiniMap(coordinate: c) }
-                            else { Text("No location").font(Typography.caption).foregroundStyle(Theme.darkMuted)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.darkSurface) }
-                        }
-                        .frame(height: 180)
-                        .clipShape(.rect(cornerRadius: Theme.cardRadius, style: .continuous))
-                        .padding(.horizontal, 20)
-                    }
-                }
-                .padding(.bottom, 24)
-            }
-            .toolbar { toolbar }
-            .navigationBarTitleDisplayMode(.inline)
+        switch presentation {
+        case .sheet:
+            NavigationStack { content }
+                .presentationDetents([.medium, .large])
+                .presentationBackground(.thinMaterial)
+                .presentationDragIndicator(.visible)
+        case .pushed:
+            content
+                .background(Theme.uiBg)
+                .navigationDestination(item: $profileRoute) { UserProfileView(username: $0.username, openCatchId: $0.catchId) }
         }
-        .presentationDetents([.medium, .large])
-        .presentationBackground(.thinMaterial)
-        .presentationDragIndicator(.visible)
+    }
+
+    private var content: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                carousel
+                details.padding(.horizontal, 20)
+                if showMap {
+                    Group {
+                        if let c = lead.coordinate { MiniMap(coordinate: c) }
+                        else { Text("No location").font(Typography.caption).foregroundStyle(Theme.darkMuted)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.darkSurface) }
+                    }
+                    .frame(height: 180)
+                    .clipShape(.rect(cornerRadius: Theme.cardRadius, style: .continuous))
+                    .padding(.horizontal, 20)
+                }
+            }
+            .padding(.bottom, 24)
+        }
+        .toolbar { toolbar }
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $editing) {
             CatchEditView(group: group) { result in
                 switch result {
@@ -102,7 +117,8 @@ struct CatchDetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             if !isOwn, let owner = lead.ownerProfile, let username = owner.username {
                 Button {
-                    onOpenProfile?(username)
+                    if presentation == .pushed { profileRoute = ProfileRoute(username: username) }
+                    else { onOpenProfile?(username) }
                 } label: {
                     HStack(spacing: 8) {
                         Avatar(profile: owner, size: 24)
@@ -117,13 +133,13 @@ struct CatchDetailView: View {
                 .font(Typography.title).foregroundStyle(.white)
                 .accessibilityAddTraits(.isHeader)
             Text(Formatters.formatDateFull(photo.time, hideTime: photo.hideTime))
-                .font(Typography.cardMeta).foregroundStyle(Theme.darkMuted)
+                .font(Typography.detailMeta).foregroundStyle(Theme.darkMuted)
             if let line = weatherLocationLine {
-                Text(line).font(Typography.cardMeta).foregroundStyle(Theme.darkMuted)
+                Text(line).font(Typography.detailMeta).foregroundStyle(Theme.darkMuted)
             }
             let gear = [lead.rod, lead.fly].compactMap { $0 }.filter { !$0.isEmpty }
             if !gear.isEmpty {
-                Text(gear.joined(separator: " · ")).font(Typography.cardMeta).foregroundStyle(Theme.darkMuted)
+                Text(gear.joined(separator: " · ")).font(Typography.detailMeta).foregroundStyle(Theme.darkMuted)
             }
         }
     }
@@ -138,8 +154,10 @@ struct CatchDetailView: View {
     }
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
-            Button { dismiss() } label: { Icon.xmark.view(18) }.accessibilityLabel("Close")
+        if presentation == .sheet {
+            ToolbarItem(placement: .cancellationAction) {
+                Button { dismiss() } label: { Icon.xmark.view(18) }.accessibilityLabel("Close")
+            }
         }
         if let shareURL {
             ToolbarItem(placement: .primaryAction) {

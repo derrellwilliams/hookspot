@@ -22,7 +22,8 @@ enum Typography {
     static let body = font(.sans, 16, relativeTo: .body)
     static let cardSpecies = font(.sans, 16, .semibold, relativeTo: .headline)
     static let cardAngler = font(.condensed, 12, relativeTo: .caption)
-    static let cardMeta = font(.mono, 11, relativeTo: .caption2)
+    static let cardMeta = font(.mono, 12, relativeTo: .caption)
+    static let detailMeta = font(.mono, 14, relativeTo: .footnote)
     static let caption = font(.sans, 13, relativeTo: .footnote)
     static let label = font(.condensed, 13, .medium, relativeTo: .subheadline)
 }

@@ -21,7 +21,11 @@ struct FeedView: View {
         #endif
         return []
     }()
+    /// Map marker taps → sheet over the map.
     @State private var selection: GroupSelection?
+    /// Card taps → zoom-pushed detail.
+    @State private var opened: GroupSelection?
+    @Namespace private var zoom
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -59,8 +63,12 @@ struct FeedView: View {
             }
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             .navigationDestination(for: ProfileRoute.self) { UserProfileView(username: $0.username, openCatchId: $0.catchId) }
+            .navigationDestination(item: $opened) { sel in
+                CatchDetailView(initialGroup: sel.group, presentation: .pushed)
+                    .navigationTransition(.zoom(sourceID: sel.id, in: zoom))
+            }
             .sheet(item: $selection) { sel in
-                CatchDetailView(initialGroup: sel.group, showMap: mode == .list) { username in
+                CatchDetailView(initialGroup: sel.group, showMap: false) { username in
                     selection = nil
                     path.append(ProfileRoute(username: username))
                 }
@@ -69,6 +77,7 @@ struct FeedView: View {
                 guard let link else { return }
                 router.pendingLink = nil
                 selection = nil
+                opened = nil
                 path = [ProfileRoute(username: link.username, catchId: link.catchId)]
             }
             .motion(Motion.springSmooth, value: mode)
@@ -85,8 +94,9 @@ struct FeedView: View {
                 } else {
                     ForEach(Array(feed.groups.enumerated()), id: \.element[0].key) { i, group in
                         CatchCard(group: group, index: i, me: auth.profileSummary) {
-                            selection = GroupSelection(group: group)
+                            opened = GroupSelection(group: group)
                         }
+                        .zoomSource(id: group[0].key, in: zoom)
                     }
                 }
             }
