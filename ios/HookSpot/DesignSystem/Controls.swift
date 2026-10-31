@@ -40,7 +40,7 @@ struct TintedButtonStyle: ButtonStyle {
         .frame(minHeight: 44) // pills stay a full tap target
         .contentShape(.rect)
         .scaleEffect(pressed && !reduceMotion ? Theme.pressedScale : 1)
-        .animation(Motion.animation(Motion.spring, reduceMotion: reduceMotion), value: pressed)
+        .animation(Motion.animation(Motion.press, reduceMotion: reduceMotion), value: pressed)
         .opacity(isEnabled || isBusy ? 1 : 0.4)
     }
 }
@@ -63,7 +63,7 @@ struct TextButtonStyle: ButtonStyle {
             .frame(minHeight: 44)
             .contentShape(.rect)
             .opacity(configuration.isPressed ? 0.5 : isEnabled ? 1 : 0.4)
-            .animation(.snappy(duration: 0.15), value: configuration.isPressed)
+            .animation(Motion.press, value: configuration.isPressed)
     }
 }
 

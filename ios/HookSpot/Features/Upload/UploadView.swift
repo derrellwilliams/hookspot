@@ -13,6 +13,7 @@ struct UploadView: View {
 
     @State private var path: [Step] = []
     @State private var pickerItems: [PhotosPickerItem] = []
+    @State private var pickingMore = false
     @State private var items: [PendingPhoto] = []
     @State private var loading = false
     @State private var showCamera = false
@@ -99,11 +100,11 @@ struct UploadView: View {
     private func load(_ datas: [Data]) async {
         loading = true
         defer { loading = false }
-        let loaded: [PendingPhoto] = datas.compactMap { data in
-            guard let preview = try? ImageProcessing.jpeg(from: data, maxPx: ImageProcessing.displayMaxPx, quality: 0.8),
-                  let ui = UIImage(data: preview) else { return nil }
-            return PendingPhoto(item: .init(filename: UploadNaming.filename(for: nil), data: data),
-                                preview: Image(uiImage: ui), exif: ImageProcessing.exif(from: data))
+        var loaded: [PendingPhoto] = []
+        for data in datas {
+            guard let preview = try? await ImageProcessing.displayJPEG(data), let ui = UIImage(data: preview) else { continue }
+            loaded.append(PendingPhoto(item: .init(filename: UploadNaming.filename(for: nil), data: data),
+                                       preview: Image(uiImage: ui), exif: ImageProcessing.exif(from: data)))
         }
         guard !loaded.isEmpty else { feed.showToast("Couldn't read those photos."); return }
         let wasEmpty = items.isEmpty
@@ -119,7 +120,7 @@ struct UploadView: View {
         identifying = true
         Task {
             defer { identifying = false }
-            guard let jpeg = try? ImageProcessing.identifyJPEG(first.item.data) else { return }
+            guard let jpeg = try? await ImageProcessing.identifyJPEG(first.item.data) else { return }
             let s = await APIClient().identify(jpeg: jpeg, token: await SupabaseService.accessToken())
             if let s, !speciesEdited, species.isEmpty { species = Formatters.cleanSpecies(s) ?? s }
         }
@@ -174,10 +175,12 @@ struct UploadView: View {
                                 }
                                 .accessibilityLabel(p.id == items.first?.id ? "Cover photo" : "Photo")
                         }
-                        PhotosPicker(selection: $pickerItems, maxSelectionCount: 10, matching: .images) {
+                        Button { pickingMore = true } label: {
                             Icon.plus.view(22).frame(width: 72, height: 72)
                                 .background(Theme.darkSurface, in: .rect(cornerRadius: 10, style: .continuous))
                         }
+                        .buttonStyle(.pressable)
+                        .photosPicker(isPresented: $pickingMore, selection: $pickerItems, maxSelectionCount: 10, matching: .images)
                         .accessibilityLabel("Add more photos")
                     }
                     .padding(.vertical, 4)
@@ -232,7 +235,7 @@ struct UploadView: View {
         let existing = feed.existingOwnNames
         let (savedRods, savedFlies) = (auth.gearRods, auth.gearFlies)
         dismiss()
-        Task { @MainActor [feed, auth] in
+        Task { [feed, auth] in
             do {
                 let result = try await UploadService().addCatch(uploadItems, details: details, userId: userId, existingNames: existing)
                 feed.add(result.photos)

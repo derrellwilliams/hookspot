@@ -10,6 +10,7 @@ struct OnboardingView: View {
     @State private var displayName = ""
     @State private var bio = ""
     @State private var avatarItem: PhotosPickerItem?
+    @State private var pickingAvatar = false
     @State private var avatarData: Data?
     @State private var avatarImage: Image?
     @State private var check: UsernameCheck = .idle
@@ -28,15 +29,9 @@ struct OnboardingView: View {
             Form {
                 Section {
                     HStack(spacing: 16) {
-                        PhotosPicker(selection: $avatarItem, matching: .images) {
-                            Group {
-                                if let avatarImage { avatarImage.resizable().scaledToFill() }
-                                else { Icon.user.view(32).foregroundStyle(Theme.darkMuted) }
-                            }
-                            .frame(width: 80, height: 80)
-                            .background(Theme.avatarFallback)
-                            .clipShape(.circle)
-                        }
+                        Button { pickingAvatar = true } label: { avatarPreview }
+                        .buttonStyle(.pressable)
+                        .photosPicker(isPresented: $pickingAvatar, selection: $avatarItem, matching: .images)
                         .accessibilityLabel(avatarImage == nil ? "Choose profile photo" : "Change profile photo")
                         PhotosPicker(avatarImage == nil ? "Upload photo" : "Change photo", selection: $avatarItem, matching: .images)
                             .buttonStyle(.tinted(.small))
@@ -121,9 +116,19 @@ struct OnboardingView: View {
         }
     }
 
+    private var avatarPreview: some View {
+        Group {
+            if let avatarImage { avatarImage.resizable().scaledToFill() }
+            else { Icon.user.view(32).foregroundStyle(Theme.darkMuted) }
+        }
+        .frame(width: 80, height: 80)
+        .background(Theme.avatarFallback)
+        .clipShape(.circle)
+    }
+
     private func loadAvatar() async {
         guard let avatarItem, let data = try? await avatarItem.loadTransferable(type: Data.self),
-              let preview = try? ImageProcessing.jpeg(from: data, maxPx: 400, quality: 0.85),
+              let preview = try? await ImageProcessing.previewJPEG(data, maxPx: 400),
               let ui = UIImage(data: preview) else { return }
         avatarData = data
         avatarImage = Image(uiImage: ui)

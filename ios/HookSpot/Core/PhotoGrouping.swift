@@ -3,7 +3,7 @@ import Foundation
 // Port of src/lib/groupPhotos.js and src/lib/groupByTime.js.
 // JS Array.prototype.sort is stable; Swift's sort isn't, so ties keep input order explicitly.
 
-enum PhotoGrouping {
+nonisolated enum PhotoGrouping {
     static let orderUnset = 999
     /// groupByTime: photos within this window of the group's *first* photo join it.
     static let groupWindow: TimeInterval = 3 * 60
@@ -83,7 +83,7 @@ enum PhotoGrouping {
     }
 }
 
-func stableSorted<T>(_ items: [T], by areInIncreasingOrder: (T, T) -> Bool) -> [T] {
+nonisolated func stableSorted<T>(_ items: [T], by areInIncreasingOrder: (T, T) -> Bool) -> [T] {
     items.enumerated().sorted { a, b in
         if areInIncreasingOrder(a.element, b.element) { return true }
         if areInIncreasingOrder(b.element, a.element) { return false }

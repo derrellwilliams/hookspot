@@ -27,6 +27,7 @@ struct ProfileView: View {
     @State private var editingProfile = false
     @State private var editingGear = false
     @State private var avatarItem: PhotosPickerItem?
+    @State private var pickingAvatar = false
     @State private var avatarUploading = false
     @State private var pendingCatchId: String?
 
@@ -80,7 +81,6 @@ struct ProfileView: View {
         .sheet(isPresented: $editingProfile) { EditProfileSheet() }
         .sheet(isPresented: $editingGear) { EditGearSheet() }
         .task(id: avatarItem) { await changeAvatar() }
-        .motion(Motion.springTight, value: section)
     }
 
     // MARK: Header
@@ -120,8 +120,9 @@ struct ProfileView: View {
 
     @ViewBuilder private var avatar: some View {
         if isOwn {
-            let label = editableAvatar
-            PhotosPicker(selection: $avatarItem, matching: .images) { label }
+            Button { pickingAvatar = true } label: { editableAvatar }
+            .buttonStyle(.pressable)
+            .photosPicker(isPresented: $pickingAvatar, selection: $avatarItem, matching: .images)
             .disabled(avatarUploading)
             .accessibilityLabel("Change profile photo")
         } else {
@@ -129,7 +130,6 @@ struct ProfileView: View {
         }
     }
 
-    /// Built outside PhotosPicker's (nonisolated) label closure.
     private var editableAvatar: some View {
         Avatar(profile: shownProfile, size: 80)
             .overlay { if avatarUploading { Circle().fill(.black.opacity(0.5)); PixelFishLoader(size: 22) } }

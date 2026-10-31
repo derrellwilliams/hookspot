@@ -11,7 +11,7 @@ struct APIClient: Sendable {
         var errorDescription: String? { message ?? "Request failed (\(status))" }
     }
 
-    struct FeedResponse: Decodable, Sendable {
+    nonisolated struct FeedResponse: Decodable, Sendable {
         var rows: [PhotoRow]
         var profiles: [ProfileSummary]
         var truncated: Bool?
@@ -24,18 +24,18 @@ struct APIClient: Sendable {
         enum CodingKeys: String, CodingKey { case rows, profiles, truncated }
     }
 
-    struct ProfileLookup: Decodable, Sendable {
+    nonisolated struct ProfileLookup: Decodable, Sendable {
         let username: String?
         let avatarUrl: String?
         enum CodingKeys: String, CodingKey { case username; case avatarUrl = "avatar_url" }
     }
 
-    struct SaveProfileResponse: Decodable, Sendable {
-        struct User: Decodable, Sendable { let id: String }
+    nonisolated struct SaveProfileResponse: Decodable, Sendable {
+        nonisolated struct User: Decodable, Sendable { let id: String }
         let user: User
     }
 
-    private struct ErrorBody: Decodable { let error: String? }
+    private nonisolated struct ErrorBody: Decodable { let error: String? }
 
     private func url(_ path: String, _ query: [String: String?] = [:]) -> URL {
         var c = URLComponents(url: baseURL.appending(path: path), resolvingAgainstBaseURL: false)!
@@ -70,13 +70,13 @@ struct APIClient: Sendable {
     }
 
     func isUsernameAvailable(_ username: String) async throws -> Bool {
-        struct R: Decodable { let available: Bool }
+        nonisolated struct R: Decodable { let available: Bool }
         let r: R = try await get("api/check-username", ["username": username])
         return r.available
     }
 
     func searchUsers(_ q: String) async throws -> [ProfileSummary] {
-        struct R: Decodable { let results: [ProfileSummary] }
+        nonisolated struct R: Decodable { let results: [ProfileSummary] }
         let r: R = try await get("api/search-users", ["q": q])
         return r.results
     }
@@ -109,7 +109,7 @@ struct APIClient: Sendable {
         req.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
         if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         req.httpBody = jpeg
-        struct R: Decodable { let species: String? }
+        nonisolated struct R: Decodable { let species: String? }
         guard let r: R = try? await send(req), let s = r.species, !s.isEmpty, s != "none" else { return nil }
         return s
     }

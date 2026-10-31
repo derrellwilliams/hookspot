@@ -2,7 +2,7 @@ import Foundation
 
 /// Lossless JSON value, used for `photos.meta` so keys the app doesn't model
 /// (or that the web adds later) survive a read → merge → write round trip.
-enum JSONValue: Codable, Hashable, Sendable {
+nonisolated enum JSONValue: Codable, Hashable, Sendable {
     case string(String)
     case number(Double)
     case bool(Bool)
@@ -40,7 +40,7 @@ enum JSONValue: Codable, Hashable, Sendable {
     subscript(key: String) -> JSONValue? { objectValue?[key] }
 }
 
-extension JSONValue: ExpressibleByStringLiteral, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral,
+nonisolated extension JSONValue: ExpressibleByStringLiteral, ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral,
                      ExpressibleByBooleanLiteral, ExpressibleByDictionaryLiteral {
     init(stringLiteral value: String) { self = .string(value) }
     init(floatLiteral value: Double) { self = .number(value) }

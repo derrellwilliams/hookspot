@@ -19,6 +19,7 @@ struct CatchEditView: View {
     @State private var order: PhotoGroup = []
     @State private var orderChanged = false
     @State private var addItem: PhotosPickerItem?
+    @State private var pickingPhoto = false
     @State private var adding = false
     @State private var saving = false
     @State private var confirmDelete = false
@@ -47,12 +48,8 @@ struct CatchEditView: View {
                     }
                     .onMove { from, to in order.move(fromOffsets: from, toOffset: to); orderChanged = true }
                     .onDelete(perform: removePhotos)
-                    PhotosPicker(selection: $addItem, matching: .images) {
-                        HStack {
-                            if adding { PixelFishLoader(size: 22) } else { Icon.plus.view(20) }
-                            Text("Add photo")
-                        }
-                    }
+                    Button { pickingPhoto = true } label: { addPhotoLabel }
+                    .photosPicker(isPresented: $pickingPhoto, selection: $addItem, matching: .images)
                     .disabled(adding)
                 } header: { Text("Photos") } footer: { Text("Drag to reorder. The first photo is the cover.") }
 
@@ -85,6 +82,13 @@ struct CatchEditView: View {
                 order = group
             }
             .sensoryFeedback(.success, trigger: saving == false && error == nil)
+        }
+    }
+
+    private var addPhotoLabel: some View {
+        HStack {
+            if adding { PixelFishLoader(size: 22) } else { Icon.plus.view(20) }
+            Text("Add photo")
         }
     }
 

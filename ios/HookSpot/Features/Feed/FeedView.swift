@@ -72,7 +72,6 @@ struct FeedView: View {
                 path = [ProfileRoute(username: link.username, catchId: link.catchId)]
             }
             .motion(Motion.springSmooth, value: mode)
-            .sensoryFeedback(.selection, trigger: mode)
         }
     }
 

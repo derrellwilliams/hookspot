@@ -6,7 +6,7 @@ struct CatchService: Sendable {
     var client: SupabaseClient = SupabaseService.client
 
     /// Encodes every key, including explicit nulls, so clearing a field really clears it.
-    private struct PhotoEdit: Encodable {
+    private nonisolated struct PhotoEdit: Encodable {
         let species: String?
         let meta: [String: JSONValue]
         func encode(to e: Encoder) throws {
@@ -16,7 +16,7 @@ struct CatchService: Sendable {
         enum CodingKeys: String, CodingKey { case species, meta }
     }
 
-    private struct CatchEdit: Encodable {
+    private nonisolated struct CatchEdit: Encodable {
         let species: String?, rod: String?, fly: String?
         func encode(to e: Encoder) throws {
             var c = e.container(keyedBy: CodingKeys.self)
@@ -25,7 +25,7 @@ struct CatchService: Sendable {
         enum CodingKeys: String, CodingKey { case species, rod, fly }
     }
 
-    private struct MetaOnly: Encodable { let meta: [String: JSONValue] }
+    private nonisolated struct MetaOnly: Encodable { let meta: [String: JSONValue] }
 
     /// Writes species/rod/fly to the lead photo *and* its catches row, then persists a new
     /// photo order if given. Returns the updated photos (lead first-updated, then reordered group).
@@ -81,14 +81,22 @@ struct CatchService: Sendable {
             try await client.from("photos").delete().in("filename", values: withoutId).eq("user_id", value: userId).execute()
         }
         let paths = photos.map { $0.storagePath ?? StorageKeys.photoPath(userId: userId, filename: $0.name) }
-        _ = try? await client.storage.from(AppConfig.catchesBucket).remove(paths: paths + paths.map(StorageKeys.thumbPath))
+        do {
+            _ = try await client.storage.from(AppConfig.catchesBucket).remove(paths: paths + paths.map(StorageKeys.thumbPath))
+        } catch {
+            Log.catches.error("Storage delete failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// Best-effort: drops the catches row once its last photo is gone (photos.catch_id is
     /// `on delete set null`, so this never touches photos).
     func deleteCatchRow(_ catchId: String?, userId: String) async {
         guard let catchId else { return }
-        _ = try? await client.from("catches").delete().eq("id", value: catchId).eq("user_id", value: userId).execute()
+        do {
+            try await client.from("catches").delete().eq("id", value: catchId).eq("user_id", value: userId).execute()
+        } catch {
+            Log.catches.error("Catch row delete failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// saveMeta(): merge one enrichment key into a photo's meta.

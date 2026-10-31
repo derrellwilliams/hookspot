@@ -61,6 +61,8 @@
 - **Icons**: lucide (same set as `src/components/icons.js`) as template SVGs in `Assets.xcassets/Icons`, used via `Icon` (`Icon.plus.view(20)`) — no SF Symbols. Regenerate with `ios/scripts/gen-lucide-icons.mjs`. App icon (pixel fish on `#1A1953`) from `ios/scripts/gen-app-icon.swift`.
 - **Screens**: Profile header is a full-bleed dither behind the nav bar (no side margins, `scrollEdgeEffectHidden` + hidden toolbar background); Search exposes scope, Just me, and From/To date filters as one scrolling `FilterPill` row (no filter sheet).
 - **Tab bar**: icon-only tabs; "+" is detached via `ProminentTab` (iOS 27 `prominentTabIdentifier`, re-applied because SwiftUI resets it to nil; iOS 26 uses the `.search` role). Keep "+" the only `.search`-role tab.
+- **Swift**: Swift 6 with Approachable Concurrency and **Default Actor Isolation = MainActor** — no `@MainActor` annotations needed. `Core/` types and Codable DTOs are `nonisolated`; image decode/encode (`ImageProcessing`) is `@concurrent` so it never runs on the main thread. Log recovered failures with `Log.*` (`os.Logger`), not `print`. Use `.photosPicker(isPresented:)` on a `Button`, not `PhotosPicker`'s `@Sendable` label closure.
+- **Motion**: press feedback `Motion.press` (160ms ease-out, no bounce); constant motion is linear; only the first screen of cards fades in; no haptics or layout animation on frequent switches (tabs, list/map, profile sections).
 - **Build/test**: `cd ios && xcodebuild -scheme HookSpot -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build test`.
 
 ## Standards

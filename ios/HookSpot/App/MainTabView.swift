@@ -34,7 +34,6 @@ struct MainTabView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .sheet(isPresented: $feed.uploadOpen) { UploadView() }
-        .sensoryFeedback(.selection, trigger: selection)
         .onChange(of: router.pendingLink) { _, link in if link != nil { selection = .catches; feed.uploadOpen = false } }
     }
 }

@@ -41,7 +41,7 @@ struct UploadService: Sendable {
 
     // MARK: Rows
 
-    private struct CatchInsert: Encodable {
+    private nonisolated struct CatchInsert: Encodable {
         let user_id: String
         let species: String?
         let rod: String?
@@ -53,7 +53,7 @@ struct UploadService: Sendable {
 
     /// Optional properties are omitted when nil (synthesized encodeIfPresent) — that is
     /// what keeps `thumb_url` out of the insert when no thumbnail was made.
-    struct PhotoInsert: Encodable {
+    nonisolated struct PhotoInsert: Encodable {
         let user_id: String
         let catch_id: String?
         let filename: String
@@ -67,7 +67,7 @@ struct UploadService: Sendable {
         let meta: [String: JSONValue]
     }
 
-    private struct IdRow: Decodable { let id: String }
+    private nonisolated struct IdRow: Decodable { let id: String }
 
     // MARK: New catch
 
@@ -108,11 +108,12 @@ struct UploadService: Sendable {
             seen.insert(item.filename)
             var m = meta
             m["order"] = .number(Double(photos.count + failed))
-            if let p = try? await uploadPhoto(item, userId: userId, catchId: catchRow.id, species: species,
-                                               meta: m, fallbackCoordinate: fallback) {
-                photos.append(p)
-            } else {
+            do {
+                photos.append(try await uploadPhoto(item, userId: userId, catchId: catchRow.id, species: species,
+                                                    meta: m, fallbackCoordinate: fallback))
+            } catch {
                 failed += 1
+                Log.upload.error("Photo upload failed: \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -131,7 +132,7 @@ struct UploadService: Sendable {
         let exif = ImageProcessing.exif(from: item.data)
         // Never fall back to the original bytes: they carry full EXIF (GPS, time) into a
         // public bucket. An image ImageIO can't re-encode fails this photo instead.
-        let storageJPEG = try ImageProcessing.storageJPEG(item.data)
+        let storageJPEG = try await ImageProcessing.storageJPEG(item.data)
 
         // Filenames are unique per pick (UploadNaming), so no 409 tolerance: an existing
         // object would belong to another row, and the cleanup below would delete it.
@@ -169,11 +170,12 @@ struct UploadService: Sendable {
     /// Best effort — returns nil on any failure so the caller omits thumb_url entirely.
     private func uploadThumbnail(_ original: Data, storagePath: String) async -> URL? {
         do {
-            let thumb = try ImageProcessing.thumbJPEG(original)
+            let thumb = try await ImageProcessing.thumbJPEG(original)
             let path = StorageKeys.thumbPath(for: storagePath)
             try await bucket.upload(path, data: thumb, options: FileOptions(contentType: "image/jpeg", upsert: false))
             return SupabaseService.publicURL(bucket: AppConfig.catchesBucket, path: path)
         } catch {
+            Log.upload.notice("Thumbnail skipped: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }

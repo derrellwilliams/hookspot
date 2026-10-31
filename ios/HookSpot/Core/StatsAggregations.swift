@@ -2,25 +2,25 @@ import Foundation
 
 // Data shaping from src/stats.js (renderStats), minus ApexCharts — fed to Swift Charts.
 
-struct CountEntry: Hashable, Sendable, Identifiable {
+nonisolated struct CountEntry: Hashable, Sendable, Identifiable {
     let label: String
     let count: Int
     var id: String { label }
 }
 
-struct MonthCount: Hashable, Sendable, Identifiable {
+nonisolated struct MonthCount: Hashable, Sendable, Identifiable {
     let monthStart: Date
     let count: Int
     var id: Date { monthStart }
 }
 
-struct SpeciesMonthSeries: Hashable, Sendable, Identifiable {
+nonisolated struct SpeciesMonthSeries: Hashable, Sendable, Identifiable {
     let species: String
     let counts: [MonthCount]
     var id: String { species }
 }
 
-struct CatchStats: Sendable {
+nonisolated struct CatchStats: Sendable {
     var totalCatches = 0
     var monthly: [MonthCount] = []          // last 12 months, oldest first
     var hourly: [Int] = Array(repeating: 0, count: 24)
@@ -38,7 +38,7 @@ struct CatchStats: Sendable {
     var totalLabel: String { "\(totalCatches) catch\(totalCatches != 1 ? "es" : "")" }
 }
 
-enum StatsAggregations {
+nonisolated enum StatsAggregations {
     static func compute(_ groups: [PhotoGroup], now: Date = .now, calendar: Calendar = .current) -> CatchStats {
         var stats = CatchStats()
         stats.totalCatches = groups.count

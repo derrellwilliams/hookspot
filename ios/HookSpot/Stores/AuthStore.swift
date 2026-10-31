@@ -3,7 +3,7 @@ import Observation
 import Supabase
 
 /// Mirrors useAuthStore + the onAuthStateChange handler in App.jsx.
-@MainActor @Observable
+@Observable
 final class AuthStore {
     enum Phase: Equatable { case loading, signedOut, needsOnboarding, signedIn }
 
@@ -95,6 +95,7 @@ final class AuthStore {
             avatarUrl = p.avatarUrl
         } catch {
             // Profile check failed — same as web: carry on to the feed.
+            Log.auth.error("Profile check failed: \(error.localizedDescription, privacy: .public)")
         }
         phase = .signedIn
         if previousId != userId || initial { onFeedOwnerChange?(userId) }

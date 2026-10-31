@@ -3,7 +3,7 @@ import Foundation
 /// A link the app can open: share links and profile URLs from the web.
 ///   https://hook-spot.com/user/<username>?catch=<id>   (universal link, see public/.well-known)
 ///   hookspot://user/<username>?catch=<id>              (custom scheme)
-struct DeepLink: Equatable, Sendable {
+nonisolated struct DeepLink: Equatable, Sendable {
     let username: String
     /// `catchId ?? lead filename` — the web's groupShareId().
     let catchId: String?
@@ -32,7 +32,7 @@ struct DeepLink: Equatable, Sendable {
     }
 }
 
-extension Array where Element == Photo {
+nonisolated extension Array where Element == Photo {
     /// groupShareId(): the id a share link uses for this catch.
     var shareId: String? { first.map { $0.catchId ?? $0.name } }
 }

@@ -1,12 +1,12 @@
 import Foundation
 
-struct Coordinate: Hashable, Sendable, Codable {
+nonisolated struct Coordinate: Hashable, Sendable, Codable {
     var latitude: Double
     var longitude: Double
 }
 
 /// `profiles` columns as returned by `/api/photos`, `/api/search-*` (id, username, display_name, avatar_url).
-struct ProfileSummary: Codable, Hashable, Sendable, Identifiable {
+nonisolated struct ProfileSummary: Codable, Hashable, Sendable, Identifiable {
     let id: String
     var username: String?
     var displayName: String?
@@ -21,7 +21,7 @@ struct ProfileSummary: Codable, Hashable, Sendable, Identifiable {
 }
 
 /// Raw `photos` row from `/api/photos` and `/api/search-catches`.
-struct PhotoRow: Decodable, Sendable {
+nonisolated struct PhotoRow: Decodable, Sendable {
     let id: String?
     let userId: String
     let catchId: String?
@@ -45,7 +45,7 @@ struct PhotoRow: Decodable, Sendable {
 }
 
 /// In-app photo — the Swift twin of the object `mapPhotoRow()` + `initPhotos()` build on web.
-struct Photo: Hashable, Sendable, Identifiable {
+nonisolated struct Photo: Hashable, Sendable, Identifiable {
     var rowId: String?
     var name: String
     var storagePath: String?
@@ -84,7 +84,7 @@ struct Photo: Hashable, Sendable, Identifiable {
 /// A catch on screen: photos sharing a `catchId` (or a single legacy photo), already ordered.
 typealias PhotoGroup = [Photo]
 
-extension Array where Element == Photo {
+nonisolated extension Array where Element == Photo {
     /// Lead photo for labels/counting — first photo with a species, else the first.
     var lead: Photo? { first { ($0.species ?? "").isEmpty == false } ?? first }
 }

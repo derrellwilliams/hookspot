@@ -64,9 +64,10 @@ struct CatchCard: View {
         .opacity(appeared ? 1 : 0)
         .onAppear {
             guard !appeared else { return }
-            withAnimation(reduceMotion ? nil : Motion.easeOut(0.25).delay(index < 9 ? Double(index) * 0.04 : 0)) {
-                appeared = true
-            }
+            // Only the first screenful fades in (staggered 40ms). Cards further down appear
+            // as they scroll in, which happens constantly, so they don't animate.
+            guard index < 9, !reduceMotion else { appeared = true; return }
+            withAnimation(Motion.easeOut(0.25).delay(Double(index) * 0.04)) { appeared = true }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel([species.map { "\($0) catch" } ?? "Fishing catch", showAngler ? ownerName : nil, dateText, location]
@@ -96,7 +97,7 @@ struct SkeletonCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .onAppear {
             guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: false)) { phase = 1 }
+            withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) { phase = 1 } // constant motion → linear
         }
         .accessibilityLabel("Loading catch")
     }

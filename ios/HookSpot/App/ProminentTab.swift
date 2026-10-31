@@ -10,7 +10,7 @@ import ObjectiveC
 enum ProminentTab {
     static let addTitle = "Add Catch"
 
-    @MainActor static func install() {
+    static func install() {
         guard #available(iOS 27.0, *) else { return }
         swap(#selector(setter: UITabBarController.prominentTabIdentifier),
              #selector(UITabBarController.hs_setProminentTabIdentifier(_:)))

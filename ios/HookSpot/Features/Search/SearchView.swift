@@ -173,10 +173,12 @@ struct SearchView: View {
         guard isSearching else { users = []; groups = []; truncated = false; return }
         loading = true
         defer { loading = false }
-        let q = trimmed
+        // Read view state here; the async lets below run as child tasks off the main actor.
+        let q = trimmed, api = api, userId = auth.userId, mine = whose == .me
+        let wantCatches = hasCatchFilters, fromDay = day(from), toDay = day(to)
         async let usersReq: [ProfileSummary] = q.isEmpty ? [] : ((try? await api.searchUsers(q)) ?? [])
-        async let catchesReq: APIClient.FeedResponse? = hasCatchFilters
-            ? try? await api.searchCatches(query: q, userId: auth.userId, mine: whose == .me, from: day(from), to: day(to))
+        async let catchesReq: APIClient.FeedResponse? = wantCatches
+            ? try? await api.searchCatches(query: q, userId: userId, mine: mine, from: fromDay, to: toDay)
             : nil
         let (u, c) = await (usersReq, catchesReq)
         guard !Task.isCancelled else { return }

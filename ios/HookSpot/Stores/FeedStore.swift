@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 /// Mirrors usePhotoStore + initPhotos()/enrichment in src/lib/fileLoader.js.
-@MainActor @Observable
+@Observable
 final class FeedStore {
     private(set) var photos: [Photo] = []
     /// Catches with GPS, grouped and newest first (what the feed and map render).
@@ -45,8 +45,12 @@ final class FeedStore {
     private func fetch(userId: String?) async {
         isLoading = true
         defer { isLoading = false; initialized = true }
-        guard let res = try? await api.photos(userId: userId), !Task.isCancelled,
-              feedUserId == .some(userId) else { return }
+        let res: APIClient.FeedResponse
+        do { res = try await api.photos(userId: userId) } catch {
+            Log.feed.error("Feed load failed: \(error.localizedDescription, privacy: .public)")
+            return
+        }
+        guard !Task.isCancelled, feedUserId == .some(userId) else { return }
         let profiles = Dictionary(res.profiles.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         // The server is the source of truth, so a refresh drops deletions and picks up edits
         // made elsewhere. Enrichment values saved locally but not yet echoed back are kept.
@@ -156,7 +160,11 @@ final class FeedStore {
             let write = Task { [catches] in
                 await previous?.value
                 guard let current = self.photos.first(where: { $0.key == photo.key }) else { return }
-                _ = try? await catches.saveMeta(current, key: key, value: current.meta[key] ?? value, userId: userId)
+                do {
+                    _ = try await catches.saveMeta(current, key: key, value: current.meta[key] ?? value, userId: userId)
+                } catch {
+                    Log.feed.error("Saving \(key, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+                }
             }
             metaWrites = write
             await write.value

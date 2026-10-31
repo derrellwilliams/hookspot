@@ -10,7 +10,7 @@ struct ProfileService: Sendable {
     var client: SupabaseClient = SupabaseService.client
     var api = APIClient()
 
-    struct FullProfile: Decodable, Sendable {
+    nonisolated struct FullProfile: Decodable, Sendable {
         let id: String
         let username: String
         let displayName: String?
@@ -28,7 +28,7 @@ struct ProfileService: Sendable {
     }
 
     func uploadAvatar(userId: String, imageData: Data) async throws -> URL {
-        let jpeg = try ImageProcessing.avatarJPEG(from: imageData)
+        let jpeg = try await ImageProcessing.avatarJPEG(from: imageData)
         let path = StorageKeys.avatarPath(userId: userId)
         try await client.storage.from(AppConfig.avatarsBucket)
             .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg", upsert: true))
@@ -50,7 +50,7 @@ struct ProfileService: Sendable {
     }
 
     func setAvatarURL(userId: String, url: String) async throws {
-        struct R: Encodable { let id: String; let avatar_url: String }
+        nonisolated struct R: Encodable { let id: String; let avatar_url: String }
         try await client.from("profiles").upsert(R(id: userId, avatar_url: url)).execute()
     }
 
@@ -59,7 +59,7 @@ struct ProfileService: Sendable {
         let name = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         let b = bio.trimmingCharacters(in: .whitespacesAndNewlines)
         let user = try await client.auth.update(user: UserAttributes(data: ["display_name": .string(name), "bio": .string(b)]))
-        struct R: Encodable {
+        nonisolated struct R: Encodable {
             let id: String; let display_name: String?; let bio: String?; let avatar_url: String?
             func encode(to e: Encoder) throws {
                 var c = e.container(keyedBy: CodingKeys.self)
@@ -100,7 +100,7 @@ struct ProfileService: Sendable {
     }
 
     func setFavorites(userId: String, favorites: [String?]) async throws {
-        struct R: Encodable { let favorites: [String?] }
+        nonisolated struct R: Encodable { let favorites: [String?] }
         try await client.from("profiles").update(R(favorites: favorites)).eq("id", value: userId).execute()
     }
 
@@ -117,14 +117,14 @@ struct ProfileService: Sendable {
     }
 
     func isFollowing(me: String, profileId: String) async throws -> Bool {
-        struct R: Decodable { let follower_id: String }
+        nonisolated struct R: Decodable { let follower_id: String }
         let rows: [R] = try await client.from("follows").select("follower_id")
             .eq("follower_id", value: me).eq("following_id", value: profileId).limit(1).execute().value
         return !rows.isEmpty
     }
 
     func follow(me: String, profileId: String) async throws {
-        struct R: Encodable { let follower_id: String; let following_id: String }
+        nonisolated struct R: Encodable { let follower_id: String; let following_id: String }
         try await client.from("follows").insert(R(follower_id: me, following_id: profileId)).execute()
     }
 
@@ -135,7 +135,7 @@ struct ProfileService: Sendable {
     enum FollowList { case followers, following }
 
     func followList(_ kind: FollowList, profileId: String) async throws -> [ProfileSummary] {
-        struct R: Decodable { let follower_id: String?; let following_id: String? }
+        nonisolated struct R: Decodable { let follower_id: String?; let following_id: String? }
         let rows: [R] = switch kind {
         case .followers: try await client.from("follows").select("follower_id").eq("following_id", value: profileId).execute().value
         case .following: try await client.from("follows").select("following_id").eq("follower_id", value: profileId).execute().value

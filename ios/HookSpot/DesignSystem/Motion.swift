@@ -12,6 +12,12 @@ enum Motion {
     /// EASE_OUT cubic-bezier(0.23, 1, 0.32, 1)
     static func easeOut(_ duration: Double) -> Animation { .timingCurve(0.23, 1, 0.32, 1, duration: duration) }
 
+    /// Press feedback: fast and settled, no overshoot (scale 0.97–0.98, 100–160ms ease-out).
+    static let press = easeOut(0.16)
+    /// Toasts enter/exit often and get interrupted by the next one: a spring keeps the
+    /// velocity when retargeted, and a small bounce keeps it from feeling playful.
+    static let toast = Animation.spring(duration: 0.35, bounce: 0.1)
+
     static let reduced = Animation.easeInOut(duration: 0.15)
 
     static func animation(_ a: Animation, reduceMotion: Bool) -> Animation { reduceMotion ? reduced : a }
@@ -33,7 +39,7 @@ extension View {
     }
 }
 
-/// `whileTap={{ scale: 0.975 }}` press feedback with the default spring.
+/// `whileTap={{ scale: 0.975 }}` press feedback.
 struct PressableStyle: ButtonStyle {
     var scale: CGFloat = 0.975
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -43,7 +49,7 @@ struct PressableStyle: ButtonStyle {
             .contentShape(.rect)
             .scaleEffect(configuration.isPressed && !reduceMotion ? scale : 1)
             .opacity(configuration.isPressed && reduceMotion ? 0.8 : 1)
-            .animation(Motion.animation(Motion.spring, reduceMotion: reduceMotion), value: configuration.isPressed)
+            .animation(Motion.animation(Motion.press, reduceMotion: reduceMotion), value: configuration.isPressed)
     }
 }
 

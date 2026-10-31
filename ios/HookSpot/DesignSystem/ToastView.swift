@@ -32,7 +32,7 @@ private struct ToastOverlay: ViewModifier {
                     .onAppear { AccessibilityNotification.Announcement(toast.message).post() }
             }
         }
-        .motion(Motion.springPop, value: feed.toast)
+        .motion(Motion.toast, value: feed.toast)
         .sensoryFeedback(trigger: feed.toast) { _, new in new?.variant == .success ? .success : nil }
     }
 }

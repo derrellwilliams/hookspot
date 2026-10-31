@@ -1,7 +1,7 @@
 import Foundation
 
 // Port of src/lib/validation.js plus the limits /api/save-profile enforces.
-enum Validation {
+nonisolated enum Validation {
     static func isValidUsername(_ s: String) -> Bool {
         s.wholeMatch(of: /[a-z0-9_-]{3,20}/) != nil
     }
@@ -10,7 +10,7 @@ enum Validation {
 }
 
 // Storage object keys, matching storageKey() and the thumbs/ sibling path in src/lib/fileLoader.js.
-enum StorageKeys {
+nonisolated enum StorageKeys {
     /// Supabase Storage rejects spaces/special chars; HEIC/HEIF become .jpg since we always store JPEG.
     /// Works per UTF-16 unit, like the JS regex, so keys match what the web would produce.
     static func storageKey(_ filename: String) -> String {

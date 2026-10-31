@@ -3,7 +3,7 @@ import Foundation
 // Port of src/lib/formatters.js. Dates format in the device time zone, like the
 // web's local-time Date methods; `calendar` is injectable so tests stay deterministic.
 
-enum Formatters {
+nonisolated enum Formatters {
     static func formatLocation(city: String?, state: String?) -> String? {
         guard let city, !city.isEmpty, let state, !state.isEmpty else { return nil }
         return "\(city), \(state)"
@@ -57,7 +57,7 @@ enum Formatters {
 
     private static func parts(_ d: Date, _ cal: Calendar) -> (month: String, day: Int, year: Int, mm: Int, time: String) {
         let c = cal.dateComponents([.year, .month, .day, .hour, .minute], from: d)
-        let monthName = DateFormatter.enUSMonthNames[(c.month ?? 1) - 1]
+        let monthName = enUSMonthNames[(c.month ?? 1) - 1]
         let h = c.hour ?? 0
         let time = "\(h % 12 == 0 ? 12 : h % 12):\(String(format: "%02d", c.minute ?? 0))\(h >= 12 ? "pm" : "am")"
         return (monthName, c.day ?? 1, c.year ?? 1970, c.month ?? 1, time)
@@ -88,17 +88,15 @@ enum Formatters {
     static func formatDay(_ d: Date) -> String {
         d.formatted(.dateTime.month(.wide).day())
     }
-}
 
-private extension DateFormatter {
-    static let enUSMonthNames: [String] = {
+    private static let enUSMonthNames: [String] = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US")
         return f.standaloneMonthSymbols
     }()
 }
 
-enum DateParsing {
+nonisolated enum DateParsing {
     /// Supabase `timestamptz` / JS ISO strings, with or without fractional seconds.
     static func timestamptz(_ s: String) -> Date? {
         if let d = try? Date(s, strategy: .iso8601) { return d }
@@ -130,13 +128,9 @@ enum DateParsing {
 
     /// JS `Date.toISOString()` (UTC, milliseconds) — the format the web writes to `time` columns.
     static func isoString(_ d: Date) -> String {
-        isoFormatter.string(from: d)
+        d.formatted(isoStyle)
     }
 
-    nonisolated(unsafe) private static let isoFormatter: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        f.timeZone = TimeZone(identifier: "UTC")
-        return f
-    }()
+    /// A Sendable value type, so it's safe to share without `nonisolated(unsafe)`.
+    private static let isoStyle = Date.ISO8601FormatStyle(includingFractionalSeconds: true, timeZone: .gmt)
 }

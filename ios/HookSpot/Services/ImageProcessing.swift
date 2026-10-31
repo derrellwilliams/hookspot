@@ -6,7 +6,10 @@ import CoreGraphics
 /// ImageIO port of src/exif.js + avatarUpload.js resizing. Decodes HEIC natively,
 /// downsamples without loading the full bitmap, and re-encodes JPEG with no
 /// metadata (like the web canvas re-encode — stored images carry no EXIF/GPS).
-enum ImageProcessing {
+///
+/// Decoding a 12MP HEIC and re-encoding it takes long enough to hang a frame, so the
+/// public entry points are `@concurrent` and always run off the main actor.
+nonisolated enum ImageProcessing {
     static let storageMaxPx = 2048, storageQuality = 0.85
     static let thumbMaxPx = 960, thumbQuality = 0.82       // keep in sync with exif.js / backfill-thumbnails.js
     static let identifyMaxPx = 1024, identifyQuality = 0.85
@@ -54,7 +57,7 @@ enum ImageProcessing {
     }
 
     /// Center-cropped square avatar (avatarUpload.js resizeToBlob).
-    static func avatarJPEG(from data: Data) throws -> Data {
+    @concurrent static func avatarJPEG(from data: Data) async throws -> Data {
         let base = try jpeg(from: data, maxPx: 1024, quality: 0.95)
         guard let src = CGImageSourceCreateWithData(base as CFData, nil),
               let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { throw ImageError.decodeFailed }
@@ -69,9 +72,11 @@ enum ImageProcessing {
         return try encode(out, quality: avatarQuality)
     }
 
-    static func storageJPEG(_ data: Data) throws -> Data { try jpeg(from: data, maxPx: storageMaxPx, quality: storageQuality) }
-    static func thumbJPEG(_ data: Data) throws -> Data { try jpeg(from: data, maxPx: thumbMaxPx, quality: thumbQuality) }
-    static func identifyJPEG(_ data: Data) throws -> Data { try jpeg(from: data, maxPx: identifyMaxPx, quality: identifyQuality) }
+    @concurrent static func storageJPEG(_ data: Data) async throws -> Data { try jpeg(from: data, maxPx: storageMaxPx, quality: storageQuality) }
+    @concurrent static func thumbJPEG(_ data: Data) async throws -> Data { try jpeg(from: data, maxPx: thumbMaxPx, quality: thumbQuality) }
+    @concurrent static func identifyJPEG(_ data: Data) async throws -> Data { try jpeg(from: data, maxPx: identifyMaxPx, quality: identifyQuality) }
+    @concurrent static func previewJPEG(_ data: Data, maxPx: Int) async throws -> Data { try jpeg(from: data, maxPx: maxPx, quality: 0.85) }
+    @concurrent static func displayJPEG(_ data: Data) async throws -> Data { try jpeg(from: data, maxPx: displayMaxPx, quality: displayQuality) }
 
     private static func encode(_ image: CGImage, quality: Double) throws -> Data {
         let out = NSMutableData()
