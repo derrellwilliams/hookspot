@@ -6,7 +6,7 @@
 - **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/search`, `/design`
 - **Supabase** auth (emailed one-time code) + storage + database (`src/lib/supabase.js`)
 - **Mapbox GL JS** (raw, no react-map-gl) — lazy-loaded, see Performance
-- **Radix UI** for modals, dropdowns, tooltips; **lucide-react** icons via `src/components/icons.js` (iOS: SF Symbols)
+- **Radix UI** for modals, dropdowns, tooltips; **lucide-react** icons via `src/components/icons.js` (iOS uses the same set, see iOS › Icons)
 - **CSS Modules** + CSS custom properties; tokens in `src/tokens.js` mirror `src/style.css`
 
 ## Key Files
@@ -56,7 +56,7 @@
 - `supabase/mobile-rpcs.sql` and its deployed RPCs stay — migration 006 references them.
 - **Project**: `ios/project.yml` (XcodeGen) is the source of truth for `HookSpot.xcodeproj`; folders are synchronized, so new Swift files need no regeneration — only target/package/setting changes do (`cd ios && xcodegen`).
 - **Config**: `ios/Config/Base.xcconfig` → `Info.plist` `HS*` keys → `AppConfig`. Real values go in gitignored `ios/Config/Secrets.xcconfig` (`ios/scripts/make-secrets.sh`): publishable Supabase key and public `pk.` Mapbox token only.
-- **Layout**: `Core/` pure Swift ports of `src/lib` (parity-tested in `HookSpotTests/`, fixtures generated from the JS); `Services/` (APIClient → same `/api/*` routes, UploadService, CatchService, ProfileService, EnrichmentService, ImageProcessing via ImageIO); `Stores/` (`AuthStore`, `FeedStore`, `@Observable @MainActor`).
+- **Layout**: `Core/` pure Swift ports of `src/lib` (parity-tested in `HookSpotTests/`, fixtures generated from the JS); `Services/` (APIClient → same `/api/*` routes, UploadService, CatchService, ProfileService, EnrichmentService, ImageProcessing via ImageIO); `Stores/` (`AuthStore`, `FeedStore`, `Router`; `@Observable`, main actor by default).
 - **Design system**: `ios/HookSpot/DesignSystem/` — `Theme` (only place colors live, mirrors `src/tokens.js`), `Typography` (bundled fonts, Dynamic Type via `relativeTo:`), `Motion` (motion.js springs; Reduce Motion aware), `glassSurface` (one Liquid Glass recipe, solid under Reduce Transparency — glass is only for floating chrome: bars, toast, close buttons), `Controls` (Wavetile-style flat tinted controls for everything in content: `.tinted`, `.primary()`, `.text`, `FilterPill`, `surfaceCard()`), `Avatar`, `DitherMesh` (Metal port of Paper's Dithering warp/4×4), `PixelFishLoader`, `CatchCard`. `DesignCatalog` is the iOS `/design` — launch with `-catalog` in Debug; render real components only.
 - **Icons**: lucide (same set as `src/components/icons.js`) as template SVGs in `Assets.xcassets/Icons`, used via `Icon` (`Icon.plus.view(20)`) — no SF Symbols. Regenerate with `ios/scripts/gen-lucide-icons.mjs`. App icon (pixel fish on `#1A1953`) from `ios/scripts/gen-app-icon.swift`.
 - **Screens**: Profile header is a full-bleed dither behind the nav bar (no side margins, `scrollEdgeEffectHidden` + hidden toolbar background); Search exposes scope, Just me, and From/To date filters as one scrolling `FilterPill` row (no filter sheet).

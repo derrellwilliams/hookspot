@@ -11,6 +11,7 @@ struct ProfileView: View {
 
     @Environment(AuthStore.self) private var auth
     @Environment(FeedStore.self) private var feed
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     enum Section: String, CaseIterable { case activity = "Recent Activity", stats = "Stats" }
 
@@ -97,12 +98,14 @@ struct ProfileView: View {
                         .multilineTextAlignment(.center)
                 }
             }
-            HStack(spacing: 0) {
+            // Side by side normally; stacked at accessibility sizes so labels never break mid-word.
+            let stacked = typeSize.isAccessibilitySize
+            (stacked ? AnyLayout(VStackLayout(spacing: 4)) : AnyLayout(HStackLayout(spacing: 0))) {
                 stat(groups.count, "Catches")
-                Divider().frame(height: 28).overlay(Theme.darkBorder)
+                if !stacked { Divider().frame(height: 28).overlay(Theme.darkBorder) }
                 Button { followList = .followers } label: { stat(counts.followers, "Followers") }
                     .buttonStyle(.pressable)
-                Divider().frame(height: 28).overlay(Theme.darkBorder)
+                if !stacked { Divider().frame(height: 28).overlay(Theme.darkBorder) }
                 Button { followList = .following } label: { stat(counts.following, "Following") }
                     .buttonStyle(.pressable)
             }
@@ -141,7 +144,7 @@ struct ProfileView: View {
     private func stat(_ n: Int, _ label: String) -> some View {
         VStack(spacing: 2) {
             Text("\(n)").font(Typography.font(.mono, 17, .medium, relativeTo: .headline)).foregroundStyle(.white)
-            Text(label).font(Typography.cardAngler).foregroundStyle(Theme.darkMuted)
+            Text(label).font(Typography.cardAngler).foregroundStyle(Theme.darkMuted).lineLimit(1)
         }
         .frame(maxWidth: .infinity, minHeight: 44)
         .accessibilityElement(children: .combine)

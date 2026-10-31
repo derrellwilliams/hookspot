@@ -11,6 +11,9 @@ struct CatchCard: View {
     var action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// One line at normal sizes (like the web); wrap at accessibility sizes instead of truncating.
+    private var metaLines: Int? { typeSize.isAccessibilitySize ? nil : 1 }
     @State private var appeared = false
 
     private var lead: Photo { group.lead ?? group[0] }
@@ -43,18 +46,18 @@ struct CatchCard: View {
                         HStack(spacing: 6) {
                             Avatar(profile: owner, size: 18)
                             if !ownerName.isEmpty {
-                                Text(ownerName).font(Typography.cardAngler).foregroundStyle(Theme.darkMuted).lineLimit(1)
+                                Text(ownerName).font(Typography.cardAngler).foregroundStyle(Theme.darkMuted).lineLimit(metaLines)
                             }
                         }
                     }
                     if let species {
-                        Text(species).font(Typography.cardSpecies).foregroundStyle(.white).lineLimit(1)
+                        Text(species).font(Typography.cardSpecies).foregroundStyle(.white).lineLimit(metaLines)
                     }
                     if let dateText {
-                        Text(dateText).font(Typography.cardMeta).foregroundStyle(Theme.darkMuted).lineLimit(1)
+                        Text(dateText).font(Typography.cardMeta).foregroundStyle(Theme.darkMuted).lineLimit(metaLines)
                     }
                     if let location {
-                        Text(location).font(Typography.cardMeta).foregroundStyle(Theme.darkMuted).lineLimit(1)
+                        Text(location).font(Typography.cardMeta).foregroundStyle(Theme.darkMuted).lineLimit(metaLines)
                     }
                 }
             }
