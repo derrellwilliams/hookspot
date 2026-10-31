@@ -20,6 +20,7 @@ enum Icon: String {
     case chevronsUpDown = "lucide.chevrons-up-down"
     case navLeft = "lucide.chevron-left"
     case navRight = "lucide.chevron-right"
+    case chevronDown = "lucide.chevron-down"
     case mediaImage = "lucide.image"
     case settings = "lucide.settings"
     case camera = "lucide.camera"

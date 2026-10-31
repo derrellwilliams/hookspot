@@ -82,10 +82,10 @@ struct UploadView: View {
                 PhotosPicker(selection: $pickerItems, maxSelectionCount: 10, matching: .images, photoLibrary: .shared()) {
                     Text("Choose photos")
                 }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(.primary())
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     Button("Take photo") { showCamera = true }
-                        .buttonStyle(SecondaryButtonStyle())
+                        .buttonStyle(.tinted)
                 }
             }
             Spacer()
@@ -132,13 +132,13 @@ struct UploadView: View {
             Text("No GPS data found — pin your catch location")
                 .font(Typography.caption).foregroundStyle(Theme.darkText)
                 .padding(.horizontal, 14).padding(.vertical, 8)
-                .glassSurface(in: Capsule())
+                .background(Theme.tint, in: Capsule())
                 .padding(.vertical, 10)
             PinDropMap(pin: $pin, start: PhotoGrouping.homeCenter(feed.photos))
                 .clipShape(.rect(cornerRadius: Theme.cardRadius, style: .continuous))
                 .padding(.horizontal, 12)
             Button("Next") { path.append(.details) }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(.primary())
                 .disabled(pin == nil)
                 .padding(16)
         }
@@ -202,7 +202,7 @@ struct UploadView: View {
             }
             Section {
                 Button("Add Catch", action: submit)
-                    .buttonStyle(PrimaryButtonStyle())
+                    .buttonStyle(.primary())
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                     .disabled(items.isEmpty)

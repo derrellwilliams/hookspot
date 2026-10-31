@@ -39,7 +39,7 @@ struct OnboardingView: View {
                         }
                         .accessibilityLabel(avatarImage == nil ? "Choose profile photo" : "Change profile photo")
                         PhotosPicker(avatarImage == nil ? "Upload photo" : "Change photo", selection: $avatarItem, matching: .images)
-                            .buttonStyle(SecondaryButtonStyle())
+                            .buttonStyle(.tinted(.small))
                     }
                     .padding(.vertical, 4)
                 } header: { Text("Profile photo *") }

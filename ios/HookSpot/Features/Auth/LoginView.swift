@@ -28,7 +28,7 @@ struct LoginView: View {
                             .multilineTextAlignment(.center)
                     }
                 }
-                .glassCard()
+                .surfaceCard()
                 .frame(maxWidth: 420)
                 .motion(Motion.springSmooth, value: sent)
             }
@@ -59,7 +59,7 @@ struct LoginView: View {
                 .onSubmit(sendCode)
                 .fieldChrome()
             Button("Continue", action: sendCode)
-                .buttonStyle(PrimaryButtonStyle(isBusy: busy))
+                .buttonStyle(.primary(busy: busy))
                 .disabled(busy || !email.contains("@"))
         }
         .transition(reduceMotion ? .opacity : .push(from: .leading))
@@ -81,14 +81,12 @@ struct LoginView: View {
                 }
                 .fieldChrome()
             Button("Sign in", action: verify)
-                .buttonStyle(PrimaryButtonStyle(isBusy: busy))
+                .buttonStyle(.primary(busy: busy))
                 .disabled(busy || code.count < 6)
             Button("Use a different email") {
                 sent = false; code = ""; error = nil; focused = .email
             }
-            .font(Typography.caption)
-            .foregroundStyle(Theme.darkMuted)
-            .frame(minHeight: 44)
+            .buttonStyle(.text)
         }
         .transition(reduceMotion ? .opacity : .push(from: .trailing))
     }

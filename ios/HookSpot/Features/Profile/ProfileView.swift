@@ -46,17 +46,22 @@ struct ProfileView: View {
         ScrollView {
             VStack(spacing: 20) {
                 header
-                if !isOwn { followButton }
-                Picker("Section", selection: $section) {
-                    ForEach(Section.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                VStack(spacing: 20) {
+                    if !isOwn { followButton }
+                    Picker("Section", selection: $section) {
+                        ForEach(Section.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    content
                 }
-                .pickerStyle(.segmented)
-                content
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
         .background(Theme.uiBg)
+        // Full-bleed header behind the nav bar (Wavetile's detailPageChrome).
+        .scrollEdgeEffectHidden(true, for: .top)
+        .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
         .navigationTitle(shownProfile.map { Formatters.displayName($0) } ?? username)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { if isOwn { settingsMenu } }
@@ -102,11 +107,15 @@ struct ProfileView: View {
                     .buttonStyle(.pressable)
             }
         }
-        .padding(.vertical, 24).padding(.horizontal, 16)
+        .padding(.top, 12).padding(.bottom, 32).padding(.horizontal, 16)
         .frame(maxWidth: .infinity)
-        .background(DitherMesh())
-        .clipShape(.rect(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Theme.darkBorder.opacity(0.6), lineWidth: 0.5))
+        .background(alignment: .bottom) {
+            // Runs up under the nav bar and status bar, and past the top on overscroll.
+            DitherMesh()
+                .overlay(LinearGradient(colors: [.clear, Theme.uiBg], startPoint: .init(x: 0.5, y: 0.7), endPoint: .bottom))
+                .padding(.top, -600)
+                .ignoresSafeArea(edges: .top)
+        }
     }
 
     @ViewBuilder private var avatar: some View {
@@ -125,7 +134,7 @@ struct ProfileView: View {
         Avatar(profile: shownProfile, size: 80)
             .overlay { if avatarUploading { Circle().fill(.black.opacity(0.5)); PixelFishLoader(size: 22) } }
             .overlay(alignment: .bottomTrailing) {
-                Icon.editPencil.view(12).padding(6).glassSurface(in: Circle())
+                Icon.editPencil.view(12).foregroundStyle(Theme.uiBg).padding(6).background(Theme.tintAccent, in: Circle())
             }
     }
 
@@ -140,7 +149,7 @@ struct ProfileView: View {
 
     private var followButton: some View {
         Button(isFollowing ? "Unfollow" : "Follow", action: toggleFollow)
-            .buttonStyle(SecondaryButtonStyle())
+            .buttonStyle(.primary())
             .disabled(followBusy || profile == nil)
             .sensoryFeedback(.success, trigger: isFollowing)
     }

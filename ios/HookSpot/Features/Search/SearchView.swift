@@ -21,7 +21,7 @@ struct SearchView: View {
     @State private var groups: [PhotoGroup] = []
     @State private var truncated = false
     @State private var loading = false
-    @State private var showFilters = false
+    @State private var editingDate: DateField?
     @State private var path: [ProfileRoute] = []
     @State private var selection: GroupSelection?
 
@@ -33,6 +33,8 @@ struct SearchView: View {
     private var showAnglers: Bool { scope != .catches && !trimmed.isEmpty && !users.isEmpty }
     private var showCatches: Bool { scope != .anglers && hasCatchFilters && !groups.isEmpty }
     private var filtersActive: Bool { whose == .me || from != nil || to != nil }
+
+    enum DateField: String, Identifiable { case from = "From", to = "To"; var id: Self { self } }
 
     /// Everything that should re-run the search.
     private struct Key: Equatable { let q: String; let whose: Whose; let from: Date?; let to: Date?; let me: String? }
@@ -76,20 +78,7 @@ struct SearchView: View {
             .navigationTitle("Search")
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always),
                         prompt: "Search anglers, species, flies, rods, locations…")
-            .searchScopes($scope) { ForEach(Scope.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
-            .toolbar {
-                if scope != .anglers {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button { showFilters = true } label: {
-                            Icon.filters.view(20).overlay(alignment: .topTrailing) {
-                                if filtersActive { Circle().fill(Theme.iosBlue).frame(width: 7, height: 7).offset(x: 3, y: -3) }
-                            }
-                        }
-                        .accessibilityLabel(filtersActive ? "Filters, active" : "Filters")
-                    }
-                }
-            }
-            .sheet(isPresented: $showFilters) { filterSheet }
+            .safeAreaInset(edge: .top, spacing: 0) { filterRow }
             .sheet(item: $selection) { sel in
                 CatchDetailView(initialGroup: sel.group, onOpenProfile: { u in selection = nil; path.append(ProfileRoute(username: u)) },
                                 onChange: { Task { await search() } })
@@ -117,36 +106,61 @@ struct SearchView: View {
         Text(t).font(Typography.label).foregroundStyle(Theme.darkMuted).accessibilityAddTraits(.isHeader)
     }
 
-    private var filterSheet: some View {
-        NavigationStack {
-            Form {
-                Picker("Whose catches", selection: $whose) {
-                    Text("Everyone").tag(Whose.everyone)
-                    if auth.isSignedIn { Text("Just me").tag(Whose.me) }
+    /// Every filter exposed in one horizontally scrolling row (mobile web's filter row).
+    private var filterRow: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                ForEach(Scope.allCases, id: \.self) { s in
+                    FilterPill(isOn: scope == s, action: { scope = s }) { Text(s.rawValue) }
                 }
-                Section("Date range") {
-                    dateRow("From", value: $from, range: Date.distantPast...(to ?? .now))
-                    dateRow("To", value: $to, range: (from ?? .distantPast)...Date.now)
-                }
-                if filtersActive {
-                    Button("Clear filters", role: .destructive) { whose = .everyone; from = nil; to = nil }
+                if scope != .anglers {
+                    Divider().frame(height: 20).overlay(Theme.darkBorder)
+                    if auth.isSignedIn {
+                        FilterPill(isOn: whose == .me, action: { whose = whose == .me ? .everyone : .me }) { Text("Just me") }
+                    }
+                    datePill(.from, value: from)
+                    datePill(.to, value: to)
+                    if filtersActive {
+                        Button("Clear") { whose = .everyone; from = nil; to = nil }
+                            .buttonStyle(.text)
+                            .font(Typography.label.weight(.semibold))
+                    }
                 }
             }
-            .navigationTitle("Filters")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showFilters = false } } }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
         }
-        .presentationDetents([.medium])
+        .scrollIndicators(.hidden)
+        .motion(Motion.springSnappy, value: filtersActive)
+        .popover(item: $editingDate) { field in
+            datePopover(field).presentationCompactAdaptation(.popover)
+        }
     }
 
-    private func dateRow(_ label: String, value: Binding<Date?>, range: ClosedRange<Date>) -> some View {
-        Toggle(isOn: Binding(get: { value.wrappedValue != nil }, set: { value.wrappedValue = $0 ? .now : nil })) {
-            if let d = value.wrappedValue {
-                DatePicker(label, selection: Binding(get: { d }, set: { value.wrappedValue = $0 }), in: range, displayedComponents: .date)
-            } else {
-                Text(label)
+    private func datePill(_ field: DateField, value: Date?) -> some View {
+        FilterPill(isOn: value != nil, action: { editingDate = field }) {
+            HStack(spacing: 6) {
+                Text(value.map { "\(field.rawValue) \($0.formatted(.dateTime.month(.abbreviated).day().year(.twoDigits)))" } ?? field.rawValue)
+                Icon.chevronDown.view(12)
             }
         }
+    }
+
+    private func datePopover(_ field: DateField) -> some View {
+        let binding = field == .from ? $from : $to
+        let range = field == .from ? Date.distantPast...(to ?? .now) : (from ?? .distantPast)...Date.now
+        return VStack(spacing: 8) {
+            DatePicker(field.rawValue, selection: Binding(get: { binding.wrappedValue ?? .now }, set: { binding.wrappedValue = $0 }),
+                       in: range, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .tint(Theme.tintAccent)
+            if binding.wrappedValue != nil {
+                Button("Clear \(field.rawValue.lowercased()) date") { binding.wrappedValue = nil; editingDate = nil }
+                    .buttonStyle(.text)
+            }
+        }
+        .padding()
+        .frame(width: 340)
     }
 
     /// YYYY-MM-DD in the device calendar (what <input type="date"> sends).

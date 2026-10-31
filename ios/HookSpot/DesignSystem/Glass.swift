@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The one glass recipe (web: `composes: glassSurface from shared.module.css`).
+/// The one glass recipe (web: `composes: glassSurface from shared.module.css`). Only for
+/// chrome floating above content (toast) — content controls use tinted styles (Controls.swift).
 /// Liquid Glass normally; solid surface when Reduce Transparency is on.
 private struct GlassSurface<S: Shape>: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -26,8 +27,4 @@ extension View {
         glassSurface(in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous), interactive: interactive)
     }
 
-    /// Glass card container used by Login/Onboarding and sheets' floating panels.
-    func glassCard(padding: CGFloat = 20) -> some View {
-        self.padding(padding).glassSurface(cornerRadius: 24)
-    }
 }

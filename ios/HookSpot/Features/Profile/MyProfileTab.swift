@@ -14,7 +14,7 @@ struct MyProfileTab: View {
                     VStack(spacing: 16) {
                         PixelFishLoader(size: 48)
                         Text("Sign in to see your profile").font(Typography.headline)
-                        Button("Sign In") { auth.requireSignIn() }.buttonStyle(SecondaryButtonStyle())
+                        Button("Sign In") { auth.requireSignIn() }.buttonStyle(.tinted)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Theme.uiBg)

@@ -15,8 +15,17 @@ struct DesignCatalog: View {
                 Text("HookSpot").font(Typography.wordmark)
                 section("DitherMesh") { DitherMesh().frame(height: 160).clipShape(.rect(cornerRadius: 20)) }
                 section("PixelFishLoader") { HStack(spacing: 24) { PixelFishLoader(size: 64); PixelFishLoader(size: 14) } }
-                section("Glass card") {
-                    Text("Glass surface").font(Typography.body).frame(maxWidth: .infinity).glassCard()
+                section("Buttons (glass is for floating chrome only)") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Button("Add Catch") {}.buttonStyle(.primary())
+                        Button("Saving") {}.buttonStyle(.primary(busy: true))
+                        HStack { Button("Follow") {}.buttonStyle(.tinted); Button("Upload photo") {}.buttonStyle(.tinted(.small)) }
+                        Button("Use a different email") {}.buttonStyle(.text)
+                        HStack { FilterPill(isOn: true, action: {}) { Text("All") }; FilterPill(isOn: false, action: {}) { Text("Anglers") } }
+                    }
+                }
+                section("Surface card") {
+                    Text("Flat content card").font(Typography.body).frame(maxWidth: .infinity).surfaceCard()
                         .background(DitherMesh().clipShape(.rect(cornerRadius: 24)))
                 }
                 section("Avatar") { HStack { Avatar(url: nil, name: "Sam", size: 36); Avatar(url: nil, name: "", size: 18) } }

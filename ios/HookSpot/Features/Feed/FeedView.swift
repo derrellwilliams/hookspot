@@ -105,7 +105,7 @@ struct FeedView: View {
             Text(auth.isSignedIn ? "Add your first catch, or follow anglers to see theirs." : "Pull to refresh.")
                 .font(Typography.caption).foregroundStyle(Theme.darkMuted).multilineTextAlignment(.center)
             if auth.isSignedIn {
-                Button("Add Catch") { feed.uploadOpen = true }.buttonStyle(SecondaryButtonStyle())
+                Button("Add Catch") { feed.uploadOpen = true }.buttonStyle(.tinted)
             }
         }
         .frame(maxWidth: .infinity)
