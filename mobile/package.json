@@ -13,7 +13,7 @@
     "@shopify/react-native-skia": "2.6.2",
     "@supabase/supabase-js": "^2.106.1",
     "babel-preset-expo": "~56.0.0",
-    "expo": "~56.0.3",
+    "expo": "~58.0.22",
     "expo-blur": "~56.0.3",
     "expo-constants": "~56.0.14",
     "expo-font": "^56.0.5",
