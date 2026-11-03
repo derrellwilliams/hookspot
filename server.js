@@ -103,7 +103,9 @@ const server = http.createServer(async (req, res) => {
   if (!stat || stat.isDirectory()) filePath = path.join(DIST, 'index.html')
 
   const ext = path.extname(filePath)
-  res.setHeader('content-type', MIME[ext] || 'application/octet-stream')
+  // Universal links: Apple requires JSON for the extensionless AASA file
+  const isAasa = path.basename(filePath) === 'apple-app-site-association'
+  res.setHeader('content-type', isAasa ? 'application/json' : (MIME[ext] || 'application/octet-stream'))
 
   const stream = fs.createReadStream(filePath)
   stream.on('error', (err) => {

@@ -1,5 +1,5 @@
 // JS mirror of CSS custom properties in style.css
-// Source of truth for future React Native / Expo parity
+// Source of truth for iOS parity (ios/HookSpot/DesignSystem/Theme.swift)
 
 export const tokens = {
   // Colors

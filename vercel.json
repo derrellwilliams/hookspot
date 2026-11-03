@@ -1,13 +1,47 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "regions": ["pdx1"],
+  "regions": [
+    "pdx1"
+  ],
   "functions": {
-    "api/catch-meta.js": { "includeFiles": "dist/index.html" }
+    "api/catch-meta.js": {
+      "includeFiles": "dist/index.html"
+    }
   },
   "rewrites": [
-    { "source": "/identify", "destination": "/api/identify" },
-    { "source": "/user/:username", "has": [{ "type": "query", "key": "catch" }], "destination": "/api/catch-meta?username=:username" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/identify",
+      "destination": "/api/identify"
+    },
+    {
+      "source": "/user/:username",
+      "has": [
+        {
+          "type": "query",
+          "key": "catch"
+        }
+      ],
+      "destination": "/api/catch-meta?username=:username"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    }
   ]
 }

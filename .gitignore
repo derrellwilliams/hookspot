@@ -6,3 +6,13 @@ dist
 *.MOV
 *.mp4
 *.MP4
+
+# iOS
+ios/Config/Secrets.xcconfig
+ios/build/
+ios/DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Claude Code local permissions
+.claude/settings.local.json

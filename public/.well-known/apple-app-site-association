@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["88S9XG6NXK.com.hookspot.app"],
+        "components": [
+          { "/": "/user/*", "comment": "Profiles and catch share links (/user/:username?catch=<id>)" }
+        ]
+      }
+    ]
+  }
+}

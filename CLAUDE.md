@@ -6,7 +6,7 @@
 - **React Router 7** (`BrowserRouter`); routes: `/` (MapPage), `/login`, `/onboarding`, `/user/:username`, `/profile` (redirect), `/search`, `/design`
 - **Supabase** auth (emailed one-time code) + storage + database (`src/lib/supabase.js`)
 - **Mapbox GL JS** (raw, no react-map-gl) — lazy-loaded, see Performance
-- **Radix UI** for modals, dropdowns, tooltips; **lucide-react** icons via `src/components/icons.js` (mobile: `lucide-react-native` via `mobile/components/icons.js`)
+- **Radix UI** for modals, dropdowns, tooltips; **lucide-react** icons via `src/components/icons.js` (iOS uses the same set, see iOS › Icons)
 - **CSS Modules** + CSS custom properties; tokens in `src/tokens.js` mirror `src/style.css`
 
 ## Key Files
@@ -50,16 +50,24 @@
 - Catch details open as glass bottom-sheet dialogs (`CatchDialog` on home; same pattern in Search/Profile) — base styles carry the glass recipe, mobile media query only reshapes the positioner.
 - Profile: contained dither header card + segmented Recent Activity/Stats in normal page flow; Search: filters in one horizontally scrolling row.
 
-## Mobile (`mobile/`)
-- Expo 56 bare workflow, React Native 0.85.3, new arch
-- **Does not yet consume `thumb_url`** — `mobile/components/CatchCard.js` renders `photoUrl()` (full-resolution `storage_path`) directly, and `mobile/lib/upload.js` has its own upload path with no thumbnail generation. Parity would need native-side resize tooling, not a port of `src/exif.js`'s canvas resize.
-- Only some `mobile/lib` files are symlinks into `src/lib` (formatters, groupByTime, groupPhotos, imageUtils, validation) — the rest of `mobile/lib` and all of `mobile/store` are independent real files, not shared with `src/`
-- Map screen (`mobile/app/(tabs)/map.js`) fetches photos, maps `catch_id → catchId` + ISO → ms, calls `groupPhotos()`, renders one marker/list item per group
-- Environment gotchas (Fabric layout quirks, Skia canvas limits, Metro/Supabase resolution, prebuild caveats) live in `mobile/AGENTS.md` — read it before touching native config or full-screen canvases
+## iOS (`ios/`)
+- Native Swift / SwiftUI app, iOS 26+, replacing the deleted Expo app (`mobile/`, removed 2026-10-30; recover from git history if needed). Uses Mapbox Maps SDK for iOS (v11, SPM, no download token), supabase-swift, Nuke; talks to the same `/api/*` routes and Supabase tables as the web.
+- Must follow the same upload order and `thumb_url` rules as `src/lib/fileLoader.js` (see Data Model), and the same `user_metadata` / `avatar_url` constraints (see Supabase Constraints).
+- `supabase/mobile-rpcs.sql` and its deployed RPCs stay — migration 006 references them.
+- **Project**: `ios/project.yml` (XcodeGen) is the source of truth for `HookSpot.xcodeproj`; folders are synchronized, so new Swift files need no regeneration — only target/package/setting changes do (`cd ios && xcodegen`).
+- **Config**: `ios/Config/Base.xcconfig` → `Info.plist` `HS*` keys → `AppConfig`. Real values go in gitignored `ios/Config/Secrets.xcconfig` (`ios/scripts/make-secrets.sh`): publishable Supabase key and public `pk.` Mapbox token only.
+- **Layout**: `Core/` pure Swift ports of `src/lib` (parity-tested in `HookSpotTests/`, fixtures generated from the JS); `Services/` (APIClient → same `/api/*` routes, UploadService, CatchService, ProfileService, EnrichmentService, ImageProcessing via ImageIO); `Stores/` (`AuthStore`, `FeedStore`, `Router`; `@Observable`, main actor by default).
+- **Design system**: `ios/HookSpot/DesignSystem/` — `Theme` (only place colors live, mirrors `src/tokens.js`), `Typography` (bundled fonts, Dynamic Type via `relativeTo:`), `Motion` (motion.js springs; Reduce Motion aware), `glassSurface` (one Liquid Glass recipe, solid under Reduce Transparency — glass is only for floating chrome: bars, toast, close buttons), `Controls` (Wavetile-style flat tinted controls for everything in content: `.tinted`, `.primary()`, `.text`, `FilterPill`, `surfaceCard()`), `Avatar`, `DitherMesh` (Metal port of Paper's Dithering warp/4×4), `PixelFishLoader`, `CatchCard`. `DesignCatalog` is the iOS `/design` — launch with `-catalog` in Debug; render real components only.
+- **Icons**: lucide (same set as `src/components/icons.js`) as template SVGs in `Assets.xcassets/Icons`, used via `Icon` (`Icon.plus.view(20)`) — no SF Symbols. Regenerate with `ios/scripts/gen-lucide-icons.mjs`. App icon (pixel fish on `#1A1953`) from `ios/scripts/gen-app-icon.swift`.
+- **Screens**: Feed and Profile cards zoom-push `CatchDetailView(presentation: .pushed)` (`zoomSource` + `.navigationTransition(.zoom)`); map markers and Search still open it as a sheet. Profile header is a full-bleed dither behind the nav bar (no side margins, `scrollEdgeEffectHidden` + hidden toolbar background); Search exposes scope, Just me, and From/To date filters as one scrolling `FilterPill` row (no filter sheet).
+- **Tab bar**: icon-only tabs; "+" is detached via `ProminentTab` (iOS 27 `prominentTabIdentifier`, re-applied because SwiftUI resets it to nil; iOS 26 uses the `.search` role). Keep "+" the only `.search`-role tab.
+- **Swift**: Swift 6 with Approachable Concurrency and **Default Actor Isolation = MainActor** — no `@MainActor` annotations needed. `Core/` types and Codable DTOs are `nonisolated`; image decode/encode (`ImageProcessing`) is `@concurrent` so it never runs on the main thread. Log recovered failures with `Log.*` (`os.Logger`), not `print`. Use `.photosPicker(isPresented:)` on a `Button`, not `PhotosPicker`'s `@Sendable` label closure.
+- **Motion**: press feedback `Motion.press` (160ms ease-out, no bounce); constant motion is linear; only the first screen of cards fades in; no haptics or layout animation on frequent switches (tabs, list/map, profile sections).
+- **Build/test**: `cd ios && xcodebuild -scheme HookSpot -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build test`.
 
 ## Standards
 - **No browser automation unless asked**: Don't use Chrome DevTools MCP / browser tools to verify changes unless explicitly requested
-- **No test suite**: CI (`.github/workflows/ci.yml`) runs `npm run build` + `npm audit --audit-level=high` on push/PR — make sure the build passes.
+- **No test suite** (web): CI (`.github/workflows/ci.yml`) runs `npm run build` + `npm audit --audit-level=high` on push/PR — make sure the build passes. iOS has its own workflow (`.github/workflows/ios.yml`, `ios/**` only): newest Xcode on `macos-26`, `xcodebuild build test` with no secrets.
 - **Zustand selectors**: Select only what's needed (`usePhotoStore(s => s.photos)`) — no whole-store subscriptions
 - **Markers**: `MapView` diffs markers against `groups` in one effect (keeping existing markers/popups); don't rebuild them wholesale.
 - **Design tokens**: Use CSS custom properties from `src/tokens.js` — no hardcoded hex values in `.module.css`
