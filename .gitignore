@@ -13,3 +13,6 @@ ios/build/
 ios/DerivedData/
 xcuserdata/
 *.xcuserstate
+
+# Claude Code local permissions
+.claude/settings.local.json
