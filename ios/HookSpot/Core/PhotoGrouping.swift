@@ -35,19 +35,22 @@ nonisolated enum PhotoGrouping {
     }
 
     static func groupPhotos(_ photos: [Photo]) -> [PhotoGroup] {
-        var byCatchId: [String: [Photo]] = [:]
+        // Keyed by owner + catch so a photo pointing at someone else's catch_id
+        // never merges into their group.
+        var byCatch: [String: [Photo]] = [:]
         var catchOrder: [String] = []
         var ungrouped: [PhotoGroup] = []
         for p in photos {
             if let cid = p.catchId, !cid.isEmpty {
-                if byCatchId[cid] == nil { catchOrder.append(cid) }
-                byCatchId[cid, default: []].append(p)
+                let key = "\(p.userId):\(cid)"
+                if byCatch[key] == nil { catchOrder.append(key) }
+                byCatch[key, default: []].append(p)
             } else {
                 ungrouped.append([p])
             }
         }
-        let catchGroups = catchOrder.map { cid in
-            stableSorted(byCatchId[cid]!) { a, b in
+        let catchGroups = catchOrder.map { key in
+            stableSorted(byCatch[key]!) { a, b in
                 let oa = a.order ?? orderUnset, ob = b.order ?? orderUnset
                 return oa != ob ? oa < ob : ms(a.time) < ms(b.time)
             }

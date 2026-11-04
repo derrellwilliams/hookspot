@@ -84,7 +84,7 @@ as $$
   select p.*
   from photos p
   where auth.uid() is not null
-    and p.catch_id in (select catch_id from matched where catch_id is not null)
+    and (p.catch_id, p.user_id) in (select catch_id, user_id from matched where catch_id is not null)
 $$;
 
 grant execute on function public.get_user_catches(uuid) to authenticated;

@@ -63,7 +63,10 @@ export function createSearchCatchesHandler(env) {
           const siblings = await siblingsRes.json()
           if (Array.isArray(siblings)) {
             const seen = new Set(rows.map(r => r.id))
-            rows = [...rows, ...siblings.filter(s => !seen.has(s.id))]
+            // Only the catch owner's photos count as siblings, so a row that
+            // points at someone else's catch_id can't join their carousel.
+            const ownerByCatch = new Map(rows.filter(r => r.catch_id).map(r => [r.catch_id, r.user_id]))
+            rows = [...rows, ...siblings.filter(s => !seen.has(s.id) && ownerByCatch.get(s.catch_id) === s.user_id)]
           }
         }
       }

@@ -22,18 +22,20 @@ export function mapPhotoRow(row) {
 }
 
 export function groupPhotos(photos) {
-  const byCatchId = {}
+  // Keyed by owner + catch so a photo pointing at someone else's catch_id
+  // never merges into their group.
+  const byCatch = {}
   const ungrouped = []
 
   for (const p of photos) {
     if (p.catchId) {
-      (byCatchId[p.catchId] ??= []).push(p)
+      (byCatch[`${p.userId}:${p.catchId}`] ??= []).push(p)
     } else {
       ungrouped.push([p])
     }
   }
 
-  const catchGroups = Object.values(byCatchId).map(g =>
+  const catchGroups = Object.values(byCatch).map(g =>
     g.sort((a, b) =>
       (a.meta?.order ?? ORDER_UNSET) - (b.meta?.order ?? ORDER_UNSET) ||
       (a.time ?? 0) - (b.time ?? 0)
