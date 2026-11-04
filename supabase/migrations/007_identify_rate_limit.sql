@@ -11,6 +11,9 @@ create table public.identify_usage (
 
 alter table public.identify_usage enable row level security;
 
+-- This project still has default privileges that hand new tables to
+-- anon/authenticated, so take them back explicitly.
+revoke all on public.identify_usage from anon, authenticated;
 grant select, insert, update, delete on public.identify_usage to service_role;
 grant select on public.identify_usage to backup_reader;
 
