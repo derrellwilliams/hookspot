@@ -11,11 +11,15 @@ enum ProminentTab {
     static let addTitle = "Add Catch"
 
     static func install() {
+        // The iOS 27 SDK ships with Xcode 27 (Swift 6.4). Older toolchains (e.g. the CI
+        // runner image) can't compile these symbols, so they fall back to the iOS 26 path.
+        #if compiler(>=6.4)
         guard #available(iOS 27.0, *) else { return }
         swap(#selector(setter: UITabBarController.prominentTabIdentifier),
              #selector(UITabBarController.hs_setProminentTabIdentifier(_:)))
         swap(#selector(UITabBarController.setProminentTabIdentifier(_:animated:)),
              #selector(UITabBarController.hs_setProminentTabIdentifier(_:animated:)))
+        #endif
     }
 
     private static func swap(_ original: Selector, _ replacement: Selector) {
@@ -25,6 +29,7 @@ enum ProminentTab {
     }
 }
 
+#if compiler(>=6.4)
 @available(iOS 27.0, *)
 extension UITabBarController {
     fileprivate var hs_addTabIdentifier: String? {
@@ -41,3 +46,4 @@ extension UITabBarController {
         hs_setProminentTabIdentifier(identifier ?? hs_addTabIdentifier, animated: animated)
     }
 }
+#endif
