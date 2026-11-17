@@ -75,12 +75,23 @@ function makeSemaphore(limit) {
 }
 const runGeoTask = makeSemaphore(3)
 
-async function saveMeta(photoName, key, value, userId) {
+let metaWrites = Promise.resolve()
+function saveMeta(photoName, key, value, userId) {
+  const write = metaWrites.then(() => persistMeta(photoName, key, value, userId))
+  metaWrites = write.catch(() => {})
+  return write
+}
+
+async function persistMeta(photoName, key, value, userId) {
+  if (getUser()?.id !== userId) return
   const current = usePhotoStore.getState().photos.find(p => p.name === photoName && p.userId === userId)
   if (!current) return
   const meta = { ...current.meta, [key]: value }
   const { error } = await supabase.from('photos').update({ meta }).eq('filename', photoName).eq('user_id', userId)
-  if (!error) usePhotoStore.getState().updatePhoto({ ...current, meta })
+  if (!error) {
+    const latest = usePhotoStore.getState().photos.find(p => p.name === photoName && p.userId === userId)
+    if (latest) usePhotoStore.getState().updatePhoto({ ...latest, meta: { ...latest.meta, [key]: value } })
+  }
 }
 
 function maybeFetchLocation(photo) {
@@ -140,6 +151,7 @@ export async function initPhotos() {
     if (!res.ok) throw new Error(`Photos fetch error: ${res.status}`)
     const { rows, profiles: profileRows, error } = await res.json()
 
+    if ((getUser()?.id ?? null) !== userId) { _initQueued = true; return }
     if (error || !rows?.length) return
 
     const profileMap = Object.fromEntries((profileRows ?? []).map(p => [p.id, p]))
@@ -287,7 +299,7 @@ export async function uploadPhotoToGroup(file, groupLead) {
   const { error: uploadError } = await supabase.storage
     .from('catches')
     .upload(storagePath, storageBlob, { upsert: false, contentType: 'image/jpeg' })
-  if (uploadError && uploadError.statusCode !== '409') throw new Error('Storage: ' + uploadError.message)
+  if (uploadError) throw new Error('Storage: ' + uploadError.message)
 
   const { data: { publicUrl } } = supabase.storage.from('catches').getPublicUrl(storagePath)
 

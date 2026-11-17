@@ -56,7 +56,7 @@
 
 ## Standards
 - **No browser automation unless asked**: Don't use Chrome DevTools MCP / browser tools to verify changes unless explicitly requested
-- **No test suite** (web): CI (`.github/workflows/ci.yml`) runs `npm run build` + `npm audit --audit-level=high` on push/PR — make sure the build passes. iOS has its own workflow (`.github/workflows/ios.yml`, `ios/**` only): newest Xcode on `macos-26`, `xcodebuild build test` with no secrets.
+- **Web regression checks**: `node --test tests/*.test.js`; CI (`.github/workflows/ci.yml`) runs the regression checks + `npm run build` + `npm audit --audit-level=high` on push/PR — make sure the build passes. iOS has its own workflow (`.github/workflows/ios.yml`, `ios/**` only): newest Xcode on `macos-26`, `xcodebuild build test` with no secrets.
 - **Zustand selectors**: Select only what's needed (`usePhotoStore(s => s.photos)`) — no whole-store subscriptions
 - **Markers**: `MapView` diffs markers against `groups` in one effect (keeping existing markers/popups); don't rebuild them wholesale.
 - **Design tokens**: Use CSS custom properties from `src/tokens.js` — no hardcoded hex values in `.module.css`

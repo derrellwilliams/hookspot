@@ -7,17 +7,9 @@ import { renderCatchShare } from '../catch-meta-handler.js'
 // with tags injected when the catch resolves, untouched otherwise — so the page
 // itself always loads.
 let indexHtml = null
-async function getIndexHtml(origin) {
-  if (indexHtml) return indexHtml
-  try {
-    // Bundled into the function via `includeFiles` in vercel.json
-    indexHtml = fs.readFileSync(path.join(process.cwd(), 'dist', 'index.html'), 'utf-8')
-  } catch (err) {
-    console.error('[catch-meta] bundled index.html missing, fetching it:', err.message)
-    const res = await fetch(`${origin}/index.html`)
-    if (!res.ok) throw new Error(`index.html fetch failed: ${res.status}`)
-    indexHtml = await res.text()
-  }
+async function getIndexHtml() {
+  // Read only the bundled shell, never HTML from a request-controlled origin.
+  if (!indexHtml) indexHtml = fs.readFileSync(path.join(process.cwd(), 'dist', 'index.html'), 'utf-8')
   return indexHtml
 }
 
@@ -25,7 +17,7 @@ export default async function handler(req, res) {
   const origin = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
   let html
   try {
-    html = await getIndexHtml(origin)
+    html = await getIndexHtml()
   } catch (err) {
     console.error('[catch-meta]', err.message)
     res.statusCode = 500

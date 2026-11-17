@@ -52,7 +52,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
   const prevRods = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => cleanGear(p.meta?.rod)).filter(Boolean))]))
   const prevFlys = usePhotoStore(useShallow(s => [...new Set(s.photos.filter(p => p.isOwn).map(p => cleanGear(p.meta?.fly)).filter(Boolean))]))
 
-  const group = groups.find(g => g.some(p => p.name === leadName)) ?? initialGroup
+  const group = groups.find(g => g.some(p => p.name === leadName && p.userId === initialGroup[0].userId)) ?? initialGroup
 
   const [current, setCurrent] = useState(0)
   const [editing, setEditing] = useState(false)
@@ -101,7 +101,8 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
       }
       updatePhoto(updatedPhoto)
       if (localOrder) {
-        const newOrderedGroup = localOrder.map(i => group[i])
+        const newOrderedGroup = localOrder.map(i => group[i]).map(p =>
+          p.name === updatedPhoto.name && p.userId === updatedPhoto.userId ? updatedPhoto : p)
         const results = await Promise.all(newOrderedGroup.map((p, i) =>
           supabase.from('photos')
             .update({ meta: { ...p.meta, order: i } })
@@ -164,7 +165,7 @@ export function PopupCarousel({ initialGroup, onClose, onDelete, showMap = false
     e.stopPropagation()
     try {
       await deletePhotos([photo])
-      const remaining = usePhotoStore.getState().groups.find(g => g.some(p => p.name === leadName))
+      const remaining = usePhotoStore.getState().groups.find(g => g.some(p => p.name === leadName && p.userId === initialGroup[0].userId))
       if (!remaining) { onClose?.(); return }
       setCurrent(c => Math.min(c, remaining.length - 1))
       setLocalOrder(null)

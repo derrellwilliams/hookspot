@@ -15,6 +15,7 @@ export function createIdentifyHandler(anthropic, env) {
       sendJson(res, { error: 'Server misconfigured' }, 500); return
     }
 
+    try {
     // Verify the caller holds a valid Supabase session
     const auth = req.headers.authorization
     if (!auth?.startsWith('Bearer ')) { sendJson(res, { error: 'Unauthorized' }, 401); return }
@@ -50,6 +51,10 @@ export function createIdentifyHandler(anthropic, env) {
       console.error('[identify] error:', err.message)
       res.statusCode = err instanceof Anthropic.APIError ? err.status : 500
       res.end(JSON.stringify({ error: err.message }))
+    }
+    } catch (err) {
+      console.error('[identify] upstream failure:', err.message)
+      if (!res.writableEnded && !res.destroyed) sendJson(res, { error: 'Identification service unavailable' }, 503)
     }
   }
 }

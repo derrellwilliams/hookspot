@@ -68,7 +68,10 @@ export function parseCatchShareUrl(pathname, searchParams) {
   const catchParam = searchParams.get('catch')
   if (!catchParam) return null
   const match = pathname.match(/^\/user\/([^/]+)\/?$/)
-  if (match) return { username: decodeURIComponent(match[1]), catchParam }
+  if (match) {
+    try { return { username: decodeURIComponent(match[1]), catchParam } }
+    catch { return null }
+  }
   const username = searchParams.get('username')
   if (/^\/api\/catch-meta\/?$/.test(pathname) && username && !username.includes('/')) {
     return { username, catchParam }

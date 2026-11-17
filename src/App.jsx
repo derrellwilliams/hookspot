@@ -42,7 +42,10 @@ function AppInner() {
   const isPublicPage = ['/login', '/onboarding'].includes(location.pathname) || !isKnownRoute
 
   useEffect(() => {
+    let disposed = false
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session ?? null)
+      if (!session) useAuthStore.getState().setUsername(null)
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         setUser(session.user)
         setSession(session)
@@ -59,6 +62,7 @@ function AppInner() {
           const res = await fetch(`/api/profile?userId=${session.user.id}`)
           if (!res.ok) throw new Error(`Profile fetch error: ${res.status}`)
           const { username, avatar_url, error: profileError } = await res.json()
+          if (disposed || useAuthStore.getState().user?.id !== session.user.id) return
           if (profileError) {
             console.error('[auth] profile check failed', profileError)
             initPhotos()
@@ -85,7 +89,7 @@ function AppInner() {
         if (!session && (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT')) initPhotos()
       }
     })
-    return () => subscription.unsubscribe()
+    return () => { disposed = true; subscription.unsubscribe() }
   }, [setUser, setSession, setUserAndUsername])
 
   const isMap = location.pathname === '/'

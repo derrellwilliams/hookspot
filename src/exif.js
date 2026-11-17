@@ -58,8 +58,9 @@ export async function toDisplayBlob(file) {
 export async function resizeBlob(blob, maxPx, quality = 0.85) {
   const url = URL.createObjectURL(blob)
   const img = new Image()
-  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url })
-  URL.revokeObjectURL(url)
+  try {
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url })
+  } finally { URL.revokeObjectURL(url) }
 
   const scale = Math.min(1, maxPx / Math.max(img.naturalWidth, img.naturalHeight))
   if (scale === 1 && blob.type === 'image/jpeg') return blob

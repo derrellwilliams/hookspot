@@ -10,9 +10,20 @@ export function createSaveProfileHandler(env) {
     try {
       const buf = await readBody(req, res, MAX_BODY_SIZE)
       if (buf === null) return
-      const { token, username, displayName, bio, avatarUrl } = JSON.parse(buf.toString())
+      let body
+      try { body = JSON.parse(buf.toString()) } catch { sendJson(res, { error: 'Invalid JSON' }, 400); return }
+      if (!body || typeof body !== 'object' || Array.isArray(body)) { sendJson(res, { error: 'Invalid profile' }, 400); return }
+      const { token, username, displayName, bio, avatarUrl } = body
+      if (typeof token !== 'string' || !token) { sendJson(res, { error: 'Unauthorized' }, 401); return }
+      if (typeof username !== 'string' || [displayName, bio, avatarUrl].some(v => v != null && typeof v !== 'string')) {
+        sendJson(res, { error: 'Profile fields must be strings' }, 400); return
+      }
+      if (avatarUrl) {
+        let valid = false
+        try { valid = avatarUrl.length <= 2048 && new URL(avatarUrl).protocol === 'https:' } catch {}
+        if (!valid) { sendJson(res, { error: 'Invalid avatar URL' }, 400); return }
+      }
 
-      if (!token) { sendJson(res, { error: 'Unauthorized' }, 401); return }
       if (!USERNAME_RE.test(username)) { sendJson(res, { error: 'Invalid username' }, 400); return }
       if (displayName && displayName.length > 60) { sendJson(res, { error: 'Display name too long (max 60)' }, 400); return }
       if (bio && bio.length > 200) { sendJson(res, { error: 'Bio too long (max 200)' }, 400); return }
@@ -22,7 +33,7 @@ export function createSaveProfileHandler(env) {
         headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${token}` },
       })
       const userData = await userRes.json()
-      if (!userRes.ok) throw new Error(userData.message || 'Invalid token')
+      if (!userRes.ok || !userData.id) { sendJson(res, { error: 'Unauthorized' }, 401); return }
       const userId = userData.id
 
       const updateData = {}

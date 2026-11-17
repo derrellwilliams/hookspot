@@ -1,4 +1,4 @@
-import { serviceHeaders, sendJson } from './handler-utils.js'
+import { serviceHeaders, sendJson, searchPattern } from './handler-utils.js'
 
 // Searches everyone's catch photos by species / rod / fly / location (water body,
 // city, state) text and date range.
@@ -11,8 +11,8 @@ export function createSearchCatchesHandler(env) {
   return async function handleSearchCatches(req, res) {
     if (req.method !== 'GET') { res.statusCode = 405; res.end(); return }
     const url = new URL(req.url, 'http://localhost')
-    // Commas/parens/percent break the PostgREST or=() filter grammar
-    const q = (url.searchParams.get('q') || '').replace(/[,()%]/g, '').trim()
+    const q = (url.searchParams.get('q') || '').trim()
+    if (q.length > 200) { sendJson(res, { error: 'Search query too long' }, 400); return }
     const userId = url.searchParams.get('userId')
     const mine = url.searchParams.get('mine') === 'true'
     // from/to come from <input type="date">; reject anything that isn't a
@@ -27,7 +27,7 @@ export function createSearchCatchesHandler(env) {
     try {
       const params = ['select=*', 'order=time.desc', 'limit=301']
       if (q) {
-        params.push(`or=${encodeURIComponent(`(species.ilike.*${q}*,meta->>rod.ilike.*${q}*,meta->>fly.ilike.*${q}*,meta->waterBody->>name.ilike.*${q}*,meta->location->>city.ilike.*${q}*,meta->location->>state.ilike.*${q}*)`)}`)
+        params.push(`or=${encodeURIComponent(`(species.ilike.${searchPattern(q)},meta->>rod.ilike.${searchPattern(q)},meta->>fly.ilike.${searchPattern(q)},meta->waterBody->>name.ilike.${searchPattern(q)},meta->location->>city.ilike.${searchPattern(q)},meta->location->>state.ilike.${searchPattern(q)})`)}`)
       }
       if (mine && userId) params.push(`user_id=eq.${encodeURIComponent(userId)}`)
       const timeFilters = []

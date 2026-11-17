@@ -30,7 +30,7 @@ import { readFileSync, writeFileSync, unlinkSync } from 'fs'
 import { resolve } from 'path'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 
 // Read .env manually (no dotenv dependency)
 const env = Object.fromEntries(
@@ -75,7 +75,7 @@ function heicBufferToJpeg(buffer) {
   const outPath = join(tmpdir(), `hookspot_out_${ts}_${rand}.jpg`)
   try {
     writeFileSync(inPath, buffer)
-    execSync(`sips -s format jpeg "${inPath}" --out "${outPath}"`, { stdio: 'pipe' })
+    execFileSync('sips', ['-s', 'format', 'jpeg', inPath, '--out', outPath], { stdio: 'pipe' })
     return readFileSync(outPath)
   } finally {
     try { unlinkSync(inPath) } catch {}
@@ -107,10 +107,15 @@ async function main() {
 
   for (const photo of photos) {
     try {
-      let res = await fetch(photo.url)
+      // Rows are user-writable: never let a maintenance job fetch arbitrary hosts.
+      const source = new URL(photo.url)
+      if (source.origin !== new URL(SUPABASE_URL).origin || !source.pathname.startsWith('/storage/v1/object/public/catches/')) {
+        throw new Error('Photo URL is outside the catches storage bucket')
+      }
+      let res = await fetch(source, { redirect: 'error', signal: AbortSignal.timeout(30000) })
       // Some old HEIC files were stored with a .jpg extension via storageKey normalization
       if (!res.ok && isHeicName(photo.filename)) {
-        res = await fetch(photo.url.replace(/\.(heic|heif)$/i, '.jpg'))
+        res = await fetch(photo.url.replace(/\.(heic|heif)$/i, '.jpg'), { redirect: 'error', signal: AbortSignal.timeout(30000) })
       }
       if (!res.ok) {
         if (res.status === 400 || res.status === 404) {

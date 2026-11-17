@@ -17,6 +17,7 @@ import { createSaveProfileHandler } from './save-profile-handler.js'
 import { createProfileHandler } from './profile-handler.js'
 import { createPhotosHandler } from './photos-handler.js'
 import { createCheckUsernameHandler } from './check-username-handler.js'
+import { createSearchCatchesHandler } from './search-catches-handler.js'
 import { createSearchUsersHandler } from './search-users-handler.js'
 import { renderCatchShare } from './catch-meta-handler.js'
 
@@ -37,6 +38,7 @@ const handleSaveProfile = createSaveProfileHandler(env)
 const handleProfile = createProfileHandler(env)
 const handlePhotos = createPhotosHandler(env)
 const handleCheckUsername = createCheckUsernameHandler(env)
+const handleSearchCatches = createSearchCatchesHandler(env)
 const handleSearchUsers = createSearchUsersHandler(env)
 const INDEX_HTML = fs.readFileSync(path.join(DIST, 'index.html'), 'utf-8')
 
@@ -68,6 +70,8 @@ const server = http.createServer(async (req, res) => {
   if (urlPath === '/api/photos') { handlePhotos(req, res); return }
   if (urlPath === '/api/check-username') { handleCheckUsername(req, res); return }
   if (urlPath === '/api/search-users') { handleSearchUsers(req, res); return }
+
+  if (urlPath === '/api/search-catches') { await handleSearchCatches(req, res); return }
 
   // Shared catch links (`/user/:username?catch=<id>`) get real OG meta tags
   // injected into the SPA shell so iMessage/Slack/etc. previews show the

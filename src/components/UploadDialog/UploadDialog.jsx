@@ -189,8 +189,14 @@ export function UploadDialog() {
     setPendingUrls(prev => [...prev, ...urls])
   }
 
+  const submitting = useRef(false)
   async function submit() {
-    if (!user) return
+    if (!user || submitting.current || !pendingFiles.length) return
+    submitting.current = true
+    try { await submitCatch() } finally { submitting.current = false }
+  }
+
+  async function submitCatch() {
     const files = pendingFiles.slice()
     const blobs = pendingBlobs.slice()
     const rodVal = cleanGear(rod)
@@ -242,7 +248,9 @@ export function UploadDialog() {
         showToast('Failed to add catch.')
       } else {
         showToast('Catch added!', 'success')
-        await saveNewGear(flyVal, rodVal)
+        // Gear is optional; its failure must never delete a successfully saved catch.
+        try { await saveNewGear(flyVal, rodVal) }
+        catch (err) { console.warn('[upload] gear save failed', err) }
       }
     } catch {
       await supabase.from('catches').delete().eq('id', catchId)

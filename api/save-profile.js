@@ -6,5 +6,5 @@ export const config = { api: { bodyParser: false } }
 const handle = createSaveProfileHandler(process.env)
 
 export default function handler(req, res) {
-  handle(req, res)
+  return handle(req, res)
 }

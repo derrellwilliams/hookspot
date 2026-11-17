@@ -35,3 +35,8 @@ export async function readBody(req, res, maxBytes) {
   } catch { return null }
   return Buffer.concat(chunks)
 }
+
+// Quote filter values before URL encoding so punctuation cannot become filter syntax.
+export function searchPattern(value) {
+  return JSON.stringify(`%${value}%`)
+}

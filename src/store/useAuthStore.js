@@ -8,7 +8,7 @@ export const useAuthStore = create((set) => ({
   loading: true,
   setUser: (user) => set(state => {
     const prevAvatar = state.user?.user_metadata?.avatar_url
-    const merged = user && prevAvatar && !user.user_metadata?.avatar_url
+    const merged = user && user.id === state.user?.id && prevAvatar && !user.user_metadata?.avatar_url
       ? { ...user, user_metadata: { ...user.user_metadata, avatar_url: prevAvatar } }
       : user
     return { user: merged, loading: false }

@@ -1,4 +1,4 @@
-import { serviceHeaders, sendJson } from './handler-utils.js'
+import { serviceHeaders, sendJson, searchPattern } from './handler-utils.js'
 
 export function createSearchUsersHandler(env) {
   return async function handleSearchUsers(req, res) {
@@ -6,8 +6,9 @@ export function createSearchUsersHandler(env) {
     const url = new URL(req.url, 'http://localhost')
     const q = url.searchParams.get('q')
     if (!q || q.trim().length === 0) { sendJson(res, { results: [] }); return }
+    if (q.length > 200) { sendJson(res, { error: 'Invalid search query' }, 400); return }
     try {
-      const filter = encodeURIComponent(`(username.ilike.%${q.trim()}%,display_name.ilike.%${q.trim()}%)`)
+      const filter = encodeURIComponent(`(username.ilike.${searchPattern(q.trim())},display_name.ilike.${searchPattern(q.trim())})`)
       const response = await fetch(
         `${env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id,username,display_name,avatar_url&or=${filter}&limit=20`,
         { headers: serviceHeaders(env) }
